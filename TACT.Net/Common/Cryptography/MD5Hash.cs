@@ -53,6 +53,38 @@ namespace TACT.Net.Common.Cryptography
 
         #endregion
 
+        #region Static Initialisation
+
+        public static MD5Hash Parse(string hash) => new MD5Hash(hash);
+
+        public static MD5Hash Parse(byte[] hash) => new MD5Hash(hash);
+
+        public static bool TryParse(string hash, out MD5Hash md5Hash)
+        {
+            if (string.IsNullOrWhiteSpace(hash) || hash.Length > 32)
+            {
+                md5Hash = default(MD5Hash);
+                return false;
+            }
+
+            md5Hash = new MD5Hash(hash);
+            return true;                
+        }
+
+        public static bool TryParse(byte[] hash, out MD5Hash md5Hash)
+        {
+            if(hash == null || hash.Length == 0 || hash.Length > 16)
+            {
+                md5Hash = default(MD5Hash);
+                return false;
+            }
+
+            md5Hash = new MD5Hash(hash);
+            return true;
+        }
+
+        #endregion
+
         public override string ToString() => stringvalue ?? (stringvalue = Value.ToHex());
 
         public override int GetHashCode()
