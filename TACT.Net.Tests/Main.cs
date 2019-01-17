@@ -57,6 +57,8 @@ namespace TACT.Net.Tests
         [TestMethod]
         public void TestConfigs()
         {
+            //WOW-28807patch8.1.0_PTR
+
             //Archives.ArchiveIndex index = new Archives.ArchiveIndex(@"C:\Users\TomSpearman\Downloads\0052ea9a56fd7b3b6fe7d1d906e6cdef.index");
             //var entry = index.Entries.First(x => x.Offset == 0);
 

@@ -20,6 +20,10 @@ namespace TACT.Net.Configs
         /// </summary>
         public KeyValueConfig CDNConfig { get; private set; }
         /// <summary>
+        /// Lists the various patch files and their size, encoding and checksums
+        /// </summary>
+        public KeyValueConfig PatchConfig { get; private set; }
+        /// <summary>
         /// Information for downloading files by region
         /// </summary>
         public VariableConfig CDNsFile { get; private set; }
@@ -34,6 +38,7 @@ namespace TACT.Net.Configs
 
         public MD5Hash BuildConfigMD5 => new MD5Hash(VersionsFile.GetValue("buildconfig", Locale));
         public MD5Hash CDNConfigMD5 => new MD5Hash(VersionsFile.GetValue("cdnconfig", Locale));
+        public MD5Hash PatchConfigMD5 => new MD5Hash(VersionsFile.GetValue("patch-config", Locale));
         public MD5Hash RootMD5 => new MD5Hash(BuildConfig.GetValue("root", 0));
         public MD5Hash EncodingMD5 => new MD5Hash(BuildConfig.GetValue("encoding", 0));
         public MD5Hash EncodingEKey => new MD5Hash(BuildConfig.GetValue("encoding", 1));
@@ -96,6 +101,7 @@ namespace TACT.Net.Configs
             // load the localised configs
             BuildConfig = new KeyValueConfig(BuildConfigMD5.ToString(), directory, ConfigType.BuildConfig);
             CDNConfig = new KeyValueConfig(CDNConfigMD5.ToString(), directory, ConfigType.CDNConfig);
+            PatchConfig = new KeyValueConfig(PatchConfigMD5.ToString(), directory, ConfigType.PatchConfig);
         }
 
         /// <summary>

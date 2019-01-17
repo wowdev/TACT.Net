@@ -7,6 +7,7 @@
     {
         CDNConfig,
         BuildConfig,
+        PatchConfig,
         Versions,
         CDNs,
     }

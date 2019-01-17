@@ -239,6 +239,9 @@ namespace TACT.Net.Configs
                     case ConfigType.CDNConfig:
                         sw.WriteLine("# CDN Configuration");
                         break;
+                    case ConfigType.PatchConfig:
+                        sw.WriteLine("# Patch Configuration");
+                        break;
                 }
 
                 // spacer
