@@ -27,6 +27,7 @@ namespace TACT.Net.Download
         public DownloadSizeFile(TACT container = null) : base(container)
         {
             DownloadSizeHeader = new DownloadSizeHeader();
+            ((HashComparer)_FileEntries.Comparer).KeySize = DownloadSizeHeader.EKeySize;
 
             _EncodingMap = new[]
             {
@@ -64,6 +65,7 @@ namespace TACT.Net.Download
             using (var br = new BinaryReader(stream))
             {
                 DownloadSizeHeader.Read(br);
+                ((HashComparer)_FileEntries.Comparer).KeySize = DownloadSizeHeader.EKeySize;
 
                 // Tags
                 ReadTags(br, DownloadSizeHeader.TagCount, DownloadSizeHeader.EntryCount);

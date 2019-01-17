@@ -1,19 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using TACT.Net.Encoding;
-using TACT.Net.Shared.DownloadFile;
 
 namespace TACT.Net.Common.Cryptography
 {
     internal class HashComparer : IComparer<byte[]>, IComparer<MD5Hash>, IComparer<string>, IComparer<EncodingEntryBase>, IEqualityComparer<MD5Hash>
     {
-        private readonly bool _nonStandardKeySize;
-
-        public HashComparer(bool nonStandardKeySize = false)
-        {
-            _nonStandardKeySize = nonStandardKeySize;
-        }
-
+        public int KeySize { get; set; } = 16;
 
         public int Compare(MD5Hash x, MD5Hash y) => Compare(x.Value, y.Value);
         public int Compare(string x, string y) => Compare(x.ToByteArray(), y.ToByteArray());
@@ -35,11 +28,15 @@ namespace TACT.Net.Common.Cryptography
 
         public bool Equals(MD5Hash x, MD5Hash y)
         {
-            if (_nonStandardKeySize)
-                return Compare(x, y) == 0;
+            if (KeySize == 16)
+                return x == y;
 
-            return x == y;
+            return Compare(x, y) == 0;
         }
-        public int GetHashCode(MD5Hash obj) => obj.GetHashCode();
+
+        public int GetHashCode(MD5Hash obj)
+        {
+            return obj.GetHashCode();
+        }
     }
 }

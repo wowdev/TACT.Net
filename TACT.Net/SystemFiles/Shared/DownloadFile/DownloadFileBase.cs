@@ -17,7 +17,7 @@ namespace TACT.Net.Shared.DownloadFile
 
         protected DownloadFileBase(TACT container = null) : base(container)
         {
-            _FileEntries = new Dictionary<MD5Hash, T>(new HashComparer(GetType() == typeof(DownloadSizeFile)));
+            _FileEntries = new Dictionary<MD5Hash, T>(new HashComparer());
         }
 
         #endregion
