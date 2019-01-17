@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace TACT.Net.SystemFiles.Shared
+﻿namespace TACT.Net.SystemFiles.Shared
 {
     public class SystemFileBase
     {

@@ -2,7 +2,6 @@
 using System.IO;
 using TACT.Net.Common;
 using TACT.Net.Common.Cryptography;
-using TACT.Net.Download;
 using TACT.Net.Shared.Tags;
 
 namespace TACT.Net.Shared.DownloadFile

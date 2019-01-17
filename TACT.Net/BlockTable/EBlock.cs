@@ -24,7 +24,7 @@ namespace TACT.Net.BlockTable
         /// Encoding Type and Compression Level
         /// </summary>
         public EMap EncodingMap;
-        
+
         public EBlock()
         {
             EncodingMap = default(EMap);

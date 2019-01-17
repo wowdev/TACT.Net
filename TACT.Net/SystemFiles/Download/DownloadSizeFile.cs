@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.Linq;
 using TACT.Net.BlockTable;
 using TACT.Net.Common;
@@ -92,7 +91,7 @@ namespace TACT.Net.Download
             CASRecord record;
             using (var bt = new BlockTableStreamWriter(_EncodingMap[0]))
             using (var bw = new BinaryWriter(bt))
-            using(var ms = new MemoryStream())
+            using (var ms = new MemoryStream())
             {
                 // Header
                 DownloadSizeHeader.EntryCount = (uint)_FileEntries.Count;

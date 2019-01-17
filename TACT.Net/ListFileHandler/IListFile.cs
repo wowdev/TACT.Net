@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace TACT.Net.ListFileHandler
+﻿namespace TACT.Net.ListFileHandler
 {
     public interface IListFile
     {

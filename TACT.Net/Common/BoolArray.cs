@@ -42,24 +42,21 @@ namespace TACT.Net.Common
                 _values[index] = value;
             }
         }
-        public void Insert(int i, bool v) => _values.Insert(i, v);
-        public bool Set(int i) => _values[i] = true;
-        public bool UnSet(int i) => _values[i] = false;
-        public bool Get(int i) => _values[i];
+
         public void Add(bool v) => _values.Add(v);
+
+        public void Remove(int index) => _values.RemoveAt(index);
+
+        public void Insert(int i, bool v) => _values.Insert(i, v);
+
         public void Clear() => _values.Clear();
-        public void RemoveAt(int index) => _values.RemoveAt(index);
-        public int Count => _values.Count;
 
         public byte[] ToByteArray()
         {
             byte[] bytes = new byte[(_values.Count + 7) / 8];
 
             for (int i = 0; i < _values.Count; i++)
-            {
-                if (_values[i])
-                    bytes[i / 8] |= (byte)(1 << (7 - (i % 8)));
-            }
+                bytes[i / 8] |= (byte)(1 << (7 - (i % 8)));
 
             return bytes;
         }
@@ -68,11 +65,18 @@ namespace TACT.Net.Common
 
         #region Interface Methods
 
+        public int Count => _values.Count;
+
         public bool IsReadOnly => false;
+
         public bool Contains(bool item) => throw new NotImplementedException();
+
         public bool Remove(bool item) => throw new NotImplementedException();
+
         public void CopyTo(bool[] array, int arrayIndex) => _values.CopyTo(array, arrayIndex);
+
         public IEnumerator<bool> GetEnumerator() => _values.GetEnumerator();
+
         IEnumerator IEnumerable.GetEnumerator() => _values.GetEnumerator();
 
         #endregion

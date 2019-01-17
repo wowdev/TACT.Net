@@ -68,12 +68,12 @@ namespace TACT.Net.Common.Cryptography
             }
 
             md5Hash = new MD5Hash(hash);
-            return true;                
+            return true;
         }
 
         public static bool TryParse(byte[] hash, out MD5Hash md5Hash)
         {
-            if(hash == null || hash.Length == 0 || hash.Length > 16)
+            if (hash == null || hash.Length == 0 || hash.Length > 16)
             {
                 md5Hash = default(MD5Hash);
                 return false;

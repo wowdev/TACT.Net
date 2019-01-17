@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using TACT.Net.Common;
 using TACT.Net.Common.Cryptography;
@@ -36,7 +35,7 @@ namespace TACT.Net.Patch
         }
 
         #endregion
-        
+
         #region IO
 
         private void Read(Stream stream)

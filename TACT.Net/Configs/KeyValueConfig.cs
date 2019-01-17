@@ -246,7 +246,7 @@ namespace TACT.Net.Configs
 
                 // spacer
                 sw.WriteLine();
-                
+
                 // write the token and values skipping blanks
                 foreach (var data in _data)
                     if (!data.Value.All(x => string.IsNullOrWhiteSpace(x)))

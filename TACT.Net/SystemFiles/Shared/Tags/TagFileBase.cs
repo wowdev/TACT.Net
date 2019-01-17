@@ -64,7 +64,7 @@ namespace TACT.Net.Shared.Tags
             if (index > -1)
             {
                 foreach (var tagEntry in _TagEntries.Values)
-                    tagEntry.FileMask.RemoveAt(index);
+                    tagEntry.FileMask.Remove(index);
             }
         }
 

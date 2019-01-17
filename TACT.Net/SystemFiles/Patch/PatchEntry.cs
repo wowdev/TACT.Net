@@ -36,7 +36,7 @@ namespace TACT.Net.Patch
             DecompressedSize = br.ReadUInt40BE();
 
             Records = new List<PatchRecord>(PatchCount);
-            for(int i = 0; i < PatchCount; i++)
+            for (int i = 0; i < PatchCount; i++)
             {
                 var entry = new PatchRecord();
                 entry.Read(br, header);

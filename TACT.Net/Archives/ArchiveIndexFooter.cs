@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.Security.Cryptography;
 using TACT.Net.Common;
 using TACT.Net.Common.Cryptography;
@@ -39,7 +38,7 @@ namespace TACT.Net.Archives
         /// Hash of Version to the EOF with an empty FooterChecksum
         /// </summary>
         public MD5Hash FooterChecksum;
-        
+
         #region IO
         public void Read(BinaryReader br)
         {

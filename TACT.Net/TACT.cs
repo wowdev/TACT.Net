@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using TACT.Net.Common.Singleton;
 
 namespace TACT.Net
 {

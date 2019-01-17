@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Linq.Expressions;
 
 namespace TACT.Net.ListFileHandler
 {
@@ -24,7 +23,7 @@ namespace TACT.Net.ListFileHandler
             _idIndex = idIndex;
 
             // declare indexof function
-            if(_idIndex == 0)
+            if (_idIndex == 0)
                 IndexOf = (string s) => s.IndexOf(',');
             else
                 IndexOf = (string s) => s.LastIndexOf(',');

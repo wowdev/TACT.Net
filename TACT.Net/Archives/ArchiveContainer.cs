@@ -145,7 +145,7 @@ namespace TACT.Net.Archives
             foreach (var index in ArchiveIndices)
                 if (!index.IsGroup && index.TryGet(hash, out archiveIndexEntry))
                     return true;
-            
+
             return false;
         }
 

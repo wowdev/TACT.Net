@@ -170,7 +170,7 @@ namespace TACT.Net.Common.ZLib
             }
             return readLen;
         }
-        
+
         public override void Write(byte[] buffer, int offset, int count)
         {
             if (_mode != ZLibMode.Compress)

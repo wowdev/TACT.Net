@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
+﻿using System.IO;
 using TACT.Net.Common;
 using TACT.Net.Common.Cryptography;
 
@@ -34,7 +31,7 @@ namespace TACT.Net.Patch
         public byte PatchOrdinal;
 
         #region IO
-        
+
         public void Read(BinaryReader br, PatchHeader header)
         {
             EKey = new MD5Hash(br.ReadBytes(header.FileKeySize));
