@@ -36,16 +36,16 @@ namespace TACT.Net.Configs
 
         #region Keys
 
-        public MD5Hash BuildConfigMD5 => new MD5Hash(VersionsFile.GetValue("buildconfig", Locale));
-        public MD5Hash CDNConfigMD5 => new MD5Hash(VersionsFile.GetValue("cdnconfig", Locale));
-        public MD5Hash PatchConfigMD5 => new MD5Hash(VersionsFile.GetValue("patch-config", Locale));
-        public MD5Hash RootMD5 => new MD5Hash(BuildConfig.GetValue("root", 0));
-        public MD5Hash EncodingMD5 => new MD5Hash(BuildConfig.GetValue("encoding", 0));
-        public MD5Hash EncodingEKey => new MD5Hash(BuildConfig.GetValue("encoding", 1));
-        public MD5Hash InstallMD5 => new MD5Hash(BuildConfig.GetValue("install", 0));
-        public MD5Hash DownloadMD5 => new MD5Hash(BuildConfig.GetValue("download", 0));
-        public MD5Hash DownloadSizeMD5 => new MD5Hash(BuildConfig.GetValue("size", 0));
-        public MD5Hash PatchMD5 => new MD5Hash(BuildConfig.GetValue("patch", 0));
+        public MD5Hash BuildConfigMD5 => TryGetKey(VersionsFile, "buildconfig");
+        public MD5Hash CDNConfigMD5 => TryGetKey(VersionsFile, "cdnconfig");
+        public MD5Hash PatchConfigMD5 => TryGetKey(VersionsFile, "patch-config");
+        public MD5Hash RootMD5 => TryGetKey(BuildConfig, "root");
+        public MD5Hash EncodingMD5 => TryGetKey(BuildConfig, "encoding");
+        public MD5Hash EncodingEKey => TryGetKey(BuildConfig, "encoding", 1);
+        public MD5Hash InstallMD5 => TryGetKey(BuildConfig, "install", 1);
+        public MD5Hash DownloadMD5 => TryGetKey(BuildConfig, "download", 1);
+        public MD5Hash DownloadSizeMD5 => TryGetKey(BuildConfig, "size", 1);
+        public MD5Hash PatchMD5 => TryGetKey(BuildConfig, "patch", 1);
 
         #endregion
 
@@ -121,6 +121,22 @@ namespace TACT.Net.Configs
             // save the primary configs
             CDNsFile.Write(directory, Product);
             VersionsFile.Write(directory, Product);
+        }
+
+        #endregion
+
+        #region Helpers
+
+        private MD5Hash TryGetKey(IConfig config, string identifier, int index = 0)
+        {
+            MD5Hash hash = default(MD5Hash);
+
+            if (config is VariableConfig _varConf)
+                MD5Hash.TryParse(_varConf.GetValue(identifier, Locale), out hash);
+            else if (config is KeyValueConfig _keyConf)
+                MD5Hash.TryParse(_keyConf.GetValue(identifier, index), out hash);
+
+            return hash;
         }
 
         #endregion
