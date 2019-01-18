@@ -148,10 +148,10 @@ namespace TACT.Net.Configs
         /// <param name="key"></param>
         /// <param name="value"></param>
         /// <param name="index"></param>
-        public void SetValue(string key, object value, int index)
+        public void SetValue(string key, string value, int index)
         {
             if (_data.ContainsKey(key))
-                _data[key][index] = value.ToString();
+                _data[key][index] = value;
         }
 
         /// <summary>
