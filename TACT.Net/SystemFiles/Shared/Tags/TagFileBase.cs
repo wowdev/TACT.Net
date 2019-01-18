@@ -93,24 +93,19 @@ namespace TACT.Net.Shared.Tags
             }
         }
 
-
-        protected void SetTags(int index, params string[] tags)
-        {
-            if (index > -1)
-            {
-                if (tags == null)
-                    tags = _TagEntries.Keys.ToArray();
-
-                var _ = tags.ToHashSet(StringComparer.OrdinalIgnoreCase);
-                foreach (var tagEntry in _TagEntries.Values)
-                    tagEntry.FileMask[index] = _.Contains(tagEntry.Name);
-            }
-        }
-
+        /// <summary>
+        /// Enables/disables a the file at index for the supplied tags. If no tags are provided this applies to them all.
+        /// </summary>
+        /// <param name="index"></param>
+        /// <param name="value"></param>
+        /// <param name="tags"></param>
         protected void SetTags(int index, bool value, params string[] tags)
         {
             if (index > -1)
             {
+                if (tags == null || tags.Length == 0)
+                    tags = _TagEntries.Keys.ToArray();
+
                 foreach (var tag in tags)
                     if (_TagEntries.TryGetValue(tag, out var tagEntry))
                         tagEntry.FileMask[index] = value;

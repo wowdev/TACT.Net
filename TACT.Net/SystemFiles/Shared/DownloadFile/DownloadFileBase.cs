@@ -37,7 +37,7 @@ namespace TACT.Net.Shared.DownloadFile
 
             // update the tag masks
             int index = _FileEntries.IndexOfKey(x => x == fileEntry.EKey);
-            SetTags(index, tags);
+            SetTags(index, true, tags);
         }
 
         public void AddOrUpdate(TagEntry tagEntry)

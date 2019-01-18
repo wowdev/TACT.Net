@@ -139,7 +139,7 @@ namespace TACT.Net.Install
 
             // update the tag masks
             int index = _FileEntries.IndexOfKey(x => x.IndexOf(fileEntry.FilePath, StringComparison.OrdinalIgnoreCase) >= 0);
-            SetTags(index, tags);
+            SetTags(index, true, tags);
         }
 
         public void AddOrUpdate(TagEntry tagEntry)
