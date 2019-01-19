@@ -6,7 +6,7 @@ namespace TACT.Net.Common.Cryptography
     /// <summary>
     /// https://en.wikipedia.org/wiki/Jenkins_hash_function
     /// </summary>
-    public class Lookup3 : HashAlgorithm
+    public sealed class Lookup3 : HashAlgorithm
     {
         public byte[] ResultValue => BitConverter.GetBytes(Result);
         public ulong Result { get; private set; }
@@ -75,7 +75,7 @@ namespace TACT.Net.Common.Cryptography
                     c -= b; c ^= rot(b, 4); b += a;
                 }
 
-                var i = length - 12;
+                uint i = length - 12;
                 a += *(u + i / 4);
                 b += *(u + i / 4 + 1);
                 c += *(u + i / 4 + 2);

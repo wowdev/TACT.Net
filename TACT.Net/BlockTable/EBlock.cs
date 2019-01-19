@@ -24,6 +24,11 @@ namespace TACT.Net.BlockTable
         /// Encoding Type and Compression Level
         /// </summary>
         public EMap EncodingMap;
+        /// <summary>
+        /// Name of the Encryption Key
+        /// </summary>
+        public ulong EncryptionKeyName;
+
 
         public EBlock()
         {

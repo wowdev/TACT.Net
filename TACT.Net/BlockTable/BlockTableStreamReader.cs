@@ -46,6 +46,7 @@ namespace TACT.Net.BlockTable
         }
 
         #region Parsing
+
         private void Parse()
         {
             uint size = (uint)reader.BaseStream.Length;
@@ -116,8 +117,13 @@ namespace TACT.Net.BlockTable
             byte[] data = reader.ReadBytes((int)block.CompressedSize);
             block.EncodingMap.Type = (EType)data[0];
 
+Process:
             switch (block.EncodingMap.Type)
             {
+                case EType.Encrypted:
+                    data = Decrypt(block, data, blockIndex);
+                    block.EncodingMap.Type = (EType)data[0];
+                    goto Process;
                 case EType.ZLib:
                     Decompress(block, data, memStream);
                     break;
@@ -144,9 +150,45 @@ namespace TACT.Net.BlockTable
             using (var stream = new DeflateStream(ms, CompressionMode.Decompress))
                 stream.CopyTo(outStream);
         }
+
+        private byte[] Decrypt(EBlock block, byte[] data, int index)
+        {
+            byte keyNameSize = data[1];
+            if (keyNameSize != 8)
+                throw new Exception("Invalid KeyName size");
+
+            block.EncryptionKeyName = BitConverter.ToUInt64(data, 2);
+
+            byte IVSize = data[keyNameSize + 2];
+            if (IVSize != 4)
+                throw new Exception("Invalid IV size");
+
+            byte[] IV = new byte[8];
+            Buffer.BlockCopy(data, keyNameSize + 3, IV, 0, IVSize);
+            Array.Reverse(IV);
+
+            if (data.Length < IVSize + keyNameSize + 4)
+                throw new Exception("Not enough data");
+
+            int dataOffset = keyNameSize + IVSize + 3;
+
+            byte encType = data[dataOffset];
+            if (encType != 0x53) // 'S'
+                throw new NotImplementedException($"Encryption type {encType} not implemented");
+
+            if (!KeyService.TryGetKey(block.EncryptionKeyName, out byte[] key))
+                throw new Exception($"Unknown KeyName {block.EncryptionKeyName:X16}");
+
+            dataOffset++;
+
+            var decryptor = KeyService.Salsa20.CreateDecryptor(key, IV);
+            return decryptor.TransformFinalBlock(data, dataOffset, data.Length - dataOffset);
+        }
+
         #endregion
 
         #region Methods
+
         public override int Read(byte[] buffer, int offset, int count)
         {
             if (memStream.Position + count > memStream.Length && blockIndex < EBlocks.Length)
@@ -172,10 +214,11 @@ namespace TACT.Net.BlockTable
 
             return Position;
         }
+
         #endregion
 
-
         #region Interface Methods
+
         public override void Flush() => throw new NotSupportedException();
         public override void SetLength(long value) => throw new NotSupportedException();
         public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
@@ -191,6 +234,7 @@ namespace TACT.Net.BlockTable
 
             base.Dispose(disposing);
         }
+
         #endregion
     }
 }
