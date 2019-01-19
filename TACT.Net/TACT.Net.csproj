@@ -8,4 +8,8 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="MimeKitLite" Version="2.1.1" />
+  </ItemGroup>
+
 </Project>
