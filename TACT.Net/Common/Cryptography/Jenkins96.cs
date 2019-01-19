@@ -41,7 +41,7 @@ namespace TACT.Net.Common.Cryptography
 
             uint length = (uint)array.Length;
             uint a, b, c;
-            a = b = c = 0xdeadbeef + (length) + PC;
+            a = b = c = 0xdeadbeef + length + PC;
             c += PB;
 
             if (length == 0)
@@ -50,7 +50,7 @@ namespace TACT.Net.Common.Cryptography
                 return;
             }
 
-            var newLen = (length + (12 - length % 12) % 12);
+            var newLen = length + (12 - length % 12) % 12;
             if (length != newLen)
             {
                 Array.Resize(ref array, (int)newLen);
