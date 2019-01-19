@@ -57,6 +57,10 @@ namespace TACT.Net.Tests
         [TestMethod]
         public void TestConfigs()
         {
+            var rc = new Ribbit.RibbitClient(Locale.US);
+            var resp = rc.GetString("v1/products/wowt/versions");
+
+
             //WOW-28807patch8.1.0_PTR
 
             //Archives.ArchiveIndex index = new Archives.ArchiveIndex(@"C:\Users\TomSpearman\Downloads\0052ea9a56fd7b3b6fe7d1d906e6cdef.index");

@@ -72,7 +72,6 @@ namespace TACT.Net.BlockTable
                 if (flags != 0xF || chunkCount == 0)
                     throw new InvalidDataException($"Bad table format 0x{flags.ToString("X2")}, numBlocks {chunkCount}");
 
-
                 uint frameHeaderSize = 24 * chunkCount + 12;
                 if (headerSize != frameHeaderSize)
                     throw new InvalidDataException($"Invalid Header Size");
