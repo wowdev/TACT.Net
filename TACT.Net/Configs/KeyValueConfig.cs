@@ -13,11 +13,8 @@ namespace TACT.Net.Configs
     public class KeyValueConfig : IConfig
     {
         public ConfigType Type { get; private set; }
-
-        /// <summary>
-        /// Hash of the file
-        /// </summary>
         public MD5Hash Checksum { get; private set; }
+        public uint SequenceNumber;
 
         public List<string> this[string key]
         {
@@ -27,7 +24,6 @@ namespace TACT.Net.Configs
                 return values;
             }
         }
-
 
         private readonly Dictionary<string, List<string>> _data;
 
@@ -210,8 +206,15 @@ namespace TACT.Net.Configs
 
             while ((line = reader.ReadLine()) != null)
             {
-                if (string.IsNullOrWhiteSpace(line) || line.StartsWith("#"))
+                if (string.IsNullOrWhiteSpace(line) || line[0] == '#')
+                {
+                    // grab the sequence number
+                    if (line.StartsWith("## seqn", StringComparison.OrdinalIgnoreCase))
+                        uint.TryParse(line.Split(' ').Last(), out SequenceNumber);
+
                     continue;
+                }
+                    
 
                 tokens = line.Split('=', StringSplitOptions.RemoveEmptyEntries);
                 if (tokens.Length != 2)
@@ -244,8 +247,9 @@ namespace TACT.Net.Configs
                         break;
                 }
 
-                // spacer
-                sw.WriteLine();
+                // sequence number
+                if(SequenceNumber > 0)
+                    sw.WriteLine("## seqn " + SequenceNumber);
 
                 // write the token and values skipping blanks
                 foreach (var data in _data)
