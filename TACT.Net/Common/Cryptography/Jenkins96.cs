@@ -8,18 +8,16 @@ namespace TACT.Net.Common.Cryptography
     /// </summary>
     public sealed class Lookup3 : HashAlgorithm
     {
-        public byte[] ResultValue => BitConverter.GetBytes(Result);
         public ulong Result { get; private set; }
         public uint PB { get; private set; }
         public uint PC { get; private set; }
 
-        public ulong ComputeHash(string str, bool normalized = true)
+        public ulong ComputeHash(string str, bool normalize = true)
         {
-            if (normalized)
+            if (normalize)
                 str = str.Replace('/', '\\').ToUpperInvariant();
 
-            byte[] data = System.Text.Encoding.ASCII.GetBytes(str);
-            ComputeHash(data);
+            ComputeHash(System.Text.Encoding.ASCII.GetBytes(str));
             return Result;
         }
 
@@ -29,7 +27,7 @@ namespace TACT.Net.Common.Cryptography
                 pC = PB = 0;
 
             ComputeHash(data);
-            pC = this.PC;
+            pC = PC;
             return Result;
         }
 
@@ -50,7 +48,7 @@ namespace TACT.Net.Common.Cryptography
                 return;
             }
 
-            var newLen = length + (12 - length % 12) % 12;
+            uint newLen = length + (12 - length % 12) % 12;
             if (length != newLen)
             {
                 Array.Resize(ref array, (int)newLen);
@@ -95,6 +93,6 @@ namespace TACT.Net.Common.Cryptography
             }
         }
 
-        protected override byte[] HashFinal() => ResultValue;
+        protected override byte[] HashFinal() => BitConverter.GetBytes(Result);
     }
 }
