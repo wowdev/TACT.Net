@@ -1,28 +1,15 @@
-﻿using System;
+﻿using System.Collections.Generic;
 
 namespace TACT.Net.Shared.Tags
 {
-    // TODO make less awful
     internal static class TagTypeHelper
     {
-        private static readonly (uint Build, Type Type)[] _TypeMap = new (uint, Type)[]
-        {
-            ( 18761, typeof(Types_18761) ),
-            ( 20426, typeof(Types_20426) ),
-            ( 99999, typeof(Types_99999) ),
-        };
-
         public static string TypeName(int type, uint build)
         {
-            foreach (var _ in _TypeMap)
+            for (int i = 0; i < BuildLookup.Length; i++)
             {
-                if (build <= _.Build)
-                {
-                    if (!Enum.IsDefined(_.Type, type))
-                        return "";
-
-                    return Enum.Parse(_.Type, type.ToString()).ToString();
-                }
+                if (build <= BuildLookup[i])
+                    return TypeNames.ContainsKey(type) ? TypeNames[type][i] : "";
             }
 
             return "";
@@ -30,31 +17,17 @@ namespace TACT.Net.Shared.Tags
 
         #region Enums
 
-        private enum Types_18761 : int
-        {
-            Architecture = 1,
-            Locale = 2,
-            Platform = 3
-        }
+        private static readonly int[] BuildLookup = new[] { 18761, 20426, 99999 };
 
-        private enum Types_20426 : int
+        private static readonly Dictionary<int, string[]> TypeNames = new Dictionary<int, string[]>
         {
-            Architecture = 1,
-            Category = 2,
-            Locale = 3,
-            Platform = 4,
-            Region = 5
-        }
-
-        private enum Types_99999 : int
-        {
-            Platform = 1,
-            Architecture = 2,
-            Locale = 3,
-            Region = 4,
-            Category = 5,
-            Alternate = 0x4000
-        }
+            { 1,      new[] { "Architecture", "Architecture", "Platform" }      },
+            { 2,      new[] { "Locale"      , "Category"    , "Architecture" }  },
+            { 3,      new[] { "Platform"    , "Locale"      , "Locale" }        },
+            { 4,      new[] { ""            , "Platform"    , "Region" }        },
+            { 5,      new[] { ""            , "Region"      , "Category" }      },
+            { 0x4000, new[] { ""            , ""            , "Alternate" }     },
+        };
 
         #endregion
     }
