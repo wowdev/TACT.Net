@@ -65,12 +65,28 @@ namespace TACT.Net.Tests
         [TestMethod]
         public void TestConfigs()
         {
+            TACT tact = new TACT();
+            ConfigContainer configContainer = new ConfigContainer("wowt", Locale.US, tact);
+
+            //configContainer.OpenRemote(@"D:\Backup\");
+            //Assert.IsNotNull(configContainer.VersionsFile);
+
+            configContainer.OpenLocal(@"D:\Backup\", @"D:\Backup\");
+            Assert.IsNotNull(configContainer.VersionsFile);
+            Assert.IsNotNull(configContainer.BuildConfig);
+            Assert.IsFalse(configContainer.RootMD5.IsEmpty);
+        }
+
+
+        [TestMethod]
+        public void TestDebugStuff()
+        {
             //WOW-28807patch8.1.0_PTR
 
             //Archives.ArchiveIndex index = new Archives.ArchiveIndex(@"C:\Users\TomSpearman\Downloads\0052ea9a56fd7b3b6fe7d1d906e6cdef.index");
             //var entry = index.Entries.First(x => x.Offset == 0);
 
-            Patch.PatchFile patchFile = new Patch.PatchFile(@"C:\Users\TomSpearman\Downloads\284bff5cb89beb6ba2de5e012eb9ed1c");
+            //Patch.PatchFile patchFile = new Patch.PatchFile(@"C:\Users\TomSpearman\Downloads\284bff5cb89beb6ba2de5e012eb9ed1c");
 
             //Install.InstallFile installFile = new Install.InstallFile(@"C:\Users\spear\Downloads\9e85df74a6280ee0d1c78b96c75d2384");
             //installFile.Write("");
@@ -80,9 +96,9 @@ namespace TACT.Net.Tests
             //Root.RootFile rootFile = new Root.RootFile(@"C:\Users\TomSpearman\Downloads\b785e5c1ff3a3fc9805baef91ea732e8");
             //rootFile.Write("");
 
-            Encoding.EncodingFile encodingFile = new Encoding.EncodingFile(@"C:\Users\TomSpearman\Downloads\fc8bb2fcd439453504e8758ddd7e7535");
-            var b1 = encodingFile.GetContentEntryByEKey(new Common.Cryptography.MD5Hash("3afb13d370fe03be2d0b8622952621c3")).First();
-            encodingFile.TryGetEncodedEntry(new Common.Cryptography.MD5Hash("3afb13d370fe03be2d0b8622952621c3"), out var b);
+            //Encoding.EncodingFile encodingFile = new Encoding.EncodingFile(@"C:\Users\TomSpearman\Downloads\fc8bb2fcd439453504e8758ddd7e7535");
+            //var b1 = encodingFile.GetContentEntryByEKey(new Common.Cryptography.MD5Hash("3afb13d370fe03be2d0b8622952621c3")).First();
+            //encodingFile.TryGetEncodedEntry(new Common.Cryptography.MD5Hash("3afb13d370fe03be2d0b8622952621c3"), out var b);
 
 
             //encodingFile.Write("");
@@ -100,8 +116,8 @@ namespace TACT.Net.Tests
 
             //64318bc48003848f6fb5f1604d314935
 
-            ConfigContainer configContainer = new ConfigContainer("wowt");
-            configContainer.Open(@"C:\Users\TomSpearman\Downloads\Dump", Locale.US);
+
+            
         }
 
         public string ToHex(byte[] barray)
