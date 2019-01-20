@@ -206,7 +206,12 @@ namespace TACT.Net.Configs
 
             while ((line = reader.ReadLine()) != null)
             {
-                if (string.IsNullOrWhiteSpace(line) || line[0] == '#')
+                // skip blank
+                if (string.IsNullOrWhiteSpace(line))
+                    continue;
+
+                // skip comments
+                if (line[0] == '#')
                 {
                     // grab the sequence number
                     if (line.StartsWith("## seqn", StringComparison.OrdinalIgnoreCase))
@@ -214,13 +219,18 @@ namespace TACT.Net.Configs
 
                     continue;
                 }
-                    
 
-                tokens = line.Split('=', StringSplitOptions.RemoveEmptyEntries);
-                if (tokens.Length != 2)
-                    throw new Exception("Invalid config");
-
-                _data.Add(tokens[0].Trim(), tokens[1].Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries).ToList());
+                // special case for PatchConfig's patch entries; store the entry as the systemfile type
+                if (Type == ConfigType.PatchConfig && line.StartsWith("patch-entry"))
+                {
+                    tokens = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                    _data.Add(tokens[2].Trim(), tokens.Skip(3).ToList());
+                }
+                else
+                {
+                    tokens = line.Split('=', StringSplitOptions.RemoveEmptyEntries);
+                    _data.Add(tokens[0].Trim(), tokens[1].Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries).ToList());
+                }
             }
         }
 
@@ -248,13 +258,25 @@ namespace TACT.Net.Configs
                 }
 
                 // sequence number
-                if(SequenceNumber > 0)
+                if (SequenceNumber > 0)
                     sw.WriteLine("## seqn " + SequenceNumber);
 
                 // write the token and values skipping blanks
                 foreach (var data in _data)
+                {
                     if (!data.Value.All(x => string.IsNullOrWhiteSpace(x)))
-                        sw.WriteLine($"{data.Key} = {string.Join(" ", data.Value)}");
+                    {
+                        // special case for PatchConfig's patch entries
+                        if (Type == ConfigType.PatchConfig && !data.Key.StartsWith("patch"))
+                        {
+                            sw.WriteLine($"patch-entry = {data.Key} {string.Join(" ", data.Value)}");
+                        }
+                        else
+                        {
+                            sw.WriteLine($"{data.Key} = {string.Join(" ", data.Value)}");
+                        }
+                    }
+                }
 
                 Checksum = ms.MD5Hash();
 

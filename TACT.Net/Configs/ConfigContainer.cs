@@ -38,14 +38,14 @@ namespace TACT.Net.Configs
 
         public MD5Hash BuildConfigMD5 => TryGetKey(VersionsFile, "buildconfig");
         public MD5Hash CDNConfigMD5 => TryGetKey(VersionsFile, "cdnconfig");
-        public MD5Hash PatchConfigMD5 => TryGetKey(VersionsFile, "patch-config");
+        public MD5Hash PatchConfigMD5 => TryGetKey(BuildConfig, "patch-config");
         public MD5Hash RootMD5 => TryGetKey(BuildConfig, "root");
         public MD5Hash EncodingMD5 => TryGetKey(BuildConfig, "encoding");
         public MD5Hash EncodingEKey => TryGetKey(BuildConfig, "encoding", 1);
         public MD5Hash InstallMD5 => TryGetKey(BuildConfig, "install", 1);
         public MD5Hash DownloadMD5 => TryGetKey(BuildConfig, "download", 1);
         public MD5Hash DownloadSizeMD5 => TryGetKey(BuildConfig, "size", 1);
-        public MD5Hash PatchMD5 => TryGetKey(BuildConfig, "patch", 1);
+        public MD5Hash PatchMD5 => TryGetKey(BuildConfig, "patch");
 
         #endregion
 
