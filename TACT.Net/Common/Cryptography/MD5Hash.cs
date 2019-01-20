@@ -85,7 +85,10 @@ namespace TACT.Net.Common.Cryptography
 
         #endregion
 
-        public override string ToString() => stringvalue ?? (stringvalue = Value.ToHex());
+        public override string ToString()
+        {
+            return stringvalue ?? (stringvalue = Value.ToHex());
+        }
 
         public override int GetHashCode()
         {
