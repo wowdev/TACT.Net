@@ -21,7 +21,6 @@ namespace TACT.Net.Ribbit
         public string GetString(string payload)
         {
             using (var stream = new TcpClient(_endpoint, _port).GetStream())
-            using (var sr = new StreamReader(stream))
             {
                 stream.Write(System.Text.Encoding.ASCII.GetBytes(payload + "\r\n"));
 
