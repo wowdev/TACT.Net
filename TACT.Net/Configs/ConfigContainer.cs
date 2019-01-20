@@ -56,13 +56,14 @@ namespace TACT.Net.Configs
         /// <summary>
         /// Current Locale
         /// </summary>
-        public Locale Locale;
+        public readonly Locale Locale;
 
         #region Constructors
 
-        public ConfigContainer(string product, TACT container = null) : base(container)
+        public ConfigContainer(string product, Locale locale, TACT container = null) : base(container)
         {
             Product = product;
+            Locale = locale;
         }
 
         #endregion
@@ -78,30 +79,54 @@ namespace TACT.Net.Configs
             VersionsFile = new VariableConfig(ConfigType.Versions);
             BuildConfig = new KeyValueConfig(ConfigType.BuildConfig);
             CDNConfig = new KeyValueConfig(ConfigType.CDNConfig);
-
-            Locale = Locale.US;
         }
 
         /// <summary>
-        /// Opens an existing set of configs
+        /// Opens the CDNs, Versions and configs files from disk
+        /// </summary>
+        /// <param name="cdnverDirectory">Directory containing the CDNs and Versions files</param>
+        /// <param name="configDirectory">Directory containing the config files</param>
+        public void OpenLocal(string cdnverDirectory, string configDirectory)
+        {
+            CDNsFile = new VariableConfig(cdnverDirectory, ConfigType.CDNs);
+            VersionsFile = new VariableConfig(cdnverDirectory, ConfigType.Versions);
+
+            LoadConfigs(configDirectory);
+        }
+
+        /// <summary>
+        /// Opens the CDNs and Versions files from Ribbit and the configs from disk
+        /// </summary>
+        public void OpenRemote(string directory)
+        {
+            var ribbit = new Ribbit.RibbitClient(Locale);
+            CDNsFile = new VariableConfig(ribbit.GetStream($"v1/products/{Product}/cdns"), ConfigType.CDNs);
+            VersionsFile = new VariableConfig(ribbit.GetStream($"v1/products/{Product}/versions"), ConfigType.Versions);
+
+            LoadConfigs(directory);
+        }
+
+        /// <summary>
+        /// Loads the Build, CDN and Patch configs
         /// </summary>
         /// <param name="directory"></param>
-        public void Open(string directory, Locale locale)
+        /// <param name="locale"></param>
+        private void LoadConfigs(string directory)
         {
-            // load the primary configs
-            CDNsFile = new VariableConfig(directory, Product, ConfigType.CDNs);
-            VersionsFile = new VariableConfig(directory, Product, ConfigType.Versions);
+            if (VersionsFile == null || CDNsFile == null)
+                throw new Exception("Versions and CDNs files must be loaded first");
 
-            if (!VersionsFile.HasLocale(locale))
-                throw new Exception($"Versions missing {locale} locale");
+            if (!VersionsFile.HasLocale(Locale))
+                throw new Exception($"Versions missing {Locale} locale");
 
-            // set the current locale
-            Locale = locale;
+            if (!BuildConfigMD5.IsEmpty)
+                BuildConfig = new KeyValueConfig(BuildConfigMD5.ToString(), directory, ConfigType.BuildConfig);
 
-            // load the localised configs
-            BuildConfig = new KeyValueConfig(BuildConfigMD5.ToString(), directory, ConfigType.BuildConfig);
-            CDNConfig = new KeyValueConfig(CDNConfigMD5.ToString(), directory, ConfigType.CDNConfig);
-            PatchConfig = new KeyValueConfig(PatchConfigMD5.ToString(), directory, ConfigType.PatchConfig);
+            if (!CDNConfigMD5.IsEmpty)
+                CDNConfig = new KeyValueConfig(CDNConfigMD5.ToString(), directory, ConfigType.CDNConfig);
+
+            if (!PatchConfigMD5.IsEmpty)
+                PatchConfig = new KeyValueConfig(PatchConfigMD5.ToString(), directory, ConfigType.PatchConfig);
         }
 
         /// <summary>

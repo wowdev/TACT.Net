@@ -29,19 +29,15 @@ namespace TACT.Net.Configs
 
         #region Constructors
 
-        private VariableConfig()
-        {
-            _data = new Dictionary<Locale, Dictionary<string, string>>();
-            _localeKey = Type == ConfigType.CDNs ? "Name" : "Region";
-        }
-
         /// <summary>
         /// Creates a new config of <paramref name="type"/>
         /// </summary>
         /// <param name="type"></param>
-        public VariableConfig(ConfigType type) : this()
+        public VariableConfig(ConfigType type)
         {
             Type = type;
+            _data = new Dictionary<Locale, Dictionary<string, string>>();
+            _localeKey = type == ConfigType.CDNs ? "Name" : "Region";
 
             string[] tokens;
             switch (Type)
@@ -72,9 +68,13 @@ namespace TACT.Net.Configs
         /// </summary>
         /// <param name="directory">Root Directory</param>
         /// <param name="type"></param>
-        public VariableConfig(string directory, string product, ConfigType type) : this()
+        public VariableConfig(string directory, ConfigType type)
         {
-            string path = Path.Combine(directory, product, type.ToString());
+            Type = type;
+            _data = new Dictionary<Locale, Dictionary<string, string>>();
+            _localeKey = type == ConfigType.CDNs ? "Name" : "Region";
+
+            string path = Path.Combine(directory, type.ToString());
             if (!File.Exists(path))
                 throw new FileNotFoundException($"Unable to load {type}");
 
@@ -89,9 +89,11 @@ namespace TACT.Net.Configs
         /// </summary>
         /// <param name="stream"></param>
         /// <param name="type"></param>
-        public VariableConfig(Stream stream, ConfigType type) : this()
+        public VariableConfig(Stream stream, ConfigType type)
         {
             Type = type;
+            _data = new Dictionary<Locale, Dictionary<string, string>>();
+            _localeKey = type == ConfigType.CDNs ? "Name" : "Region";
 
             using (var sr = new StreamReader(stream))
                 Read(sr);
