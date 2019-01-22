@@ -148,21 +148,6 @@ namespace TACT.Net.BlockTable
             if (filesize >= 0 && filesize < 20)
                 return new EMap(EType.None, 0);
 
-            // TODO check these
-            // anim
-            // bone
-            // db2
-            // dbc
-            // sig
-            // skel
-            // skin
-            // tex
-            // wdl
-            // wdt
-            // wlm
-            // wlw
-            // zmp
-
             // Blizzard-esque rules
             switch (Path.GetExtension(filename).ToUpperInvariant())
             {
