@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using TACT.Net.BlockTable;
 using TACT.Net.Common;
 using TACT.Net.Common.Cryptography;
@@ -10,9 +11,21 @@ namespace TACT.Net.Archives
     // TODO split this into data, patch and loose containers?
     public class ArchiveContainer : SystemFileBase
     {
-        public List<ArchiveIndex> ArchiveIndices { get; private set; }
+        public IEnumerable<ArchiveIndex> DataIndices
+        {
+            get => _archiveIndices.Where(x => (x.Type & IndexType.Data) == IndexType.Data);
+        }
+        public IEnumerable<ArchiveIndex> LooseIndices
+        {
+            get => _archiveIndices.Where(x => (x.Type & IndexType.Loose) == IndexType.Loose);
+        }
+        public IEnumerable<ArchiveIndex> PatchIndices
+        {
+            get => _archiveIndices.Where(x => (x.Type & IndexType.Patch) == IndexType.Patch);
+        }
 
         private const long ArchiveDataSize = 256000000;
+        private List<ArchiveIndex> _archiveIndices;
         /// <summary>
         /// Files enqueued to be added to a new archive
         /// </summary>
@@ -23,7 +36,7 @@ namespace TACT.Net.Archives
 
         public ArchiveContainer(TACT container = null) : base(container)
         {
-            ArchiveIndices = new List<ArchiveIndex>();
+            _archiveIndices = new List<ArchiveIndex>();
             _fileQueue = new SortedDictionary<MD5Hash, CASRecord>(new HashComparer());
         }
 
@@ -41,7 +54,7 @@ namespace TACT.Net.Archives
 
             var indicies = Directory.EnumerateFiles(directory, "*.index", SearchOption.AllDirectories);
             foreach (var index in indicies)
-                ArchiveIndices.Add(new ArchiveIndex(index));
+                _archiveIndices.Add(new ArchiveIndex(index));
         }
 
         /// <summary>
@@ -70,7 +83,7 @@ namespace TACT.Net.Archives
         /// <returns></returns>
         public BlockTableStreamReader OpenFile(MD5Hash hash)
         {
-            foreach (var index in ArchiveIndices)
+            foreach (var index in _archiveIndices)
             {
                 if (!index.IsGroup && index.TryGet(hash, out var archiveIndexEntry))
                 {
@@ -101,8 +114,8 @@ namespace TACT.Net.Archives
         /// <param name="dispose">Delete old files</param>
         public void Save(string directory, bool dispose = false)
         {
-            // save altered archive indicies
-            foreach (var archiveIndex in ArchiveIndices)
+            // save altered Data archive indicies
+            foreach (var archiveIndex in DataIndices)
             {
                 if (!archiveIndex.IsGroup)
                 {
@@ -130,7 +143,7 @@ namespace TACT.Net.Archives
             }
 
             // reload indicies
-            ArchiveIndices.Clear();
+            _archiveIndices.Clear();
             Open(directory);
         }
 
@@ -143,7 +156,7 @@ namespace TACT.Net.Archives
         public bool TryGet(MD5Hash hash, out ArchiveIndexEntry archiveIndexEntry)
         {
             archiveIndexEntry = null;
-            foreach (var index in ArchiveIndices)
+            foreach (var index in _archiveIndices)
                 if (!index.IsGroup && index.TryGet(hash, out archiveIndexEntry))
                     return true;
 

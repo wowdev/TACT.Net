@@ -90,7 +90,7 @@ namespace TACT.Net.Tests
             // load the archives
             Archives.ArchiveContainer archiveContainer = new Archives.ArchiveContainer(tactInstance);
             archiveContainer.Open(tactInstance.BaseDirectory);
-            Assert.IsTrue(archiveContainer.ArchiveIndices.Count > 0);
+            Assert.IsTrue(archiveContainer.DataIndices.Any());
 
             // open the encoding
             Encoding.EncodingFile encoding = new Encoding.EncodingFile(tactInstance.BaseDirectory, configContainer.EncodingEKey, tactInstance);

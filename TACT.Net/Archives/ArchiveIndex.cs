@@ -16,6 +16,8 @@ namespace TACT.Net.Archives
         public IEnumerable<ArchiveIndexEntry> Entries => _indexEntries.Values;
         public ArchiveIndexFooter IndexFooter { get; private set; }
         public MD5Hash Checksum { get; private set; }
+        public readonly IndexType Type;
+
         public bool IsLoose => IndexFooter.OffsetBytes == 0;
         public bool IsGroup => IndexFooter.OffsetBytes > 4;
 
@@ -45,15 +47,19 @@ namespace TACT.Net.Archives
         {
             using (var fs = File.OpenRead(path))
                 Read(fs);
+
+            Type = DetermineType(Type, path);
         }
 
         /// <summary>
         /// Loads an archive index from a stream
         /// </summary>
         /// <param name="stream"></param>
-        public ArchiveIndex(Stream stream) : this()
+        public ArchiveIndex(Stream stream, IndexType type) : this()
         {
             Read(stream);
+
+            Type = DetermineType(type);
         }
         #endregion
 
@@ -316,5 +322,20 @@ namespace TACT.Net.Archives
         }
         #endregion
 
+        #region Helpers
+
+        private IndexType DetermineType(IndexType type, string path = "")
+        {
+            if(!string.IsNullOrWhiteSpace(path))
+                type |= path.IndexOf("patch", StringComparison.OrdinalIgnoreCase) > -1 ? IndexType.Patch : IndexType.Data;
+            if (IndexFooter.OffsetBytes == 0)
+                type |= IndexType.Loose;
+            if (IndexFooter.OffsetBytes > 4)
+                type |= IndexType.Group;
+
+            return type;
+        }
+
+        #endregion
     }
 }
