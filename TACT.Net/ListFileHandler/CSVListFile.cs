@@ -15,7 +15,7 @@ namespace TACT.Net.ListFileHandler
         private readonly int _idIndex;
 
         private readonly Dictionary<string, uint> _fileLookup;
-        private Func<string, int> IndexOf;
+        private readonly Func<string, int> IndexOf;
 
         public CSVListFile(string filename, int idIndex = 0)
         {
