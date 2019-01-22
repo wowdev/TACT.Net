@@ -18,8 +18,7 @@ namespace TACT.Net.Archives
         public MD5Hash Checksum { get; private set; }
         public readonly IndexType Type;
 
-        public bool IsLoose => IndexFooter.OffsetBytes == 0;
-        public bool IsGroup => IndexFooter.OffsetBytes > 4;
+        internal bool IsGroup => (Type & IndexType.Group) == IndexType.Group;
 
         private readonly SortedList<MD5Hash, ArchiveIndexEntry> _indexEntries;
         private readonly Dictionary<MD5Hash, CASRecord> _newEntries;

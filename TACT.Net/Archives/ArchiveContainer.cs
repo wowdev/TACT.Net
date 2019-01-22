@@ -8,7 +8,6 @@ using TACT.Net.SystemFiles.Shared;
 
 namespace TACT.Net.Archives
 {
-    // TODO split this into data, patch and loose containers?
     public class ArchiveContainer : SystemFileBase
     {
         public IEnumerable<ArchiveIndex> DataIndices
