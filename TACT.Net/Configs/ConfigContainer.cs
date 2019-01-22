@@ -82,7 +82,7 @@ namespace TACT.Net.Configs
         }
 
         /// <summary>
-        /// Opens the CDNs, Versions and configs files from disk
+        /// Opens the CDNs, Versions and config files from disk
         /// </summary>
         /// <param name="cdnverDirectory">Directory containing the CDNs and Versions files</param>
         /// <param name="configDirectory">Directory containing the config files</param>
@@ -95,7 +95,7 @@ namespace TACT.Net.Configs
         }
 
         /// <summary>
-        /// Opens the CDNs and Versions files from Ribbit and the configs from disk
+        /// Opens the CDNs and Versions files from Ribbit and the config files from disk
         /// </summary>
         public void OpenRemote(string directory)
         {

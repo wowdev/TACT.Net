@@ -116,8 +116,6 @@ namespace TACT.Net.Tests
 
             //64318bc48003848f6fb5f1604d314935
 
-
-            
         }
 
         public string ToHex(byte[] barray)
