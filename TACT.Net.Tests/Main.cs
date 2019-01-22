@@ -77,6 +77,40 @@ namespace TACT.Net.Tests
             Assert.IsFalse(configContainer.RootMD5.IsEmpty);
         }
 
+        [TestMethod]
+        public void TestOpenFile()
+        {
+            TACT tactInstance = new TACT(@"D:\Backup\");
+            ConfigContainer configContainer = new ConfigContainer("wowt", Locale.US, tactInstance);
+            configContainer.OpenLocal(tactInstance.BaseDirectory, tactInstance.BaseDirectory);
+
+            Archives.ArchiveContainer archiveContainer = new Archives.ArchiveContainer(tactInstance);
+            archiveContainer.Open(tactInstance.BaseDirectory);
+            Assert.IsTrue(archiveContainer.ArchiveIndices.Count > 0);
+
+            Encoding.EncodingFile encoding = new Encoding.EncodingFile(tactInstance.BaseDirectory, configContainer.EncodingEKey, tactInstance);
+
+            Assert.IsTrue(encoding.TryGetContentEntry(configContainer.RootMD5, out var rootCEntry));
+
+            Root.RootFile root = new Root.RootFile(tactInstance.BaseDirectory, rootCEntry.EKeys.First(), tactInstance);
+
+            var fileEntry = root.Get("world/arttest/boxtest/xyz.m2").FirstOrDefault();
+            Assert.IsNotNull(fileEntry);
+
+            Assert.IsTrue(encoding.TryGetContentEntry(fileEntry.CKey, out var fileEntryCEntry));
+
+            using (var fs = archiveContainer.OpenFile(fileEntryCEntry.EKeys.First()))
+            {
+                Assert.IsNotNull(fs);
+
+                byte[] buffer = new byte[4];
+                fs.Read(buffer);
+
+                // MD21
+                Assert.AreEqual(BitConverter.ToUInt32(buffer), 0x3132444Du);
+            }
+        }
+
 
         [TestMethod]
         public void TestDebugStuff()
