@@ -80,25 +80,35 @@ namespace TACT.Net.Tests
         [TestMethod]
         public void TestOpenFile()
         {
+            // create an instance
             TACT tactInstance = new TACT(@"D:\Backup\");
+
+            // open the configs
             ConfigContainer configContainer = new ConfigContainer("wowt", Locale.US, tactInstance);
             configContainer.OpenLocal(tactInstance.BaseDirectory, tactInstance.BaseDirectory);
 
+            // load the archives
             Archives.ArchiveContainer archiveContainer = new Archives.ArchiveContainer(tactInstance);
             archiveContainer.Open(tactInstance.BaseDirectory);
             Assert.IsTrue(archiveContainer.ArchiveIndices.Count > 0);
 
+            // open the encoding
             Encoding.EncodingFile encoding = new Encoding.EncodingFile(tactInstance.BaseDirectory, configContainer.EncodingEKey, tactInstance);
 
+            // get the root ckey
             Assert.IsTrue(encoding.TryGetContentEntry(configContainer.RootMD5, out var rootCEntry));
 
+            // open the root
             Root.RootFile root = new Root.RootFile(tactInstance.BaseDirectory, rootCEntry.EKeys.First(), tactInstance);
 
+            // try and get a file
             var fileEntry = root.Get("world/arttest/boxtest/xyz.m2").FirstOrDefault();
             Assert.IsNotNull(fileEntry);
 
+            // get the file's contententry
             Assert.IsTrue(encoding.TryGetContentEntry(fileEntry.CKey, out var fileEntryCEntry));
 
+            // open the file from the blobs
             using (var fs = archiveContainer.OpenFile(fileEntryCEntry.EKeys.First()))
             {
                 Assert.IsNotNull(fs);
@@ -106,7 +116,7 @@ namespace TACT.Net.Tests
                 byte[] buffer = new byte[4];
                 fs.Read(buffer);
 
-                // MD21
+                // check for MD21 magic
                 Assert.AreEqual(BitConverter.ToUInt32(buffer), 0x3132444Du);
             }
         }
