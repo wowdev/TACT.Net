@@ -69,6 +69,16 @@ namespace TACT.Net.Encoding
         /// <summary>
         /// Loads an existing EncodingFile
         /// </summary>
+        /// <param name="directory">Base directory</param>
+        /// <param name="hash">Encoding EKey</param>
+        public EncodingFile(string directory, MD5Hash hash, TACT container = null) :
+            this(Helpers.GetCDNPath(hash.ToString(), "data", directory), container)
+        { }
+
+
+        /// <summary>
+        /// Loads an existing EncodingFile
+        /// </summary>
         /// <param name="stream"></param>
         public EncodingFile(BlockTableStreamReader stream, TACT container = null) : this(container)
         {

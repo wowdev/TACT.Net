@@ -17,18 +17,38 @@ namespace TACT.Net.Patch
 
         #region Constructors
 
+        /// <summary>
+        /// Creates a new PatchFile
+        /// </summary>
         public PatchFile(TACT container = null) : base(container)
         {
             PatchHeader = new PatchHeader();
             _PatchEntries = new SortedDictionary<MD5Hash, PatchEntry>(new HashComparer());
         }
 
+        /// <summary>
+        /// Loads an existing PatchFile
+        /// </summary>
+        /// <param name="path">BLTE encoded file path</param>
         public PatchFile(string path, TACT container = null) : this(container)
         {
             using (var fs = File.OpenRead(path))
                 Read(fs);
         }
 
+        /// <summary>
+        /// Loads an existing PatchFile
+        /// </summary>
+        /// <param name="directory">Base directory</param>
+        /// <param name="hash">PatchFile MD5</param>
+        public PatchFile(string directory, MD5Hash hash, TACT container = null) :
+            this(Helpers.GetCDNPath(hash.ToString(), "patch", directory), container)
+        { }
+
+        /// <summary>
+        /// Loads an existing PatchFile
+        /// </summary>
+        /// <param name="stream"></param>
         public PatchFile(Stream stream, TACT container = null) : this(container)
         {
             Read(stream);

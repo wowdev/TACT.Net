@@ -27,6 +27,9 @@ namespace TACT.Net.Root
 
         #region Constructors
 
+        /// <summary>
+        /// Creates a new RootFile
+        /// </summary>
         public RootFile(TACT container = null) : base(container)
         {
             _idLookup = new Dictionary<uint, ulong>();
@@ -43,6 +46,10 @@ namespace TACT.Net.Root
             };
         }
 
+        /// <summary>
+        /// Loads an existing RootFile
+        /// </summary>
+        /// <param name="path">/// <param name="path">BLTE encoded file path</param></param>
         public RootFile(string path, TACT container = null) : base(container)
         {
             _idLookup = new Dictionary<uint, ulong>();
@@ -54,6 +61,19 @@ namespace TACT.Net.Root
                 Read(bt);
         }
 
+        /// <summary>
+        /// Loads an existing RootFile
+        /// </summary>
+        /// <param name="directory">Base directory</param>
+        /// <param name="hash">RootFile MD5</param>
+        public RootFile(string directory, MD5Hash hash, TACT container = null) :
+            this(Helpers.GetCDNPath(hash.ToString(), "data", directory), container)
+        { }
+
+        /// <summary>
+        /// Loads an existing RootFile
+        /// </summary>
+        /// <param name="stream"></param>
         public RootFile(BlockTableStreamReader stream, TACT container = null) : base(container)
         {
             _idLookup = new Dictionary<uint, ulong>();

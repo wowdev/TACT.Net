@@ -23,6 +23,9 @@ namespace TACT.Net.Install
 
         #region Constructors
 
+        /// <summary>
+        /// Creates a new InstallFile
+        /// </summary>
         public InstallFile(TACT container = null) : base(container)
         {
             InstallHeader = new InstallHeader();
@@ -35,6 +38,10 @@ namespace TACT.Net.Install
             };
         }
 
+        /// <summary>
+        /// Loads an existing InstallFile
+        /// </summary>
+        /// <param name="path">BLTE encoded file path</param>
         public InstallFile(string path, TACT container = null) : this(container)
         {
             using (var fs = File.OpenRead(path))
@@ -42,6 +49,19 @@ namespace TACT.Net.Install
                 Read(bt);
         }
 
+        /// <summary>
+        /// Loads an existing InstallFile
+        /// </summary>
+        /// <param name="directory">Base directory</param>
+        /// <param name="hash">InstallFile MD5</param>
+        public InstallFile(string directory, MD5Hash hash, TACT container = null) :
+            this(Helpers.GetCDNPath(hash.ToString(), "data", directory), container)
+        { }
+
+        /// <summary>
+        /// Loads an existing InstallFile
+        /// </summary>
+        /// <param name="stream"></param>
         public InstallFile(BlockTableStreamReader stream, TACT container = null) : this(container)
         {
             Read(stream);

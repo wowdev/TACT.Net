@@ -50,6 +50,15 @@ namespace TACT.Net.Download
         /// <summary>
         /// Loads an existing DownloadSizeFile
         /// </summary>
+        /// <param name="directory">Base directory</param>
+        /// <param name="hash">DownloadSizeFile MD5</param>
+        public DownloadSizeFile(string directory, MD5Hash hash, TACT container = null) :
+            this(Helpers.GetCDNPath(hash.ToString(), "data", directory), container)
+        { }
+
+        /// <summary>
+        /// Loads an existing DownloadSizeFile
+        /// </summary>
         /// <param name="stream"></param>
         public DownloadSizeFile(BlockTableStreamReader stream, TACT container = null) : this(container)
         {
