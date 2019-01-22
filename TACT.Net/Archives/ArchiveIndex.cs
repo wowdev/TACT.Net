@@ -200,6 +200,8 @@ namespace TACT.Net.Archives
 
             // load the previous blob to copy data from
             FileStream blob = null;
+            long blobLength = 0;
+
             if (!Checksum.IsEmpty)
             {
                 if (!File.Exists(prevBlob))
@@ -213,6 +215,7 @@ namespace TACT.Net.Archives
                 }
 
                 blob = File.OpenRead(prevBlob);
+                blobLength = blob.Length;
             }
 
             // create the new file
@@ -229,7 +232,7 @@ namespace TACT.Net.Archives
                         record.WriteTo(fs);
                         fs.Flush();
                     }
-                    else if (blob != null)
+                    else if (blobLength > entry.Offset)
                     {
                         // copy data from the old blob
                         blob.Position = entry.Offset;
