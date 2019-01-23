@@ -326,7 +326,7 @@ namespace TACT.Net.Archives
         private IndexType DetermineType(IndexType type, string path = "")
         {
             if(!string.IsNullOrWhiteSpace(path))
-                type |= path.IndexOf("patch", StringComparison.OrdinalIgnoreCase) > -1 ? IndexType.Patch : IndexType.Data;
+                type |= Helpers.PathContainsDirectory(path, "patch") ? IndexType.Patch : IndexType.Data;
             if (IndexFooter.OffsetBytes == 0)
                 type |= IndexType.Loose;
             if (IndexFooter.OffsetBytes > 4)

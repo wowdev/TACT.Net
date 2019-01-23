@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 
 namespace TACT.Net.Common.ZLib
 {
-    public class ZLibStream : Stream
+    public sealed class ZLibStream : Stream
     {
         #region Fields
 
@@ -352,25 +352,4 @@ namespace TACT.Net.Common.ZLib
             }
         }
     }
-
-    //public class ZLibStream : DeflateStream
-    //{
-    //    private readonly ZLibWriteType _writeType = ZLibWriteType.ZLib;
-    //    private readonly ZLibOpenType _openType = ZLibOpenType.ZLib;
-
-    //    public ZLibStream(Stream stream, ZLibMode mode, bool leaveOpen = false) : base(stream, mode, leaveOpen) { }
-    //    public ZLibStream(Stream stream, ZLibMode mode, ZLibCompLevel level, ZLibWriteType writeType = ZLibWriteType.ZLib, bool leaveOpen = false)
-    //        : base(stream, mode, level, leaveOpen)
-    //    {
-    //        _writeType = writeType;
-    //    }
-    //    public ZLibStream(Stream stream, ZLibMode mode, ZLibCompLevel level, ZLibOpenType openType = ZLibOpenType.ZLib, bool leaveOpen = false)
-    //        : base(stream, mode, level, leaveOpen)
-    //    {
-    //        _openType = openType;
-    //    }
-
-    //    protected override ZLibOpenType OpenType => _openType;
-    //    protected override ZLibWriteType WriteType => _writeType;
-    //}
 }
