@@ -69,13 +69,13 @@ namespace TACT.Net.Common
             return BitConverter.ToUInt64(buffer);
         }
 
-        public static T[] ReadStructArray<T>(this BinaryReader reader, int count) where T : struct
+        public static Span<T> ReadStructArray<T>(this BinaryReader reader, int count) where T : struct
         {
             if (count <= 0)
                 return new T[0];
 
             byte[] buffer = reader.ReadBytes(count * Marshal.SizeOf<T>());
-            return MemoryMarshal.Cast<byte, T>(buffer).ToArray();
+            return MemoryMarshal.Cast<byte, T>(buffer);
         }
 
         public static string ReadCString(this BinaryReader reader)
@@ -107,8 +107,7 @@ namespace TACT.Net.Common
             if (!objs.Any())
                 return;
 
-            var buffer = MemoryMarshal.Cast<T, byte>(objs.ToArray());
-            writer.Write(buffer);
+            writer.Write(MemoryMarshal.AsBytes<T>(objs.ToArray()));
         }
 
         public static void WriteCString(this BinaryWriter writer, string value)
