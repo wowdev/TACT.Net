@@ -39,7 +39,7 @@ namespace TACT.Net.BlockTable
         public void AddBlock(EMap blockencoding, int blockindex = -1)
         {
             // lock the previous substream
-            if (_blocks.Count > 1)
+            if (_blocks.Count > 0)
                 _blocks[_curIndex].Lock();
 
             // compute the new index

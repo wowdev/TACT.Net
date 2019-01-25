@@ -140,6 +140,9 @@ namespace TACT.Net.BlockTable
         /// <param name="md5"></param>
         public void MD5(MD5 md5)
         {
+            if (_finalised)
+                return;
+
             Position = 0;
 
             // pre-LOH magic number

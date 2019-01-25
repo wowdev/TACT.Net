@@ -124,7 +124,7 @@ namespace TACT.Net.Encoding
         /// <returns></returns>
         public CASRecord Write(string directory)
         {
-            RebuildLookups();
+            //RebuildLookups();
 
             EBlock[] eblocks = new EBlock[_EncodingMap.Length];
 
@@ -134,6 +134,7 @@ namespace TACT.Net.Encoding
             {
                 // ESpecStringTable 1
                 bt.Write(string.Join('\0', ESpecStringTable).GetBytes());
+                EncodingHeader.ESpecTableSize = (uint)bt.Length;
 
                 // CKeysPageIndices 2, CKeysPageTable 3
                 WritePage(bw, eblocks, 2, EncodingHeader.CKeyPageSize << 10, _CKeyEntries);
