@@ -47,6 +47,7 @@ namespace TACT.Net.Tests
 
             ckey = "e792910ee5d0c50dd89fc48562a4b80a";
             Download.DownloadFile downloadFile = new Download.DownloadFile(Path.Combine(PATH, "64318bc48003848f6fb5f1604d314935"));
+            downloadFile.DownloadHeader.IncludeChecksum = true;
             Assert.AreEqual(ckey, downloadFile.Write("test").CKey.ToString());
 
             ckey = "a6173b06ed490cdc8c94b7c2a521278d";

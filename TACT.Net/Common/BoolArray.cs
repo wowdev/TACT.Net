@@ -56,7 +56,8 @@ namespace TACT.Net.Common
             byte[] bytes = new byte[(_values.Count + 7) / 8];
 
             for (int i = 0; i < _values.Count; i++)
-                bytes[i / 8] |= (byte)(1 << (7 - (i % 8)));
+                if (_values[i])
+                    bytes[i / 8] |= (byte)(1 << (7 - (i % 8)));
 
             return bytes;
         }

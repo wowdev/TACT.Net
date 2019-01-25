@@ -12,7 +12,7 @@ namespace TACT.Net.Download
         public new ulong CompressedSize;
         /// <summary>
         /// Download priority after DownloadHeader priority is subtracted
-        /// <para>0 = highest, 2 = lowest</para>
+        /// <para>0 = highest, 2 = lowest. -1 for InstallFile since BfA</para>
         /// </summary>
         public sbyte Priority;
         /// <summary>
@@ -45,8 +45,7 @@ namespace TACT.Net.Download
             bw.Write(EKey.Value);
             bw.WriteUInt40BE(CompressedSize);
 
-            byte priority = (byte)(Priority + header.BasePriority);
-            bw.Write(priority < 0 ? (byte)0 : priority);
+            bw.Write((sbyte)(Priority + header.BasePriority));
 
             if (header.IncludeChecksum)
                 bw.WriteUInt32BE(Checksum);

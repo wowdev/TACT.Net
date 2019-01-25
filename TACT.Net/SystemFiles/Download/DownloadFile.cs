@@ -85,6 +85,9 @@ namespace TACT.Net.Download
                 // Tags
                 ReadTags(br, DownloadHeader.TagCount, DownloadHeader.EntryCount);
 
+                // HACK do we know what this is?
+                DownloadHeader.IncludeChecksum = false;
+
                 // store checksum
                 Checksum = stream.MD5Hash();
             }
@@ -102,8 +105,6 @@ namespace TACT.Net.Download
             using (var bw = new BinaryWriter(bt))
             {
                 // Header
-                // HACK do we know what this is?
-                DownloadHeader.IncludeChecksum = false;
                 DownloadHeader.EntryCount = (uint)_FileEntries.Count;
                 DownloadHeader.TagCount = (ushort)_TagEntries.Count;
                 DownloadHeader.Write(bw);
