@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace TACT.Net.Indicies
+namespace TACT.Net.Indices
 {
     [Flags]
     public enum IndexType

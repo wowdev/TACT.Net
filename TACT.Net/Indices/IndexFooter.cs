@@ -3,7 +3,7 @@ using System.Security.Cryptography;
 using TACT.Net.Common;
 using TACT.Net.Common.Cryptography;
 
-namespace TACT.Net.Indicies
+namespace TACT.Net.Indices
 {
     public sealed class IndexFooter
     {

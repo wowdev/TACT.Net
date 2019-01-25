@@ -3,7 +3,7 @@ using System.IO;
 using TACT.Net.Common;
 using TACT.Net.Common.Cryptography;
 
-namespace TACT.Net.Indicies
+namespace TACT.Net.Indices
 {
     [Serializable]
     public sealed class IndexEntry

@@ -135,10 +135,10 @@ namespace TACT.Net.Encoding
                 // ESpecStringTable 1
                 bt.Write(string.Join('\0', ESpecStringTable).GetBytes());
 
-                // CKeysPageIndicies 2, CKeysPageTable 3
+                // CKeysPageIndices 2, CKeysPageTable 3
                 WritePage(bw, eblocks, 2, EncodingHeader.CKeyPageSize << 10, _CKeyEntries);
 
-                // EKeysPageIndicies 4, EKeysPageTable 5
+                // EKeysPageIndices 4, EKeysPageTable 5
                 WritePage(bw, eblocks, 4, EncodingHeader.EKeyPageSize << 10, _EKeyEntries);
 
                 // Header 0

@@ -6,7 +6,7 @@ using TACT.Net.Common;
 using TACT.Net.Common.Cryptography;
 using TACT.Net.SystemFiles.Shared;
 
-namespace TACT.Net.Indicies
+namespace TACT.Net.Indices
 {
     public class IndexContainer : SystemFileBase
     {
@@ -53,19 +53,19 @@ namespace TACT.Net.Indicies
         {
             _sourceDirectory = directory;
 
-            var indicies = Directory.EnumerateFiles(directory, "*.index", SearchOption.AllDirectories);
-            foreach (var index in indicies)
+            var indices = Directory.EnumerateFiles(directory, "*.index", SearchOption.AllDirectories);
+            foreach (var index in indices)
                 _indices.Add(new IndexFile(index));
         }
 
         /// <summary>
-        /// Updates modified data indicies and writes enqueued files to archives
+        /// Updates modified data indices and writes enqueued files to archives
         /// </summary>
         /// <param name="directory"></param>
         /// <param name="dispose">Delete old files</param>
         public void Save(string directory, bool dispose = false)
         {
-            // save altered Data archive indicies
+            // save altered Data archive indices
             foreach (var index in DataIndices)
             {
                 if (!index.IsGroupIndex)
@@ -83,7 +83,7 @@ namespace TACT.Net.Indicies
                 }
             }
 
-            // create any new archive indicies
+            // create any new archive indices
             var partitions = EnumerablePartitioner.ConcreteBatch(_fileQueue.Values, ArchiveDataSize, (x) => x.EBlock.CompressedSize);
             foreach (var entries in partitions)
             {
@@ -93,7 +93,7 @@ namespace TACT.Net.Indicies
                 index.WriteBlob(directory);
             }
 
-            // reload indicies
+            // reload indices
             _indices.Clear();
             Open(directory);
         }
