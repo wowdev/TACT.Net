@@ -5,7 +5,7 @@ using System.Security.Cryptography;
 using TACT.Net.BlockTable;
 using TACT.Net.Common;
 using TACT.Net.Common.Cryptography;
-using TACT.Net.SystemFiles.Shared;
+using TACT.Net.SystemFiles;
 
 namespace TACT.Net.Encoding
 {

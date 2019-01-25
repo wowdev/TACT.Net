@@ -4,7 +4,7 @@ using System.IO;
 using TACT.Net.BlockTable;
 using TACT.Net.Common;
 using TACT.Net.Common.Cryptography;
-using TACT.Net.Shared.Tags;
+using TACT.Net.Tags;
 
 namespace TACT.Net.Install
 {

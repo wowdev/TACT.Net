@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace TACT.Net.Shared.Tags
+namespace TACT.Net.Tags
 {
     internal static class TagTypeHelper
     {

@@ -6,7 +6,7 @@ using TACT.Net.Common;
 using TACT.Net.Common.Cryptography;
 using TACT.Net.Encoding;
 using TACT.Net.ListFileHandler;
-using TACT.Net.SystemFiles.Shared;
+using TACT.Net.SystemFiles;
 
 namespace TACT.Net.Root
 {

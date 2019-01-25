@@ -3,7 +3,6 @@ using System.Linq;
 using TACT.Net.BlockTable;
 using TACT.Net.Common;
 using TACT.Net.Common.Cryptography;
-using TACT.Net.Shared.DownloadFile;
 
 namespace TACT.Net.Download
 {

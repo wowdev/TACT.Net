@@ -1,6 +1,6 @@
 ﻿using TACT.Net.Common.Cryptography;
 
-namespace TACT.Net.Shared.DownloadFile
+namespace TACT.Net.Download
 {
     public interface IDownloadFileEntry
     {

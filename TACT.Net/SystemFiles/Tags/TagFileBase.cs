@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using TACT.Net.Common;
-using TACT.Net.SystemFiles.Shared;
+using TACT.Net.SystemFiles;
 
-namespace TACT.Net.Shared.Tags
+namespace TACT.Net.Tags
 {
     public class TagFileBase : SystemFileBase
     {

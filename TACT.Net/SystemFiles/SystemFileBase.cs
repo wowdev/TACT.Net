@@ -1,4 +1,4 @@
-﻿namespace TACT.Net.SystemFiles.Shared
+﻿namespace TACT.Net.SystemFiles
 {
     public class SystemFileBase
     {

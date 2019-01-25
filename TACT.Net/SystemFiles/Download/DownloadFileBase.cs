@@ -2,9 +2,9 @@
 using System.IO;
 using TACT.Net.Common;
 using TACT.Net.Common.Cryptography;
-using TACT.Net.Shared.Tags;
+using TACT.Net.Tags;
 
-namespace TACT.Net.Shared.DownloadFile
+namespace TACT.Net.Download
 {
     public abstract class DownloadFileBase<T> : TagFileBase where T : IDownloadFileEntry
     {

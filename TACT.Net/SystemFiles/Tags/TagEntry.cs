@@ -1,7 +1,7 @@
 ﻿using System.IO;
 using TACT.Net.Common;
 
-namespace TACT.Net.Shared.Tags
+namespace TACT.Net.Tags
 {
     public class TagEntry
     {

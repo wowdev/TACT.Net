@@ -4,12 +4,16 @@ using TACT.Net.Common.Cryptography;
 
 namespace TACT.Net.Download
 {
-    public class DownloadFileEntry : DownloadSizeFileEntry
+    public class DownloadFileEntry : IDownloadFileEntry
     {
+        /// <summary>
+        /// Encoding Key
+        /// </summary>
+        public MD5Hash EKey { get; set; }
         /// <summary>
         /// Encoded file size
         /// </summary>
-        public new ulong CompressedSize;
+        public ulong CompressedSize;
         /// <summary>
         /// Download priority after DownloadHeader priority is subtracted
         /// <para>0 = highest, 2 = lowest. -1 for InstallFile since BfA</para>
