@@ -38,12 +38,30 @@ namespace TACT.Net.BlockTable
             }
         }
 
+        #region Constructors
+
+        public BlockTableStreamReader(string filename)
+        {
+            stream = File.OpenRead(filename);
+            reader = new BinaryReader(stream);
+            Parse();
+        }
+
         public BlockTableStreamReader(Stream src)
         {
             stream = src;
             reader = new BinaryReader(src);
             Parse();
         }
+
+        public BlockTableStreamReader(byte[] data)
+        {
+            stream = new MemoryStream(data);
+            reader = new BinaryReader(stream);
+            Parse();
+        }
+
+        #endregion
 
         #region Parsing
 

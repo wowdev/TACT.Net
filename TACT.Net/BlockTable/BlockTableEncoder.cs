@@ -131,6 +131,60 @@ namespace TACT.Net.BlockTable
 
         #endregion
 
+        #region Decode and Export
+
+        /// <summary>
+        /// Decodes a byte array and saves the result to disk
+        /// </summary>
+        /// <param name="filepath"></param>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        public static void DecodeAndExport(string filepath, byte[] data)
+        {
+            using (var bt = new BlockTableStreamReader(data))
+            using (var fs = File.Create(filepath))
+            {
+                bt.Position = 0;
+                bt.CopyTo(fs);
+            }
+        }
+
+        /// <summary>
+        /// Decodes a file and saves the result to disk
+        /// </summary>
+        /// <param name="directory"></param>
+        /// <param name="filename"></param>
+        /// <returns></returns>
+        public static void DecodeAndExport(string filepath, string filename)
+        {
+            using (var bt = new BlockTableStreamReader(filename))
+            using (var fs = File.Create(filepath))
+            {
+                bt.Position = 0;
+                bt.CopyTo(fs);
+            }
+        }
+
+        /// <summary>
+        /// Decodes a stream and saves the result to disk
+        /// </summary>
+        /// <param name="directory"></param>
+        /// <param name="stream"></param>
+        /// <param name="encodingmap"></param>
+        /// <returns></returns>
+        public static void DecodeAndExport(string filepath, Stream stream)
+        {
+            using (var bt = new BlockTableStreamReader(stream))
+            using (var fs = File.Create(filepath))
+            {
+                bt.Position = 0;
+                bt.CopyTo(fs);
+            }
+                
+        }
+
+        #endregion
+
         #region Helpers
 
         /// <summary>
