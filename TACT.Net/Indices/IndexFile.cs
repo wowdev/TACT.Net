@@ -179,7 +179,7 @@ namespace TACT.Net.Indices
                     File.WriteAllBytes(saveLocation, ms.ToArray());
 
                     // update the CDN Config
-                    if (container.TryResolve<Configs.ConfigContainer>(out var configContainer))
+                    if (container != null && container.TryResolve<Configs.ConfigContainer>(out var configContainer))
                     {
                         var archives = configContainer.CDNConfig?.GetValues("archives");
                         if (archives != null)
