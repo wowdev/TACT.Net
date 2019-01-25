@@ -3,9 +3,9 @@ using System.Security.Cryptography;
 using TACT.Net.Common;
 using TACT.Net.Common.Cryptography;
 
-namespace TACT.Net.Archives
+namespace TACT.Net.Indicies
 {
-    public sealed class ArchiveIndexFooter
+    public sealed class IndexFooter
     {
         /// <summary>
         /// Hash of the last page of entries
@@ -24,14 +24,14 @@ namespace TACT.Net.Archives
         public byte PageSizeKB = 4;
         /// <summary>
         /// Size of Entry Offset and Index
-        /// <para>0 = loosefile, 4 = blob offset, 6 = blob offset and archive index</para>
+        /// <para>0 = loosefile, 4 = blob offset, 6 = blob offset and ordinal</para>
         /// </summary>
         public byte OffsetBytes = 4;
         /// <summary>
-        /// Size of ArchiveIndexEntry's CompressedSize field
+        /// Size of IndexEntry's CompressedSize field
         /// </summary>
         public byte CompressedSizeBytes = 4;
-        public byte EKeySize { get; private set; } = 16;
+        public byte KeySize { get; private set; } = 16;
         public byte ChecksumSize { get; private set; } = 8;
         public uint EntryCount;
         /// <summary>
@@ -40,6 +40,7 @@ namespace TACT.Net.Archives
         public MD5Hash FooterChecksum;
 
         #region IO
+
         public void Read(BinaryReader br)
         {
             // TODO checksum size check
@@ -53,7 +54,7 @@ namespace TACT.Net.Archives
             PageSizeKB = br.ReadByte();
             OffsetBytes = br.ReadByte();
             CompressedSizeBytes = br.ReadByte();
-            EKeySize = br.ReadByte();
+            KeySize = br.ReadByte();
             ChecksumSize = br.ReadByte();
             EntryCount = br.ReadUInt32();
             FooterChecksum = new MD5Hash(br.ReadBytes(8));
@@ -71,7 +72,7 @@ namespace TACT.Net.Archives
                 writer.Write(PageSizeKB);
                 writer.Write(OffsetBytes);
                 writer.Write(CompressedSizeBytes);
-                writer.Write(EKeySize);
+                writer.Write(KeySize);
                 writer.Write(ChecksumSize);
                 writer.Write(EntryCount);
                 writer.Write(new byte[8]);
@@ -88,6 +89,7 @@ namespace TACT.Net.Archives
         }
 
         public int Size => 12 + (ChecksumSize * 3);
+
         #endregion
     }
 }

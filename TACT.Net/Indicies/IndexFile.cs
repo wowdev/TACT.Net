@@ -6,43 +6,44 @@ using System.Security.Cryptography;
 using TACT.Net.Common;
 using TACT.Net.Common.Cryptography;
 
-namespace TACT.Net.Archives
+namespace TACT.Net.Indicies
 {
     /// <summary>
     /// A lookup file containing location details for files within the data blobs
     /// </summary>
-    public class ArchiveIndex
+    public class IndexFile
     {
-        public IEnumerable<ArchiveIndexEntry> Entries => _indexEntries.Values;
-        public ArchiveIndexFooter IndexFooter { get; private set; }
+        public IEnumerable<IndexEntry> Entries => _indexEntries.Values;
+        public IndexFooter IndexFooter { get; private set; }
         public MD5Hash Checksum { get; private set; }
         public readonly IndexType Type;
 
-        internal bool IsGroup => (Type & IndexType.Group) == IndexType.Group;
+        internal bool IsGroupIndex => (Type & IndexType.Group) == IndexType.Group;
+        internal bool IsPatchIndex => (Type & IndexType.Patch) == IndexType.Patch;
 
-        private readonly SortedList<MD5Hash, ArchiveIndexEntry> _indexEntries;
+        private readonly SortedList<MD5Hash, IndexEntry> _indexEntries;
         private readonly Dictionary<MD5Hash, CASRecord> _newEntries;
         private ulong _currentOffset;
 
         #region Constructors
 
         /// <summary>
-        /// Creates a new archive index
+        /// Creates a new IndexFile
         /// </summary>
-        public ArchiveIndex()
+        public IndexFile()
         {
-            _indexEntries = new SortedList<MD5Hash, ArchiveIndexEntry>(new HashComparer());
+            _indexEntries = new SortedList<MD5Hash, IndexEntry>(new HashComparer());
             _newEntries = new Dictionary<MD5Hash, CASRecord>();
 
             Checksum = new MD5Hash(new byte[0]);
-            IndexFooter = new ArchiveIndexFooter();
+            IndexFooter = new IndexFooter();
         }
 
         /// <summary>
-        /// Loads an archive index from a filepath
+        /// Loads an IndexFile from a filepath
         /// </summary>
         /// <param name="path"></param>
-        public ArchiveIndex(string path) : this()
+        public IndexFile(string path) : this()
         {
             using (var fs = File.OpenRead(path))
                 Read(fs);
@@ -51,10 +52,10 @@ namespace TACT.Net.Archives
         }
 
         /// <summary>
-        /// Loads an archive index from a stream
+        /// Loads an IndexFile from a stream
         /// </summary>
         /// <param name="stream"></param>
-        public ArchiveIndex(Stream stream, IndexType type) : this()
+        public IndexFile(Stream stream, IndexType type) : this()
         {
             Read(stream);
 
@@ -81,10 +82,10 @@ namespace TACT.Net.Archives
                 {
                     for (int b = 0; b < entriesPerPage; b++)
                     {
-                        var entry = new ArchiveIndexEntry();
+                        var entry = new IndexEntry();
                         entry.Read(br, IndexFooter);
-                        if (!entry.EKey.IsEmpty)
-                            _indexEntries[entry.EKey] = entry;
+                        if (!entry.Key.IsEmpty)
+                            _indexEntries[entry.Key] = entry;
                     }
 
                     stream.Seek(pageSize - (stream.Position % pageSize), SeekOrigin.Current);
@@ -103,11 +104,15 @@ namespace TACT.Net.Archives
         }
 
         /// <summary>
-        /// Saves the archive index
+        /// Saves the IndexFile
         /// </summary>
         /// <param name="directory"></param>
         public void Write(string directory, TACT container = null)
         {
+            // TODO patch index writing
+            if (IsPatchIndex || Type == IndexType.Unknown)
+                throw new NotImplementedException();
+
             List<MD5Hash> EKeyLookupHashes = new List<MD5Hash>();
             List<MD5Hash> PageChecksums = new List<MD5Hash>();
 
@@ -137,7 +142,7 @@ namespace TACT.Net.Archives
 
                     // apply padding and store EKey and page checksum
                     ms.Write(new byte[pageSize - (bw.BaseStream.Position % pageSize)]);
-                    EKeyLookupHashes.Add(_indexEntries.Values[index - 1].EKey);
+                    EKeyLookupHashes.Add(_indexEntries.Values[index - 1].Key);
                     PageChecksums.Add(ms.HashSlice(md5, bw.BaseStream.Position - pageSize, pageSize, IndexFooter.ChecksumSize));
                 }
 
@@ -231,7 +236,7 @@ namespace TACT.Net.Archives
                 {
                     fs.Position = entry.Offset;
 
-                    if (_newEntries.TryGetValue(entry.EKey, out var record))
+                    if (_newEntries.TryGetValue(entry.Key, out var record))
                     {
                         // append new entries
                         record.WriteTo(fs);
@@ -259,17 +264,17 @@ namespace TACT.Net.Archives
         /// <param name="record"></param>
         public void Add(CASRecord record)
         {
-            var entry = new ArchiveIndexEntry()
+            var entry = new IndexEntry()
             {
-                EKey = record.EKey,
+                Key = IsPatchIndex ? record.CKey : record.EKey,
                 CompressedSize = record.EBlock.CompressedSize,
                 Offset = (uint)_currentOffset
             };
 
             _currentOffset += record.EBlock.CompressedSize;
 
-            _indexEntries[entry.EKey] = entry;
-            _newEntries[entry.EKey] = record;
+            _indexEntries[entry.Key] = entry;
+            _newEntries[entry.Key] = record;
         }
 
         /// <summary>
@@ -283,14 +288,14 @@ namespace TACT.Net.Archives
         }
 
         /// <summary>
-        /// Returns an ArchiveIndexEntry from the collection if it exists
+        /// Returns an IndexEntry from the collection if it exists
         /// </summary>
         /// <param name="hash"></param>
-        /// <param name="archiveIndexEntry"></param>
+        /// <param name="indexEntry"></param>
         /// <returns></returns>
-        public bool TryGet(MD5Hash hash, out ArchiveIndexEntry archiveIndexEntry)
+        public bool TryGet(MD5Hash hash, out IndexEntry indexEntry)
         {
-            return _indexEntries.TryGetValue(hash, out archiveIndexEntry);
+            return _indexEntries.TryGetValue(hash, out indexEntry);
         }
 
         /// <summary>

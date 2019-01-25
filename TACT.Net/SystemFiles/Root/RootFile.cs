@@ -194,7 +194,7 @@ namespace TACT.Net.Root
             if (Container != null)
             {
                 Container.Resolve<EncodingFile>()?.AddOrUpdate(record);
-                Container.Resolve<Archives.ArchiveContainer>()?.Enqueue(record);
+                Container.Resolve<Indicies.IndexContainer>()?.Enqueue(record);
                 Container.Resolve<Download.DownloadFile>()?.AddOrUpdate(record, 2);
                 Container.Resolve<Download.DownloadSizeFile>()?.AddOrUpdate(record);
             }
@@ -391,7 +391,7 @@ namespace TACT.Net.Root
         {
             if (Container != null && Container.TryResolve<EncodingFile>(out var encodingFile))
                 if (encodingFile.TryGetContentEntry(rootRecord.CKey, out EncodingContentEntry encodingCKey) && encodingCKey.EKeys.Count > 0)
-                    if (Container.TryResolve<Archives.ArchiveContainer>(out var archiveContainer))
+                    if (Container.TryResolve<Indicies.IndexContainer>(out var archiveContainer))
                         return archiveContainer.OpenFile(encodingCKey.EKeys.First());
 
             return null;

@@ -29,7 +29,7 @@ namespace TACT.Net.Tests
         public void TestCKeys()
         {
             string ckey = "0052ea9a56fd7b3b6fe7d1d906e6cdef";
-            Archives.ArchiveIndex index = new Archives.ArchiveIndex(Path.Combine(PATH, "0052ea9a56fd7b3b6fe7d1d906e6cdef.index"));
+            Indicies.IndexFile index = new Indicies.IndexFile(Path.Combine(PATH, "0052ea9a56fd7b3b6fe7d1d906e6cdef.index"));
             index.Write("test");
             Assert.AreEqual(ckey, index.Checksum.ToString());
 
@@ -88,7 +88,7 @@ namespace TACT.Net.Tests
             configContainer.OpenLocal(tactInstance.BaseDirectory, tactInstance.BaseDirectory);
 
             // load the archives
-            Archives.ArchiveContainer archiveContainer = new Archives.ArchiveContainer(tactInstance);
+            Indicies.IndexContainer archiveContainer = new Indicies.IndexContainer(tactInstance);
             archiveContainer.Open(tactInstance.BaseDirectory);
             Assert.IsTrue(archiveContainer.DataIndices.Any());
 
