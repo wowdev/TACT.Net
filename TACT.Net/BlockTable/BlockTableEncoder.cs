@@ -180,7 +180,7 @@ namespace TACT.Net.BlockTable
                 bt.Position = 0;
                 bt.CopyTo(fs);
             }
-                
+
         }
 
         #endregion

@@ -330,7 +330,7 @@ namespace TACT.Net.Indices
 
         private IndexType DetermineType(IndexType type, string path = "")
         {
-            if(!string.IsNullOrWhiteSpace(path))
+            if (!string.IsNullOrWhiteSpace(path))
                 type |= Helpers.PathContainsDirectory(path, "patch") ? IndexType.Patch : IndexType.Data;
             if (IndexFooter.OffsetBytes == 0)
                 type |= IndexType.Loose;

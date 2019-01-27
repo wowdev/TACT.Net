@@ -30,7 +30,7 @@ namespace TACT.Net.Indices
         /// </summary>
         private readonly SortedDictionary<MD5Hash, CASRecord> _fileQueue;
 
-        private List<IndexFile> _indices;        
+        private List<IndexFile> _indices;
         private string _sourceDirectory;
 
         #region Constructors
@@ -149,7 +149,7 @@ namespace TACT.Net.Indices
 
             return null;
         }
- 
+
         /// <summary>
         /// Returns an IndexEntry from the collection if it exists
         /// </summary>
