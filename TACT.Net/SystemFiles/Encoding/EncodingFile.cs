@@ -413,6 +413,7 @@ namespace TACT.Net.Encoding
             // TODO need to revisit this
             // do something about broken CKeyEntries links - throw ex?
             // should this check if the Root entry counterpart exists and delete from the archives?
+            // should this be moved to a general "Clean TACT" function that checks for all broken joins/unused files?
 
             // remove entries that are x-ref to missing keys
             var eKeys = _EKeyEntries.Keys.ToHashSet();

@@ -157,8 +157,7 @@ namespace TACT.Net.Download
                 CompressedSize = record.EBlock.CompressedSize,
                 Flags = new byte[DownloadHeader.FlagSize],
                 Priority = priority,
-                // TODO do we know what this is?
-                //Checksum = 0 
+                Checksum = 0 // TODO do we know what this is?
             };
 
             AddOrUpdate(entry, tags);
