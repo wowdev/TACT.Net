@@ -110,7 +110,7 @@ namespace TACT.Net.Indices
         public void Write(string directory, TACT container = null)
         {
             // TODO patch index writing
-            if (IsPatchIndex || Type == IndexType.Unknown)
+            if (IsPatchIndex || IsGroupIndex || Type == IndexType.Unknown)
                 throw new NotImplementedException();
 
             List<MD5Hash> EKeyLookupHashes = new List<MD5Hash>();
@@ -179,18 +179,7 @@ namespace TACT.Net.Indices
                     File.WriteAllBytes(saveLocation, ms.ToArray());
 
                     // update the CDN Config
-                    if (container != null && container.TryResolve<Configs.ConfigContainer>(out var configContainer))
-                    {
-                        var archives = configContainer.CDNConfig?.GetValues("archives");
-                        if (archives != null)
-                        {
-                            archives.Remove(Checksum.ToString());
-                            archives.Add(fileHash.ToString());
-                            archives.Sort(new HashComparer());
-                        }
-
-                        // TODO archives-index-size once the size is known
-                    }
+                    UpdateConfig(container, fileHash);
 
                     // store the new checksum
                     Checksum = fileHash;
@@ -206,6 +195,10 @@ namespace TACT.Net.Indices
         /// <param name="prevBlob"></param>
         public void WriteBlob(string directory, string prevBlob = "")
         {
+            // TODO patch blob writing
+            if (IsPatchIndex || IsGroupIndex || Type == IndexType.Unknown)
+                throw new NotImplementedException();
+
             string saveLocation = Helpers.GetCDNPath(Checksum.ToString(), "data", directory, true);
 
             // load the previous blob to copy data from
@@ -338,6 +331,31 @@ namespace TACT.Net.Indices
                 type |= IndexType.Group;
 
             return type;
+        }
+
+        private void UpdateConfig(TACT container, MD5Hash hash)
+        {
+            if (container == null)
+                return;
+
+            string identifier;
+            if ((Type & IndexType.Loose) == IndexType.Loose)
+                identifier = IsPatchIndex ? "patch-file-index" : "file-index";
+            else
+                identifier = IsPatchIndex ? "patch-archives" : "archives";
+
+            if (container.TryResolve<Configs.ConfigContainer>(out var configContainer))
+            {
+                var collection = configContainer.CDNConfig?.GetValues(identifier);
+                if (collection != null)
+                {
+                    collection.Remove(Checksum.ToString());
+                    collection.Add(hash.ToString());
+                    collection.Sort(new HashComparer());
+                }
+
+                // TODO sizes - not sure how these are calculated
+            }
         }
 
         #endregion
