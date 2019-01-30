@@ -165,11 +165,23 @@ namespace TACT.Net.Common
             return -1;
         }
 
+        /// <summary>
+        /// Sugar syntax string to byte array with optional encoding
+        /// </summary>
+        /// <param name="str"></param>
+        /// <param name="encoding"></param>
+        /// <returns></returns>
         public static byte[] GetBytes(this string str, string encoding = "UTF-8")
         {
             return System.Text.Encoding.GetEncoding(encoding).GetBytes(str);
         }
 
+        /// <summary>
+        /// Copies a specific length of one stream to another from the current offset
+        /// </summary>
+        /// <param name="stream"></param>
+        /// <param name="destination"></param>
+        /// <param name="length"></param>
         public static void PartialCopyTo(this Stream stream, Stream destination, long length)
         {
             // pre-LOH magic number
