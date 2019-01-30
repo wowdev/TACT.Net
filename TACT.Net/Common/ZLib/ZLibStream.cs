@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 
 namespace TACT.Net.Common.ZLib
 {
-    public sealed class ZLibStream : Stream
+    internal sealed class ZLibStream : Stream
     {
         #region Fields
 

@@ -19,7 +19,7 @@ namespace TACT.Net.Common.ZLib
     /// Return codes for the compression/decompression functions.
     /// Negative values are errors, positive values are used for special but normal events.
     /// </summary>
-    public enum ZLibReturnCode
+    internal enum ZLibReturnCode
     {
         OK = 0,
         STREAM_END = 1,
@@ -32,7 +32,7 @@ namespace TACT.Net.Common.ZLib
         VERSION_ERROR = -6,
     }
 
-    public enum ZLibCompLevel : int
+    internal enum ZLibCompLevel : int
     {
         Default = -1,
         NoCompression = 0,
@@ -67,7 +67,7 @@ namespace TACT.Net.Common.ZLib
         DEFLATED = 8,
     }
 
-    public enum ZLibOpenType : int
+    internal enum ZLibOpenType : int
     {
         // If a compressed stream with a larger window
         // size is given as input, inflate() will return with the error code
@@ -80,7 +80,7 @@ namespace TACT.Net.Common.ZLib
     /// <summary>
     /// WindowBits
     /// </summary>
-    public enum ZLibWriteType : int
+    internal enum ZLibWriteType : int
     {
         // If a compressed stream with a larger window
         // size is given as input, inflate() will return with the error code
@@ -90,7 +90,7 @@ namespace TACT.Net.Common.ZLib
         ZLib = 15, // 8..15, 0 = use the window size in the zlib header of the compressed stream.
     }
 
-    public enum ZLibMode
+    internal enum ZLibMode
     {
         Compress,
         Decompress,
