@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using TACT.Net.Cryptography;
 using TACT.Net.Encoding;
 
-namespace TACT.Net.Common.Cryptography
+namespace TACT.Net.Common
 {
     internal class HashComparer : IComparer<byte[]>, IComparer<MD5Hash>, IComparer<string>, IComparer<EncodingEntryBase>, IEqualityComparer<MD5Hash>
     {

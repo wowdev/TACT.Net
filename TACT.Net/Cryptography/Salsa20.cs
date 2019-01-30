@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using System.Security.Cryptography;
 
-namespace TACT.Net.Common.Cryptography
+namespace TACT.Net.Cryptography
 {
     public sealed class Salsa20 : SymmetricAlgorithm
     {

@@ -1,6 +1,6 @@
 ﻿using System.IO;
 using TACT.Net.Common;
-using TACT.Net.Common.Cryptography;
+using TACT.Net.Cryptography;
 
 namespace TACT.Net.Download
 {

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Security.Cryptography;
 
-namespace TACT.Net.Common.Cryptography
+namespace TACT.Net.Cryptography
 {
     /// <summary>
     /// https://en.wikipedia.org/wiki/Jenkins_hash_function

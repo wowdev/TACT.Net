@@ -2,7 +2,7 @@
 using System.IO;
 using System.Linq;
 using TACT.Net.Common;
-using TACT.Net.Common.Cryptography;
+using TACT.Net.Cryptography;
 
 namespace TACT.Net.Encoding
 {

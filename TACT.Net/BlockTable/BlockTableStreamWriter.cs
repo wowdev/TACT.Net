@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Security.Cryptography;
 using TACT.Net.Common;
-using TACT.Net.Common.Cryptography;
+using TACT.Net.Cryptography;
 
 namespace TACT.Net.BlockTable
 {

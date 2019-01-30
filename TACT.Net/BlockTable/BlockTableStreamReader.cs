@@ -3,7 +3,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using TACT.Net.Common;
-using TACT.Net.Common.Cryptography;
+using TACT.Net.Cryptography;
 
 namespace TACT.Net.BlockTable
 {

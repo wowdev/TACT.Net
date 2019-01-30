@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections;
 using System.Linq;
+using TACT.Net.Common;
 
-namespace TACT.Net.Common.Cryptography
+namespace TACT.Net.Cryptography
 {
     public struct MD5Hash : IEquatable<MD5Hash>
     {

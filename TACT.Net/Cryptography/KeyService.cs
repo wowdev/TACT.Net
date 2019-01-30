@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
+using TACT.Net.Common;
 
-namespace TACT.Net.Common.Cryptography
+namespace TACT.Net.Cryptography
 {
     public sealed class KeyService
     {
