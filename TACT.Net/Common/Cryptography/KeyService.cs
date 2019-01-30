@@ -12,20 +12,14 @@ namespace TACT.Net.Common.Cryptography
 
         public static bool TryGetKey(ulong name, out byte[] key) => Keys.TryGetValue(name, out key);
 
+        public static bool TryAddKey(ulong name, string key) => TryAddKey(name, key.ToByteArray());
+
         public static bool TryAddKey(ulong name, byte[] key)
         {
             if (key.Length != 16)
                 return false;
 
             return Keys.TryAdd(name, key);
-        }
-
-        public static bool TryAddKey(ulong name, string key)
-        {
-            if (key.Length != 32)
-                return false;
-
-            return Keys.TryAdd(name, key.ToByteArray());
         }
 
         #endregion
