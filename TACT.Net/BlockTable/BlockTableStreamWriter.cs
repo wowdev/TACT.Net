@@ -220,7 +220,7 @@ namespace TACT.Net.BlockTable
             using (var md5 = MD5.Create())
             {
                 foreach (var block in _blocks.Values)
-                    block.MD5(md5);
+                    block.Hash(md5);
                 md5.TransformFinalBlock(new byte[0], 0, 0);
                 return new MD5Hash(md5.Hash);
             }

@@ -138,7 +138,7 @@ namespace TACT.Net.BlockTable
         /// Hashes the stream using block transforms and buffering
         /// </summary>
         /// <param name="md5"></param>
-        public void MD5(MD5 md5)
+        public void Hash(MD5 md5)
         {
             if (_finalised)
                 return;
