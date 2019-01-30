@@ -9,7 +9,7 @@ using TACT.Net.Common.Cryptography;
 namespace TACT.Net.Indices
 {
     /// <summary>
-    /// A lookup file containing location details for files within the data blobs
+    /// A lookup for files within the data blobs
     /// </summary>
     public class IndexFile
     {
