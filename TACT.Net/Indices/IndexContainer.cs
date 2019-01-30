@@ -123,15 +123,19 @@ namespace TACT.Net.Indices
         /// Opens a file stream to a file stored in the archives
         /// </summary>
         /// <param name="hash"></param>
+        /// <param name="ispatch"></param>
         /// <returns></returns>
-        public BlockTableStreamReader OpenFile(MD5Hash hash)
+        public BlockTableStreamReader OpenFile(MD5Hash hash, bool ispatch = false)
         {
-            foreach (var index in _indices)
+            string directory = ispatch ? "patch" : "data";
+
+            var enumerable = ispatch ? PatchIndices : DataIndices;
+            foreach (var index in enumerable)
             {
                 if (!index.IsGroupIndex && index.TryGet(hash, out var indexEntry))
                 {
                     // blob file location
-                    string blobpath = Helpers.GetCDNPath(index.Checksum.ToString(), "data", _sourceDirectory);
+                    string blobpath = Helpers.GetCDNPath(index.Checksum.ToString(), directory, _sourceDirectory);
 
                     if (File.Exists(blobpath))
                     {
