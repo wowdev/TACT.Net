@@ -69,7 +69,7 @@ namespace TACT.Net.Common
             return BitConverter.ToUInt64(buffer);
         }
 
-        public static Span<T> ReadStructArray<T>(this BinaryReader reader, int count) where T : struct
+        public static Span<T> ReadStructArray<T>(this BinaryReader reader, int count) where T : unmanaged
         {
             if (count <= 0)
                 return new T[0];
@@ -102,7 +102,7 @@ namespace TACT.Net.Common
             writer.Write(buffer, 8 - size, size);
         }
 
-        public static void WriteStructArray<T>(this BinaryWriter writer, IEnumerable<T> objs) where T : struct
+        public static void WriteStructArray<T>(this BinaryWriter writer, IEnumerable<T> objs) where T : unmanaged
         {
             if (!objs.Any())
                 return;
