@@ -16,15 +16,23 @@ namespace TACT.Net.Root
     /// </summary>
     public class RootFile : ISystemFile
     {
-        public TACT Instance { get; set; }
+        public TACT TACTInstance {
+            get => _instance;
+            set
+            {
+                value.RootFile = this; // autoset c ref
+                _instance = value;
+            }
+        }
         public IListFile ListFile { get; set; }
         public MD5Hash Checksum { get; private set; }
+
+        private TACT _instance;
 
         private readonly EMap[] _EncodingMap = new[] { new EMap(EType.ZLib, 9) };
         private readonly List<RootBlock> _blocks;
         private readonly Lookup3 _lookup3;
         private readonly Dictionary<uint, ulong> _idLookup;
-
 
         #region Constructors
 
@@ -36,8 +44,7 @@ namespace TACT.Net.Root
             _idLookup = new Dictionary<uint, ulong>();
             _lookup3 = new Lookup3();
 
-            Instance = tactInstance;
-            Instance.RootFile = this;
+            TACTInstance = tactInstance;
 
             // add the default global block
             _blocks = new List<RootBlock>
@@ -60,8 +67,7 @@ namespace TACT.Net.Root
             _lookup3 = new Lookup3();
             _blocks = new List<RootBlock>();
 
-            Instance = tactInstance;
-            Instance.RootFile = this;
+            TACTInstance = tactInstance;
 
             using (var fs = File.OpenRead(path))
             using (var bt = new BlockTableStreamReader(fs))
@@ -85,8 +91,7 @@ namespace TACT.Net.Root
             _lookup3 = new Lookup3();
             _blocks = new List<RootBlock>();
 
-            Instance = tactInstance;
-            Instance.RootFile = this;
+            TACTInstance = tactInstance;
 
             Read(stream);
         }
@@ -165,10 +170,10 @@ namespace TACT.Net.Root
                     bt.WriteTo(fs);
 
                 // add to the encoding file and update the build config
-                if (Instance != null)
+                if (TACTInstance != null)
                 {
-                    Instance.EncodingFile?.AddOrUpdate(record);
-                    Instance.ConfigContainer?.BuildConfig?.SetValue("root", record.CKey, 0);
+                    TACTInstance.EncodingFile?.AddOrUpdate(record);
+                    TACTInstance.ConfigContainer?.BuildConfig?.SetValue("root", record.CKey, 0);
                 }
 
                 Checksum = record.CKey;
@@ -199,12 +204,12 @@ namespace TACT.Net.Root
             AddOrUpdate(rootRecord, locale, content);
 
             // add the record to all referenced files
-            if (Instance != null)
+            if (TACTInstance != null)
             {
-                Instance.EncodingFile?.AddOrUpdate(record);
-                Instance.IndexContainer?.Enqueue(record);
-                Instance.DownloadFile?.AddOrUpdate(record, 2);
-                Instance.DownloadSizeFile?.AddOrUpdate(record);
+                TACTInstance.EncodingFile?.AddOrUpdate(record);
+                TACTInstance.IndexContainer?.Enqueue(record);
+                TACTInstance.DownloadFile?.AddOrUpdate(record, 2);
+                TACTInstance.DownloadSizeFile?.AddOrUpdate(record);
             }
         }
         /// <summary>
@@ -397,13 +402,13 @@ namespace TACT.Net.Root
         /// <returns></returns>
         public BlockTableStreamReader OpenFile(RootRecord rootRecord)
         {
-            if (Instance == null)
+            if (TACTInstance == null)
                 return null;
 
-            if (Instance.EncodingFile != null && Instance.IndexContainer != null)
+            if (TACTInstance.EncodingFile != null && TACTInstance.IndexContainer != null)
             {
-                if (Instance.EncodingFile.TryGetContentEntry(rootRecord.CKey, out EncodingContentEntry encodingCKey) && encodingCKey.EKeys.Count > 0)
-                    return Instance.IndexContainer.OpenFile(encodingCKey.EKeys.First());
+                if (TACTInstance.EncodingFile.TryGetContentEntry(rootRecord.CKey, out EncodingContentEntry encodingCKey) && encodingCKey.EKeys.Count > 0)
+                    return TACTInstance.IndexContainer.OpenFile(encodingCKey.EKeys.First());
             }
 
             return null;
