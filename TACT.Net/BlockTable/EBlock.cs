@@ -32,7 +32,7 @@ namespace TACT.Net.BlockTable
 
         public EBlock()
         {
-            EncodingMap = default(EMap);
+            EncodingMap = default;
         }
 
         /// <summary>

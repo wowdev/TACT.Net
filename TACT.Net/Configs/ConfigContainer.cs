@@ -154,7 +154,7 @@ namespace TACT.Net.Configs
 
         private MD5Hash TryGetKey(IConfig config, string identifier, int index = 0)
         {
-            MD5Hash hash = default(MD5Hash);
+            MD5Hash hash = default;
 
             if (config is VariableConfig _varConf)
                 MD5Hash.TryParse(_varConf.GetValue(identifier, Locale), out hash);

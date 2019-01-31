@@ -64,7 +64,7 @@ namespace TACT.Net.Cryptography
         {
             if (string.IsNullOrWhiteSpace(hash) || hash.Length > 32)
             {
-                md5Hash = default(MD5Hash);
+                md5Hash = default;
                 return false;
             }
 
@@ -76,7 +76,7 @@ namespace TACT.Net.Cryptography
         {
             if (hash == null || hash.Length == 0 || hash.Length > 16)
             {
-                md5Hash = default(MD5Hash);
+                md5Hash = default;
                 return false;
             }
 
