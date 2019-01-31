@@ -22,7 +22,7 @@ namespace TACT.Net.Download
         /// <summary>
         /// Creates a new DownloadFile
         /// </summary>
-        public DownloadFile(TACT container = null) : base(container)
+        public DownloadFile()
         {
             DownloadHeader = new DownloadHeader();
 
@@ -38,7 +38,7 @@ namespace TACT.Net.Download
         /// Loads an existing DownloadFile
         /// </summary>
         /// <param name="path">BLTE encoded file path</param>
-        public DownloadFile(string path, TACT container = null) : this(container)
+        public DownloadFile(string path)
         {
             using (var fs = File.OpenRead(path))
             using (var bt = new BlockTableStreamReader(fs))
@@ -50,15 +50,13 @@ namespace TACT.Net.Download
         /// </summary>
         /// <param name="directory">Base directory</param>
         /// <param name="hash">DownloadFile MD5</param>
-        public DownloadFile(string directory, MD5Hash hash, TACT container = null) :
-            this(Helpers.GetCDNPath(hash.ToString(), "data", directory), container)
-        { }
+        public DownloadFile(string directory, MD5Hash hash) : this(Helpers.GetCDNPath(hash.ToString(), "data", directory)) { }
 
         /// <summary>
         /// Loads an existing DownloadFile
         /// </summary>
         /// <param name="stream"></param>
-        public DownloadFile(BlockTableStreamReader stream, TACT container = null) : this(container)
+        public DownloadFile(BlockTableStreamReader stream)
         {
             Read(stream);
         }
@@ -93,11 +91,12 @@ namespace TACT.Net.Download
         }
 
         /// <summary>
-        /// Saves the DownloadFile to disk and updates the BuildConfig
+        /// Saves the DownloadFile to disk and optionally updates the BuildConfig
         /// </summary>
         /// <param name="directory">Root Directory</param>
+        /// <param name="configContainer"></param>
         /// <returns></returns>
-        public override CASRecord Write(string directory)
+        public override CASRecord Write(string directory, Configs.ConfigContainer configContainer = null)
         {
             CASRecord record;
             using (var bt = new BlockTableStreamWriter(_EncodingMap[0]))
@@ -127,12 +126,12 @@ namespace TACT.Net.Download
             }
 
             // update the build config with the new values
-            if (Container != null && Container.TryResolve<Configs.ConfigContainer>(out var configContainer))
+            if (configContainer?.BuildConfig != null)
             {
-                configContainer.BuildConfig?.SetValue("download-size", record.EBlock.DecompressedSize, 0);
-                configContainer.BuildConfig?.SetValue("download-size", record.EBlock.CompressedSize, 1);
-                configContainer.BuildConfig?.SetValue("download", record.CKey, 0);
-                configContainer.BuildConfig?.SetValue("download", record.EKey, 1);
+                configContainer.BuildConfig.SetValue("download-size", record.EBlock.DecompressedSize, 0);
+                configContainer.BuildConfig.SetValue("download-size", record.EBlock.CompressedSize, 1);
+                configContainer.BuildConfig.SetValue("download", record.CKey, 0);
+                configContainer.BuildConfig.SetValue("download", record.EKey, 1);
             }
 
             Checksum = record.CKey;

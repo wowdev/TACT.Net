@@ -6,7 +6,7 @@ using TACT.Net.SystemFiles;
 
 namespace TACT.Net.Patch
 {
-    public class PatchFile : SystemFileBase
+    public class PatchFile : ISystemFile
     {
         public PatchHeader PatchHeader { get; private set; }
         public MD5Hash Checksum { get; private set; }
@@ -20,7 +20,7 @@ namespace TACT.Net.Patch
         /// <summary>
         /// Creates a new PatchFile
         /// </summary>
-        public PatchFile(TACT container = null) : base(container)
+        public PatchFile()
         {
             PatchHeader = new PatchHeader();
             _PatchEntries = new SortedDictionary<MD5Hash, PatchEntry>(new HashComparer());
@@ -30,7 +30,7 @@ namespace TACT.Net.Patch
         /// Loads an existing PatchFile
         /// </summary>
         /// <param name="path">BLTE encoded file path</param>
-        public PatchFile(string path, TACT container = null) : this(container)
+        public PatchFile(string path)
         {
             using (var fs = File.OpenRead(path))
                 Read(fs);
@@ -41,15 +41,13 @@ namespace TACT.Net.Patch
         /// </summary>
         /// <param name="directory">Base directory</param>
         /// <param name="hash">PatchFile MD5</param>
-        public PatchFile(string directory, MD5Hash hash, TACT container = null) :
-            this(Helpers.GetCDNPath(hash.ToString(), "patch", directory), container)
-        { }
+        public PatchFile(string directory, MD5Hash hash) : this(Helpers.GetCDNPath(hash.ToString(), "patch", directory)) { }
 
         /// <summary>
         /// Loads an existing PatchFile
         /// </summary>
         /// <param name="stream"></param>
-        public PatchFile(Stream stream, TACT container = null) : this(container)
+        public PatchFile(Stream stream)
         {
             Read(stream);
         }

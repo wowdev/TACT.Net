@@ -65,51 +65,55 @@ namespace TACT.Net.Tests
         [TestMethod]
         public void TestConfigs()
         {
-            TACT tact = new TACT();
-            ConfigContainer configContainer = new ConfigContainer("wowt", Locale.US, tact);
+            TACT tact = new TACT()
+            {
+                ConfigContainer = new ConfigContainer("wowt", Locale.US)
+            };
 
             //configContainer.OpenRemote(@"D:\Backup\");
             //Assert.IsNotNull(configContainer.VersionsFile);
 
-            configContainer.OpenLocal(@"D:\Backup\", @"D:\Backup\");
-            Assert.IsNotNull(configContainer.VersionsFile);
-            Assert.IsNotNull(configContainer.BuildConfig);
-            Assert.IsFalse(configContainer.RootMD5.IsEmpty);
+            tact.ConfigContainer.OpenLocal(@"D:\Backup\", @"D:\Backup\");
+            Assert.IsNotNull(tact.ConfigContainer.VersionsFile);
+            Assert.IsNotNull(tact.ConfigContainer.BuildConfig);
+            Assert.IsFalse(tact.ConfigContainer.RootMD5.IsEmpty);
         }
 
         [TestMethod]
         public void TestOpenFile()
         {
             // create an instance
-            TACT tactInstance = new TACT(@"D:\Backup\");
+            TACT tact = new TACT(@"D:\Backup\")
+            {
+                ConfigContainer = new ConfigContainer("wowt", Locale.US)
+            };
 
             // open the configs
-            ConfigContainer configContainer = new ConfigContainer("wowt", Locale.US, tactInstance);
-            configContainer.OpenLocal(tactInstance.BaseDirectory, tactInstance.BaseDirectory);
+            tact.ConfigContainer.OpenLocal(tact.BaseDirectory, tact.BaseDirectory);
 
             // load the archives
-            Indices.IndexContainer archiveContainer = new Indices.IndexContainer(tactInstance);
-            archiveContainer.Open(tactInstance.BaseDirectory);
-            Assert.IsTrue(archiveContainer.DataIndices.Any());
+            tact.IndexContainer = new Indices.IndexContainer();
+            tact.IndexContainer.Open(tact.BaseDirectory);
+            Assert.IsTrue(tact.IndexContainer.DataIndices.Any());
 
             // open the encoding
-            Encoding.EncodingFile encoding = new Encoding.EncodingFile(tactInstance.BaseDirectory, configContainer.EncodingEKey, tactInstance);
+            tact.EncodingFile = new Encoding.EncodingFile(tact.BaseDirectory, tact.ConfigContainer.EncodingEKey);
 
             // get the root ckey
-            Assert.IsTrue(encoding.TryGetContentEntry(configContainer.RootMD5, out var rootCEntry));
+            Assert.IsTrue(tact.EncodingFile.TryGetContentEntry(tact.ConfigContainer.RootMD5, out var rootCEntry));
 
             // open the root
-            Root.RootFile root = new Root.RootFile(tactInstance.BaseDirectory, rootCEntry.EKeys.First(), tactInstance);
+            tact.RootFile = new Root.RootFile(tact.BaseDirectory, rootCEntry.EKeys.First(), tact);
 
             // try and get a file
-            var fileEntry = root.Get("world/arttest/boxtest/xyz.m2").FirstOrDefault();
+            var fileEntry = tact.RootFile.Get("world/arttest/boxtest/xyz.m2").FirstOrDefault();
             Assert.IsNotNull(fileEntry);
 
             // get the file's contententry
-            Assert.IsTrue(encoding.TryGetContentEntry(fileEntry.CKey, out var fileEntryCEntry));
+            Assert.IsTrue(tact.EncodingFile.TryGetContentEntry(fileEntry.CKey, out var fileEntryCEntry));
 
             // open the file from the blobs
-            using (var fs = archiveContainer.OpenFile(fileEntryCEntry.EKeys.First()))
+            using (var fs = tact.IndexContainer.OpenFile(fileEntryCEntry.EKeys.First()))
             {
                 Assert.IsNotNull(fs);
 

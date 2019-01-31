@@ -18,7 +18,7 @@ namespace TACT.Net.Encoding
     /// <summary>
     /// A catalogue of Encoding and Content key relationships plus encoding informaton for each file
     /// </summary>
-    public class EncodingFile : SystemFileBase
+    public class EncodingFile : ISystemFile
     {
         public EncodingHeader EncodingHeader { get; private set; }
         public MD5Hash Checksum { get; private set; }
@@ -36,7 +36,7 @@ namespace TACT.Net.Encoding
         /// <summary>
         /// Creates a new EncodingFile
         /// </summary>
-        public EncodingFile(TACT container = null) : base(container)
+        public EncodingFile()
         {
             EncodingHeader = new EncodingHeader();
             ESpecStringTable = new List<string> { "" };
@@ -59,7 +59,7 @@ namespace TACT.Net.Encoding
         /// Loads an existing EncodingFile
         /// </summary>
         /// <param name="path">BLTE encoded file path</param>
-        public EncodingFile(string path, TACT container = null) : this(container)
+        public EncodingFile(string path)
         {
             using (var fs = File.OpenRead(path))
             using (var bt = new BlockTableStreamReader(fs))
@@ -71,8 +71,7 @@ namespace TACT.Net.Encoding
         /// </summary>
         /// <param name="directory">Base directory</param>
         /// <param name="hash">Encoding EKey</param>
-        public EncodingFile(string directory, MD5Hash hash, TACT container = null) :
-            this(Helpers.GetCDNPath(hash.ToString(), "data", directory), container)
+        public EncodingFile(string directory, MD5Hash hash) : this(Helpers.GetCDNPath(hash.ToString(), "data", directory))
         { }
 
 
@@ -80,7 +79,7 @@ namespace TACT.Net.Encoding
         /// Loads an existing EncodingFile
         /// </summary>
         /// <param name="stream"></param>
-        public EncodingFile(BlockTableStreamReader stream, TACT container = null) : this(container)
+        public EncodingFile(BlockTableStreamReader stream)
         {
             Read(stream);
         }
@@ -118,11 +117,12 @@ namespace TACT.Net.Encoding
         }
 
         /// <summary>
-        /// Saves the EncodingFile to disk and updates the BuildConfig
+        /// Saves the EncodingFile to disk and optionally updates the BuildConfig
         /// </summary>
         /// <param name="directory">Root Directory</param>
+        /// <param name="configContainer"></param>
         /// <returns></returns>
-        public CASRecord Write(string directory)
+        public CASRecord Write(string directory, Configs.ConfigContainer configContainer = null)
         {
             //RebuildLookups();
 
@@ -160,12 +160,12 @@ namespace TACT.Net.Encoding
             }
 
             // update the build config with the new values
-            if (Container != null && Container.TryResolve<Configs.ConfigContainer>(out var configContainer))
+            if (configContainer?.BuildConfig != null)
             {
-                configContainer.BuildConfig?.SetValue("encoding-size", record.EBlock.DecompressedSize, 0);
-                configContainer.BuildConfig?.SetValue("encoding-size", record.EBlock.CompressedSize, 1);
-                configContainer.BuildConfig?.SetValue("encoding", record.CKey, 0);
-                configContainer.BuildConfig?.SetValue("encoding", record.EKey, 1);
+                configContainer.BuildConfig.SetValue("encoding-size", record.EBlock.DecompressedSize, 0);
+                configContainer.BuildConfig.SetValue("encoding-size", record.EBlock.CompressedSize, 1);
+                configContainer.BuildConfig.SetValue("encoding", record.CKey, 0);
+                configContainer.BuildConfig.SetValue("encoding", record.EKey, 1);
             }
 
             Checksum = record.CKey;

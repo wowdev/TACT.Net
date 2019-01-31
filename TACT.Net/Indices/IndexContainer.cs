@@ -8,7 +8,7 @@ using TACT.Net.SystemFiles;
 
 namespace TACT.Net.Indices
 {
-    public class IndexContainer : SystemFileBase
+    public class IndexContainer : ISystemFile
     {
         public IEnumerable<IndexFile> DataIndices
         {
@@ -35,7 +35,7 @@ namespace TACT.Net.Indices
 
         #region Constructors
 
-        public IndexContainer(TACT container = null) : base(container)
+        public IndexContainer()
         {
             _indices = new List<IndexFile>();
             _fileQueue = new SortedDictionary<MD5Hash, CASRecord>(new HashComparer());
@@ -63,7 +63,8 @@ namespace TACT.Net.Indices
         /// </summary>
         /// <param name="directory"></param>
         /// <param name="dispose">Delete old files</param>
-        public void Save(string directory, bool dispose = false)
+        /// <param name="configContainer"></param>
+        public void Save(string directory, bool dispose = false, Configs.ConfigContainer configContainer = null)
         {
             // save altered Data archive indices
             foreach (var index in DataIndices)
@@ -71,7 +72,7 @@ namespace TACT.Net.Indices
                 if (!index.IsGroupIndex)
                 {
                     string prevBlob = Helpers.GetCDNPath(index.Checksum.ToString(), "data", _sourceDirectory);
-                    index.Write(directory, Container);
+                    index.Write(directory, configContainer);
                     index.WriteBlob(directory, prevBlob);
 
                     // remove old archives
@@ -89,7 +90,7 @@ namespace TACT.Net.Indices
             {
                 IndexFile index = new IndexFile();
                 index.Add(entries);
-                index.Write(directory, Container);
+                index.Write(directory, configContainer);
                 index.WriteBlob(directory);
             }
 

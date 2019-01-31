@@ -7,62 +7,28 @@ namespace TACT.Net
     {
         public readonly string BaseDirectory;
 
-        private readonly Dictionary<Type, object> _referenceStore;
+        #region System Files
+
+        public Configs.ConfigContainer ConfigContainer { get; set; }
+        public Indices.IndexContainer IndexContainer { get; set; }
+        public Encoding.EncodingFile EncodingFile { get; set; }
+        public Root.RootFile RootFile { get; set; }
+        public Download.DownloadFile DownloadFile {get;set;}
+        public Download.DownloadSizeFile DownloadSizeFile { get; set; }
+        public Install.InstallFile InstallFile { get; set; }
+        public Patch.PatchFile PatchFile { get; set; }
+
+        #endregion
 
         #region Constructors
 
-        public TACT()
-        {
-            _referenceStore = new Dictionary<Type, object>();
-        }
-
-        public TACT(string baseDirectory) : this()
+        public TACT(string baseDirectory = "")
         {
             BaseDirectory = baseDirectory;
         }
 
         #endregion
-
-        #region Reference store
-
-        internal void Inject<T>(T reference) where T : class
-        {
-            _referenceStore[typeof(T)] = reference;
-        }
-
-        /// <summary>
-        /// Returns a reference to type <typeparamref name="T"/>
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        public T Resolve<T>() where T : class
-        {
-            _referenceStore.TryGetValue(typeof(T), out var reference);
-            return reference as T;
-        }
-
-        /// <summary>
-        /// Returns a reference to type <typeparamref name="T"/>
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="reference"></param>
-        /// <returns></returns>
-        public bool TryResolve<T>(out T reference) where T : class
-        {
-            bool result = _referenceStore.TryGetValue(typeof(T), out var _ref);
-            reference = _ref as T;
-            return result;
-        }
-
-        /// <summary>
-        /// Determines whether this reference is stored or not
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        public bool HasReference<T>() where T : class => _referenceStore.ContainsKey(typeof(T));
-
-        #endregion
-
+        
         #region Methods
 
         ///// <summary>

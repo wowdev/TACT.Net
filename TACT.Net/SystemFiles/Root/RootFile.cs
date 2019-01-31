@@ -14,8 +14,9 @@ namespace TACT.Net.Root
     /// A catalogue of all files stored in the data archives
     /// <para>Blocks contain variants of each file seperated by their Locale and Content flags</para>
     /// </summary>
-    public class RootFile : SystemFileBase
+    public class RootFile : ISystemFile
     {
+        public TACT Instance { get; set; }
         public IListFile ListFile { get; set; }
         public MD5Hash Checksum { get; private set; }
 
@@ -30,10 +31,13 @@ namespace TACT.Net.Root
         /// <summary>
         /// Creates a new RootFile
         /// </summary>
-        public RootFile(TACT container = null) : base(container)
+        public RootFile(TACT tactInstance = null)
         {
             _idLookup = new Dictionary<uint, ulong>();
             _lookup3 = new Lookup3();
+
+            Instance = tactInstance;
+            Instance.RootFile = this;
 
             // add the default global block
             _blocks = new List<RootBlock>
@@ -50,11 +54,14 @@ namespace TACT.Net.Root
         /// Loads an existing RootFile
         /// </summary>
         /// <param name="path">/// <param name="path">BLTE encoded file path</param></param>
-        public RootFile(string path, TACT container = null) : base(container)
+        public RootFile(string path, TACT tactInstance = null)
         {
             _idLookup = new Dictionary<uint, ulong>();
             _lookup3 = new Lookup3();
             _blocks = new List<RootBlock>();
+
+            Instance = tactInstance;
+            Instance.RootFile = this;
 
             using (var fs = File.OpenRead(path))
             using (var bt = new BlockTableStreamReader(fs))
@@ -66,19 +73,20 @@ namespace TACT.Net.Root
         /// </summary>
         /// <param name="directory">Base directory</param>
         /// <param name="hash">RootFile MD5</param>
-        public RootFile(string directory, MD5Hash hash, TACT container = null) :
-            this(Helpers.GetCDNPath(hash.ToString(), "data", directory), container)
-        { }
+        public RootFile(string directory, MD5Hash hash, TACT tactInstance = null) : this(Helpers.GetCDNPath(hash.ToString(), "data", directory), tactInstance) { }
 
         /// <summary>
         /// Loads an existing RootFile
         /// </summary>
         /// <param name="stream"></param>
-        public RootFile(BlockTableStreamReader stream, TACT container = null) : base(container)
+        public RootFile(BlockTableStreamReader stream, TACT tactInstance = null)
         {
             _idLookup = new Dictionary<uint, ulong>();
             _lookup3 = new Lookup3();
             _blocks = new List<RootBlock>();
+
+            Instance = tactInstance;
+            Instance.RootFile = this;
 
             Read(stream);
         }
@@ -157,10 +165,10 @@ namespace TACT.Net.Root
                     bt.WriteTo(fs);
 
                 // add to the encoding file and update the build config
-                if (Container != null)
+                if (Instance != null)
                 {
-                    Container.Resolve<EncodingFile>()?.AddOrUpdate(record);
-                    Container.Resolve<Configs.ConfigContainer>()?.BuildConfig?.SetValue("root", record.CKey, 0);
+                    Instance.EncodingFile?.AddOrUpdate(record);
+                    Instance.ConfigContainer?.BuildConfig?.SetValue("root", record.CKey, 0);
                 }
 
                 Checksum = record.CKey;
@@ -191,12 +199,12 @@ namespace TACT.Net.Root
             AddOrUpdate(rootRecord, locale, content);
 
             // add the record to all referenced files
-            if (Container != null)
+            if (Instance != null)
             {
-                Container.Resolve<EncodingFile>()?.AddOrUpdate(record);
-                Container.Resolve<Indices.IndexContainer>()?.Enqueue(record);
-                Container.Resolve<Download.DownloadFile>()?.AddOrUpdate(record, 2);
-                Container.Resolve<Download.DownloadSizeFile>()?.AddOrUpdate(record);
+                Instance.EncodingFile?.AddOrUpdate(record);
+                Instance.IndexContainer?.Enqueue(record);
+                Instance.DownloadFile?.AddOrUpdate(record, 2);
+                Instance.DownloadSizeFile?.AddOrUpdate(record);
             }
         }
         /// <summary>
@@ -389,10 +397,14 @@ namespace TACT.Net.Root
         /// <returns></returns>
         public BlockTableStreamReader OpenFile(RootRecord rootRecord)
         {
-            if (Container != null && Container.TryResolve<EncodingFile>(out var encodingFile))
-                if (encodingFile.TryGetContentEntry(rootRecord.CKey, out EncodingContentEntry encodingCKey) && encodingCKey.EKeys.Count > 0)
-                    if (Container.TryResolve<Indices.IndexContainer>(out var archiveContainer))
-                        return archiveContainer.OpenFile(encodingCKey.EKeys.First());
+            if (Instance == null)
+                return null;
+
+            if (Instance.EncodingFile != null && Instance.IndexContainer != null)
+            {
+                if (Instance.EncodingFile.TryGetContentEntry(rootRecord.CKey, out EncodingContentEntry encodingCKey) && encodingCKey.EKeys.Count > 0)
+                    return Instance.IndexContainer.OpenFile(encodingCKey.EKeys.First());
+            }
 
             return null;
         }

@@ -7,7 +7,7 @@ using TACT.Net.SystemFiles;
 
 namespace TACT.Net.Tags
 {
-    public class TagFileBase : SystemFileBase
+    public class TagFileBase : ISystemFile
     {
         public IEnumerable<TagEntry> Tags => _TagEntries.Values;
 
@@ -15,7 +15,7 @@ namespace TACT.Net.Tags
 
         #region Constructors
 
-        protected TagFileBase(TACT container = null) : base(container)
+        protected TagFileBase()
         {
             _TagEntries = new Dictionary<string, TagEntry>(StringComparer.OrdinalIgnoreCase);
         }

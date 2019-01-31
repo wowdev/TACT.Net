@@ -14,7 +14,7 @@ namespace TACT.Net.Download
 
         #region Constructors
 
-        protected DownloadFileBase(TACT container = null) : base(container)
+        protected DownloadFileBase()
         {
             _FileEntries = new Dictionary<MD5Hash, T>(new HashComparer());
         }
@@ -25,7 +25,7 @@ namespace TACT.Net.Download
 
         protected abstract void Read(Stream stream);
 
-        public abstract CASRecord Write(string directory);
+        public abstract CASRecord Write(string directory, Configs.ConfigContainer configContainer = null);
 
         #endregion
 

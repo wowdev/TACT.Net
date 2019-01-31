@@ -1,13 +1,6 @@
 ﻿namespace TACT.Net.SystemFiles
 {
-    public class SystemFileBase
+    public interface ISystemFile
     {
-        protected readonly TACT Container;
-
-        public SystemFileBase(TACT container)
-        {
-            Container = container;
-            Container?.Inject(this);
-        }
     }
 }

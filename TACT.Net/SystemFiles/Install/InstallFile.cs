@@ -26,7 +26,7 @@ namespace TACT.Net.Install
         /// <summary>
         /// Creates a new InstallFile
         /// </summary>
-        public InstallFile(TACT container = null) : base(container)
+        public InstallFile()
         {
             InstallHeader = new InstallHeader();
             _FileEntries = new Dictionary<string, InstallFileEntry>(StringComparer.OrdinalIgnoreCase);
@@ -42,7 +42,7 @@ namespace TACT.Net.Install
         /// Loads an existing InstallFile
         /// </summary>
         /// <param name="path">BLTE encoded file path</param>
-        public InstallFile(string path, TACT container = null) : this(container)
+        public InstallFile(string path)
         {
             using (var fs = File.OpenRead(path))
             using (var bt = new BlockTableStreamReader(fs))
@@ -54,15 +54,13 @@ namespace TACT.Net.Install
         /// </summary>
         /// <param name="directory">Base directory</param>
         /// <param name="hash">InstallFile MD5</param>
-        public InstallFile(string directory, MD5Hash hash, TACT container = null) :
-            this(Helpers.GetCDNPath(hash.ToString(), "data", directory), container)
-        { }
+        public InstallFile(string directory, MD5Hash hash) : this(Helpers.GetCDNPath(hash.ToString(), "data", directory)) { }
 
         /// <summary>
         /// Loads an existing InstallFile
         /// </summary>
         /// <param name="stream"></param>
-        public InstallFile(BlockTableStreamReader stream, TACT container = null) : this(container)
+        public InstallFile(BlockTableStreamReader stream)
         {
             Read(stream);
         }
@@ -92,7 +90,13 @@ namespace TACT.Net.Install
             }
         }
 
-        public CASRecord Write(string directory)
+        /// <summary>
+        /// Saves the InstallFile to disk and optionally updates the BuildConfig
+        /// </summary>
+        /// <param name="directory">Root Directory</param>
+        /// <param name="configContainer"></param>
+        /// <returns></returns>
+        public CASRecord Write(string directory, Configs.ConfigContainer configContainer = null)
         {
             CASRecord record;
 
@@ -120,12 +124,12 @@ namespace TACT.Net.Install
             }
 
             // update the build config with the new values
-            if (Container != null && Container.TryResolve<Configs.ConfigContainer>(out var configContainer))
+            if (configContainer?.BuildConfig != null)
             {
-                configContainer.BuildConfig?.SetValue("install-size", record.EBlock.DecompressedSize, 0);
-                configContainer.BuildConfig?.SetValue("install-size", record.EBlock.CompressedSize, 1);
-                configContainer.BuildConfig?.SetValue("install", record.CKey, 0);
-                configContainer.BuildConfig?.SetValue("install", record.EKey, 1);
+                configContainer.BuildConfig.SetValue("install-size", record.EBlock.DecompressedSize, 0);
+                configContainer.BuildConfig.SetValue("install-size", record.EBlock.CompressedSize, 1);
+                configContainer.BuildConfig.SetValue("install", record.CKey, 0);
+                configContainer.BuildConfig.SetValue("install", record.EKey, 1);
             }
 
             Checksum = record.CKey;

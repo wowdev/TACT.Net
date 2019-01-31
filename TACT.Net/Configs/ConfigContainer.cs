@@ -7,7 +7,7 @@ namespace TACT.Net.Configs
     /// <summary>
     /// A container for the various configs used within TACT
     /// </summary>
-    public class ConfigContainer : SystemFileBase
+    public class ConfigContainer : ISystemFile
     {
         #region Configs
 
@@ -60,7 +60,7 @@ namespace TACT.Net.Configs
 
         #region Constructors
 
-        public ConfigContainer(string product, Locale locale, TACT container = null) : base(container)
+        public ConfigContainer(string product, Locale locale)
         {
             Product = product;
             Locale = locale;

@@ -104,10 +104,11 @@ namespace TACT.Net.Indices
         }
 
         /// <summary>
-        /// Saves the IndexFile
+        /// Saves the IndexFile to disk and optionally updates the CDN config
         /// </summary>
         /// <param name="directory"></param>
-        public void Write(string directory, TACT container = null)
+        /// <param name="configContainer"></param>
+        public void Write(string directory, Configs.ConfigContainer configContainer = null)
         {
             // TODO patch index writing
             if (IsPatchIndex || IsGroupIndex || Type == IndexType.Unknown)
@@ -179,7 +180,7 @@ namespace TACT.Net.Indices
                     File.WriteAllBytes(saveLocation, ms.ToArray());
 
                     // update the CDN Config
-                    UpdateConfig(container, fileHash);
+                    UpdateConfig(configContainer, fileHash);
 
                     // store the new checksum
                     Checksum = fileHash;
@@ -333,9 +334,9 @@ namespace TACT.Net.Indices
             return type;
         }
 
-        private void UpdateConfig(TACT container, MD5Hash hash)
+        private void UpdateConfig(Configs.ConfigContainer configContainer, MD5Hash hash)
         {
-            if (container == null)
+            if (configContainer?.CDNConfig == null)
                 return;
 
             string identifier;
@@ -344,18 +345,15 @@ namespace TACT.Net.Indices
             else
                 identifier = IsPatchIndex ? "patch-archives" : "archives";
 
-            if (container.TryResolve<Configs.ConfigContainer>(out var configContainer))
+            var collection = configContainer.CDNConfig.GetValues(identifier);
+            if (collection != null)
             {
-                var collection = configContainer.CDNConfig?.GetValues(identifier);
-                if (collection != null)
-                {
-                    collection.Remove(Checksum.ToString());
-                    collection.Add(hash.ToString());
-                    collection.Sort(new HashComparer());
-                }
-
-                // TODO sizes - not sure how these are calculated
+                collection.Remove(Checksum.ToString());
+                collection.Add(hash.ToString());
+                collection.Sort(new HashComparer());
             }
+
+            // TODO sizes - not sure how these are calculated
         }
 
         #endregion

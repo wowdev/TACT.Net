@@ -22,7 +22,7 @@ namespace TACT.Net.Download
         /// <summary>
         /// Creates a new DownloadSizeFile
         /// </summary>
-        public DownloadSizeFile(TACT container = null) : base(container)
+        public DownloadSizeFile()
         {
             DownloadSizeHeader = new DownloadSizeHeader();
             ((HashComparer)_FileEntries.Comparer).KeySize = DownloadSizeHeader.EKeySize;
@@ -39,7 +39,7 @@ namespace TACT.Net.Download
         /// Loads an existing DownloadSizeFile
         /// </summary>
         /// <param name="path">BLTE encoded file path</param>
-        public DownloadSizeFile(string path, TACT container = null) : this(container)
+        public DownloadSizeFile(string path) : this()
         {
             using (var fs = File.OpenRead(path))
             using (var bt = new BlockTableStreamReader(fs))
@@ -51,15 +51,13 @@ namespace TACT.Net.Download
         /// </summary>
         /// <param name="directory">Base directory</param>
         /// <param name="hash">DownloadSizeFile MD5</param>
-        public DownloadSizeFile(string directory, MD5Hash hash, TACT container = null) :
-            this(Helpers.GetCDNPath(hash.ToString(), "data", directory), container)
-        { }
+        public DownloadSizeFile(string directory, MD5Hash hash) : this(Helpers.GetCDNPath(hash.ToString(), "data", directory)) { }
 
         /// <summary>
         /// Loads an existing DownloadSizeFile
         /// </summary>
         /// <param name="stream"></param>
-        public DownloadSizeFile(BlockTableStreamReader stream, TACT container = null) : this(container)
+        public DownloadSizeFile(BlockTableStreamReader stream) : this()
         {
             Read(stream);
         }
@@ -90,11 +88,12 @@ namespace TACT.Net.Download
         }
 
         /// <summary>
-        /// Saves the DownloadSizeFile to disk and updates the BuildConfig
+        /// Saves the DownloadSizeFile to disk and optionally updates the BuildConfig
         /// </summary>
         /// <param name="directory">Root Directory</param>
+        /// <param name="configContainer"></param>
         /// <returns></returns>
-        public override CASRecord Write(string directory)
+        public override CASRecord Write(string directory, Configs.ConfigContainer configContainer = null)
         {
             CASRecord record;
             using (var bt = new BlockTableStreamWriter(_EncodingMap[0]))
@@ -124,12 +123,12 @@ namespace TACT.Net.Download
             }
 
             // update the build config with the new values
-            if (Container != null && Container.TryResolve<Configs.ConfigContainer>(out var configContainer))
+            if (configContainer?.BuildConfig != null)
             {
-                configContainer.BuildConfig?.SetValue("size-size", record.EBlock.DecompressedSize, 0);
-                configContainer.BuildConfig?.SetValue("size-size", record.EBlock.CompressedSize, 1);
-                configContainer.BuildConfig?.SetValue("size", record.CKey, 0);
-                configContainer.BuildConfig?.SetValue("size", record.EKey, 1);
+                configContainer.BuildConfig.SetValue("size-size", record.EBlock.DecompressedSize, 0);
+                configContainer.BuildConfig.SetValue("size-size", record.EBlock.CompressedSize, 1);
+                configContainer.BuildConfig.SetValue("size", record.CKey, 0);
+                configContainer.BuildConfig.SetValue("size", record.EKey, 1);
             }
 
             Checksum = record.CKey;
