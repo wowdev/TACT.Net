@@ -16,6 +16,7 @@ namespace TACT.Net.Root
     /// </summary>
     public class RootFile : ISystemFile
     {
+        // TODO kill this
         public TACT TACTInstance
         {
             get => _instance;
@@ -27,11 +28,13 @@ namespace TACT.Net.Root
                 _instance = value;
             }
         }
+
         public IListFile ListFile { get; set; }
+        public LocaleFlags LocaleFlags { get; set; } = LocaleFlags.enUS;
+        public ContentFlags ContentFlags { get; set; } = ContentFlags.None;
         public MD5Hash Checksum { get; private set; }
 
         private TACT _instance;
-
         private readonly EMap[] _EncodingMap = new[] { new EMap(EType.ZLib, 9) };
         private readonly List<RootBlock> _blocks;
         private readonly Lookup3 _lookup3;
@@ -192,7 +195,7 @@ namespace TACT.Net.Root
         /// <param name="record"></param>
         /// <param name="locale"></param>
         /// <param name="content"></param>
-        public void AddOrUpdate(CASRecord record, LocaleFlags locale = LocaleFlags.All_WoW, ContentFlags content = ContentFlags.None)
+        public void AddOrUpdate(CASRecord record)
         {
             var rootRecord = new RootRecord()
             {
@@ -201,7 +204,7 @@ namespace TACT.Net.Root
                 FileId = ListFile.GetOrCreateFileId(record.FileName)
             };
 
-            AddOrUpdate(rootRecord, locale, content);
+            AddOrUpdate(rootRecord);
 
             // add the record to all referenced files
             if (TACTInstance != null)
@@ -219,7 +222,7 @@ namespace TACT.Net.Root
         /// <param name="rootRecord"></param>
         /// <param name="locale"></param>
         /// <param name="content"></param>
-        public void AddOrUpdate(RootRecord rootRecord, LocaleFlags locale = LocaleFlags.All_WoW, ContentFlags content = ContentFlags.None)
+        public void AddOrUpdate(RootRecord rootRecord)
         {
             ulong nameHash = rootRecord.NameHash;
             uint fileId = rootRecord.FileId;
@@ -227,7 +230,7 @@ namespace TACT.Net.Root
             // update the lookup
             _idLookup[fileId] = nameHash;
 
-            var blocks = GetRootBlocks(locale, content);
+            var blocks = GetRootBlocks(LocaleFlags, ContentFlags);
             bool isupdate = blocks.Any(x => x.Records.ContainsKey(nameHash));
 
             // add or update compliant blocks
@@ -251,9 +254,9 @@ namespace TACT.Net.Root
         /// <param name="fileId"></param>
         /// <param name="locale"></param>
         /// <param name="content"></param>
-        public void Remove(uint fileId, LocaleFlags locale = LocaleFlags.All_WoW, ContentFlags content = ContentFlags.None)
+        public void Remove(uint fileId)
         {
-            var blocks = GetRootBlocks(locale, content);
+            var blocks = GetRootBlocks(LocaleFlags, ContentFlags);
 
             if (_idLookup.TryGetValue(fileId, out ulong namehash))
                 foreach (var block in blocks)
@@ -266,9 +269,9 @@ namespace TACT.Net.Root
         /// <param name="namehash"></param>
         /// <param name="locale"></param>
         /// <param name="content"></param>
-        public void Remove(ulong namehash, LocaleFlags locale = LocaleFlags.All_WoW, ContentFlags content = ContentFlags.None)
+        public void Remove(ulong namehash)
         {
-            var blocks = GetRootBlocks(locale, content);
+            var blocks = GetRootBlocks(LocaleFlags, ContentFlags);
             foreach (var block in blocks)
             {
                 if (block.Records.TryGetValue(namehash, out var record))
@@ -281,10 +284,10 @@ namespace TACT.Net.Root
         /// <param name="filepath"></param>
         /// <param name="locale"></param>
         /// <param name="content"></param>
-        public void Remove(string filepath, LocaleFlags locale = LocaleFlags.All_WoW, ContentFlags content = ContentFlags.None)
+        public void Remove(string filepath)
         {
             ulong namehash = _lookup3.ComputeHash(filepath);
-            Remove(namehash, locale, content);
+            Remove(namehash);
         }
 
         /// <summary>
@@ -294,9 +297,9 @@ namespace TACT.Net.Root
         /// <param name="locale"></param>
         /// <param name="content"></param>
         /// <returns></returns>
-        public IEnumerable<RootRecord> Get(uint fileId, LocaleFlags locale = LocaleFlags.All_WoW, ContentFlags content = ContentFlags.None)
+        public IEnumerable<RootRecord> Get(uint fileId)
         {
-            var blocks = GetRootBlocks(locale, content);
+            var blocks = GetRootBlocks(LocaleFlags, ContentFlags);
 
             if (_idLookup.TryGetValue(fileId, out ulong namehash))
                 foreach (var block in blocks)
@@ -310,9 +313,9 @@ namespace TACT.Net.Root
         /// <param name="locale"></param>
         /// <param name="content"></param>
         /// <returns></returns>
-        public IEnumerable<RootRecord> Get(ulong namehash, LocaleFlags locale = LocaleFlags.All_WoW, ContentFlags content = ContentFlags.None)
+        public IEnumerable<RootRecord> Get(ulong namehash)
         {
-            var blocks = GetRootBlocks(locale, content);
+            var blocks = GetRootBlocks(LocaleFlags, ContentFlags);
 
             foreach (var block in blocks)
                 if (block.Records.TryGetValue(namehash, out var rootRecord))
@@ -325,10 +328,10 @@ namespace TACT.Net.Root
         /// <param name="locale"></param>
         /// <param name="content"></param>
         /// <returns></returns>
-        public IEnumerable<RootRecord> Get(string filepath, LocaleFlags locale = LocaleFlags.All_WoW, ContentFlags content = ContentFlags.None)
+        public IEnumerable<RootRecord> Get(string filepath)
         {
             ulong namehash = _lookup3.ComputeHash(filepath);
-            return Get(namehash, locale, content);
+            return Get(namehash);
         }
         /// <summary>
         /// Returns RootRecords based on their <paramref name="ckey"/> and optionally their flags
@@ -337,9 +340,9 @@ namespace TACT.Net.Root
         /// <param name="locale"></param>
         /// <param name="content"></param>
         /// <returns></returns>
-        public IEnumerable<RootRecord> Get(MD5Hash ckey, LocaleFlags locale = LocaleFlags.All_WoW, ContentFlags content = ContentFlags.None)
+        public IEnumerable<RootRecord> Get(MD5Hash ckey)
         {
-            var blocks = GetRootBlocks(locale, content);
+            var blocks = GetRootBlocks(LocaleFlags, ContentFlags);
 
             foreach (var block in blocks)
                 foreach (var record in block.Records.Values)
@@ -402,12 +405,21 @@ namespace TACT.Net.Root
         /// <returns></returns>
         public BlockTableStreamReader OpenFile(RootRecord rootRecord)
         {
+            return OpenFile(rootRecord.CKey);
+        }
+        /// <summary>
+        /// Opens a stream to the data of the supplied CKey. Returns null if not found
+        /// </summary>
+        /// <param name="ckey"></param>
+        /// <returns></returns>
+        public BlockTableStreamReader OpenFile(MD5Hash ckey)
+        {
             if (TACTInstance == null)
                 return null;
 
             if (TACTInstance.EncodingFile != null && TACTInstance.IndexContainer != null)
             {
-                if (TACTInstance.EncodingFile.TryGetContentEntry(rootRecord.CKey, out EncodingContentEntry encodingCKey) && encodingCKey.EKeys.Count > 0)
+                if (TACTInstance.EncodingFile.TryGetContentEntry(ckey, out EncodingContentEntry encodingCKey) && encodingCKey.EKeys.Count > 0)
                     return TACTInstance.IndexContainer.OpenFile(encodingCKey.EKeys.First());
             }
 
