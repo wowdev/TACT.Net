@@ -16,11 +16,14 @@ namespace TACT.Net.Root
     /// </summary>
     public class RootFile : ISystemFile
     {
-        public TACT TACTInstance {
+        public TACT TACTInstance
+        {
             get => _instance;
             set
             {
-                value.RootFile = this; // autoset c ref
+                if (value != null)
+                    value.RootFile = this; // autoset c ref
+
                 _instance = value;
             }
         }
@@ -61,13 +64,9 @@ namespace TACT.Net.Root
         /// Loads an existing RootFile
         /// </summary>
         /// <param name="path">/// <param name="path">BLTE encoded file path</param></param>
-        public RootFile(string path, TACT tactInstance = null)
+        public RootFile(string path, TACT tactInstance = null) : this()
         {
-            _idLookup = new Dictionary<uint, ulong>();
-            _lookup3 = new Lookup3();
-            _blocks = new List<RootBlock>();
-
-            TACTInstance = tactInstance;
+            _blocks.Clear();
 
             using (var fs = File.OpenRead(path))
             using (var bt = new BlockTableStreamReader(fs))
@@ -85,13 +84,9 @@ namespace TACT.Net.Root
         /// Loads an existing RootFile
         /// </summary>
         /// <param name="stream"></param>
-        public RootFile(BlockTableStreamReader stream, TACT tactInstance = null)
+        public RootFile(BlockTableStreamReader stream, TACT tactInstance = null) : this()
         {
-            _idLookup = new Dictionary<uint, ulong>();
-            _lookup3 = new Lookup3();
-            _blocks = new List<RootBlock>();
-
-            TACTInstance = tactInstance;
+            _blocks.Clear();
 
             Read(stream);
         }
@@ -142,6 +137,11 @@ namespace TACT.Net.Root
                 throw new InvalidDataException("Root is malformed. Missing common block");
         }
 
+        /// <summary>
+        /// Writes the RootFile to disk and optionally updates the Encoding and CDN config files
+        /// </summary>
+        /// <param name="directory"></param>
+        /// <returns></returns>
         public CASRecord Write(string directory)
         {
             FixDeltas();

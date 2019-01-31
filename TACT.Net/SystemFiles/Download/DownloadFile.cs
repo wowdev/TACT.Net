@@ -38,7 +38,7 @@ namespace TACT.Net.Download
         /// Loads an existing DownloadFile
         /// </summary>
         /// <param name="path">BLTE encoded file path</param>
-        public DownloadFile(string path)
+        public DownloadFile(string path) : this()
         {
             using (var fs = File.OpenRead(path))
             using (var bt = new BlockTableStreamReader(fs))
@@ -56,7 +56,7 @@ namespace TACT.Net.Download
         /// Loads an existing DownloadFile
         /// </summary>
         /// <param name="stream"></param>
-        public DownloadFile(BlockTableStreamReader stream)
+        public DownloadFile(BlockTableStreamReader stream) : this()
         {
             Read(stream);
         }

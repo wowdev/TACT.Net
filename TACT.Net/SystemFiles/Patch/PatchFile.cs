@@ -30,7 +30,7 @@ namespace TACT.Net.Patch
         /// Loads an existing PatchFile
         /// </summary>
         /// <param name="path">BLTE encoded file path</param>
-        public PatchFile(string path)
+        public PatchFile(string path) : this()
         {
             using (var fs = File.OpenRead(path))
                 Read(fs);
@@ -47,7 +47,7 @@ namespace TACT.Net.Patch
         /// Loads an existing PatchFile
         /// </summary>
         /// <param name="stream"></param>
-        public PatchFile(Stream stream)
+        public PatchFile(Stream stream) : this()
         {
             Read(stream);
         }

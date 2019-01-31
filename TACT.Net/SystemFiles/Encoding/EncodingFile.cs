@@ -59,7 +59,7 @@ namespace TACT.Net.Encoding
         /// Loads an existing EncodingFile
         /// </summary>
         /// <param name="path">BLTE encoded file path</param>
-        public EncodingFile(string path)
+        public EncodingFile(string path) : this()
         {
             using (var fs = File.OpenRead(path))
             using (var bt = new BlockTableStreamReader(fs))
@@ -79,7 +79,7 @@ namespace TACT.Net.Encoding
         /// Loads an existing EncodingFile
         /// </summary>
         /// <param name="stream"></param>
-        public EncodingFile(BlockTableStreamReader stream)
+        public EncodingFile(BlockTableStreamReader stream) : this()
         {
             Read(stream);
         }

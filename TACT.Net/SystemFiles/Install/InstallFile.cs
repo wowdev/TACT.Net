@@ -42,7 +42,7 @@ namespace TACT.Net.Install
         /// Loads an existing InstallFile
         /// </summary>
         /// <param name="path">BLTE encoded file path</param>
-        public InstallFile(string path)
+        public InstallFile(string path) : this()
         {
             using (var fs = File.OpenRead(path))
             using (var bt = new BlockTableStreamReader(fs))
@@ -60,7 +60,7 @@ namespace TACT.Net.Install
         /// Loads an existing InstallFile
         /// </summary>
         /// <param name="stream"></param>
-        public InstallFile(BlockTableStreamReader stream)
+        public InstallFile(BlockTableStreamReader stream) : this()
         {
             Read(stream);
         }
