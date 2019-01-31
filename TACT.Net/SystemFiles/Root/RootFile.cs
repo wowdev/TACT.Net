@@ -5,7 +5,7 @@ using TACT.Net.BlockTable;
 using TACT.Net.Common;
 using TACT.Net.Cryptography;
 using TACT.Net.Encoding;
-using TACT.Net.ListFileHandler;
+using TACT.Net.FileLookup;
 using TACT.Net.SystemFiles;
 
 namespace TACT.Net.Root
@@ -29,9 +29,19 @@ namespace TACT.Net.Root
             }
         }
 
-        public IListFile ListFile { get; set; }
+        /// <summary>
+        /// File lookup for filedataids-to-filenames
+        /// </summary>
+        public IFileLookup FileLookup { get; set; }
+        /// <summary>
+        /// LocaleFlags to target a specific locale
+        /// </summary>
         public LocaleFlags LocaleFlags { get; set; } = LocaleFlags.enUS;
+        /// <summary>
+        /// ContentFlags to target a specific file set
+        /// </summary>
         public ContentFlags ContentFlags { get; set; } = ContentFlags.None;
+
         public MD5Hash Checksum { get; private set; }
 
         private TACT _instance;
@@ -201,7 +211,7 @@ namespace TACT.Net.Root
             {
                 CKey = record.CKey,
                 NameHash = _lookup3.ComputeHash(record.FileName),
-                FileId = ListFile.GetOrCreateFileId(record.FileName)
+                FileId = FileLookup.GetOrCreateFileId(record.FileName)
             };
 
             AddOrUpdate(rootRecord);
