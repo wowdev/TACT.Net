@@ -2,6 +2,7 @@
 using System.IO;
 using System.Net.Sockets;
 using MimeKit;
+using TACT.Net.Common;
 
 namespace TACT.Net.Ribbit
 {
@@ -22,7 +23,7 @@ namespace TACT.Net.Ribbit
         {
             using (var stream = new TcpClient(_endpoint, _port).GetStream())
             {
-                stream.Write(System.Text.Encoding.ASCII.GetBytes(payload + "\r\n"));
+                stream.Write((payload + "\r\n").GetBytes("ASCII"));
 
                 try
                 {
@@ -37,7 +38,7 @@ namespace TACT.Net.Ribbit
 
         public Stream GetStream(string payload)
         {
-            return new MemoryStream(System.Text.Encoding.ASCII.GetBytes(GetString(payload)));
+            return new MemoryStream(GetString(payload).GetBytes("ASCII"));
         }
 
     }

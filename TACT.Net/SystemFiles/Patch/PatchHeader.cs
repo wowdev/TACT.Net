@@ -42,7 +42,7 @@ namespace TACT.Net.Patch
             CompressedSize = br.ReadUInt32BE();
 
             byte ESpecTableSize = br.ReadByte();
-            ESpecTable = System.Text.Encoding.UTF8.GetString(br.ReadBytes(ESpecTableSize));
+            ESpecTable = System.Text.Encoding.ASCII.GetString(br.ReadBytes(ESpecTableSize));
         }
 
         #endregion

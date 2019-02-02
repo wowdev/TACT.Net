@@ -9,7 +9,7 @@ namespace TACT.Net.Common.ZLib
     {
         #region Fields
 
-        const int BufferSize = 81920;
+        private const int BufferSize = 81920;
 
         public long TotalIn { get; private set; } = 0;
         public long TotalOut { get; private set; } = 0;
@@ -34,10 +34,12 @@ namespace TACT.Net.Common.ZLib
         {
             _writeType = writeType;
         }
+
         public ZLibStream(Stream stream, ZLibMode mode, ZLibCompLevel level, ZLibOpenType openType, bool leaveOpen = false) : this(stream, mode, level, leaveOpen)
         {
             _openType = openType;
         }
+
         public ZLibStream(Stream stream, ZLibMode mode, ZLibCompLevel level, bool leaveOpen = false)
         {
             BaseStream = stream;
@@ -168,6 +170,7 @@ namespace TACT.Net.Common.ZLib
                     TotalOut += readLen;
                 }
             }
+
             return readLen;
         }
 
@@ -344,11 +347,8 @@ namespace TACT.Net.Common.ZLib
 
             protected virtual void Dispose(bool disposing)
             {
-                if (disposing)
-                {
-                    if (_hArray.IsAllocated)
-                        _hArray.Free();
-                }
+                if (disposing && _hArray.IsAllocated)
+                    _hArray.Free();
             }
         }
     }

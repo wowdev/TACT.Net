@@ -31,15 +31,12 @@
         /// <returns></returns>
         public override string ToString()
         {
-            if (Type == EType.ZLib)
-            {
-                string value = "z";
-                if (Level != 9 || MPQ)
-                    value += ":{" + Level + (MPQ ? ",mpq" : "") + "}";
-                return value;
-            }
+            string value = new string((char)(Type + 0x20), 1);
 
-            return "n";
+            if (Type == EType.ZLib && (Level != 9 || MPQ))
+                value += $":{{{Level}{(MPQ ? ",mpq" : "")}}}";
+
+            return value;
         }
     }
 }
