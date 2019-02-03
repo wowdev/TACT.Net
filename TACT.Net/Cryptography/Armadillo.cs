@@ -91,13 +91,7 @@ namespace TACT.Net.Cryptography
             byte[] IV = filename.Substring(16).ToByteArray();
 
             var decryptor = Salsa20.CreateDecryptor(Key, IV);
-            using (var cs = new CryptoStream(stream, decryptor, CryptoStreamMode.Read))
-            {
-                MemoryStream ms = new MemoryStream();
-                cs.CopyTo(ms);
-                ms.Position = 0;
-                return ms;
-            }
+            return new CryptoStream(stream, decryptor, CryptoStreamMode.Read);
         }
 
         #endregion
