@@ -8,7 +8,7 @@ using TACT.Net.Cryptography;
 namespace TACT.Net.Configs
 {
     /// <summary>
-    /// A key-value pair config with multiple values per key
+    /// A one-to-many KeyValue pair config
     /// </summary>
     public class KeyValueConfig : IConfig
     {
