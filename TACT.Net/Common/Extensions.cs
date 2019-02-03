@@ -196,8 +196,11 @@ namespace TACT.Net.Common
             }
 
             // final block < buffer size
-            read = stream.Read(buffer, 0, (int)remaining);
-            destination.Write(buffer, 0, read);
+            if(remaining > 0)
+            {
+                read = stream.Read(buffer, 0, (int)remaining);
+                destination.Write(buffer, 0, read);
+            }            
         }
 
         #endregion
