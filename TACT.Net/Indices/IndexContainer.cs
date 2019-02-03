@@ -23,6 +23,8 @@ namespace TACT.Net.Indices
             get => _indices.Where(x => (x.Type & IndexType.Patch) == IndexType.Patch);
         }
 
+        public MD5Hash Checksum { get; }
+
         private const long ArchiveDataSize = 256000000;
 
         /// <summary>

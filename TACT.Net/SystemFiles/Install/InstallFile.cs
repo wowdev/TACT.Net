@@ -15,7 +15,6 @@ namespace TACT.Net.Install
     public class InstallFile : TagFileBase
     {
         public InstallHeader InstallHeader { get; private set; }
-        public MD5Hash Checksum { get; private set; }
         public IEnumerable<InstallFileEntry> Files => _FileEntries.Values;
 
         private readonly Dictionary<string, InstallFileEntry> _FileEntries;

@@ -13,7 +13,6 @@ namespace TACT.Net.Download
     public class DownloadFile : DownloadFileBase<DownloadFileEntry>
     {
         public DownloadHeader DownloadHeader { get; private set; }
-        public MD5Hash Checksum { get; private set; }
 
         private readonly EMap[] _EncodingMap;
 

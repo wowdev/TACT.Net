@@ -58,6 +58,8 @@ namespace TACT.Net.Configs
         /// </summary>
         public readonly Locale Locale;
 
+        public MD5Hash Checksum { get; }
+
         #region Constructors
 
         public ConfigContainer(string product, Locale locale)

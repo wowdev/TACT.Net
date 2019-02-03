@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using TACT.Net.Common;
+using TACT.Net.Cryptography;
 using TACT.Net.SystemFiles;
 
 namespace TACT.Net.Tags
@@ -10,6 +11,7 @@ namespace TACT.Net.Tags
     public class TagFileBase : ISystemFile
     {
         public IEnumerable<TagEntry> Tags => _TagEntries.Values;
+        public MD5Hash Checksum { get; protected set; }
 
         protected readonly Dictionary<string, TagEntry> _TagEntries;
 
