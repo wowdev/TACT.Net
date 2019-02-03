@@ -32,13 +32,11 @@ namespace TACT.Net.Cryptography
         /// <returns></returns>
         public bool LoadKey(string filePathOrKeyName)
         {
-            filePathOrKeyName = Path.ChangeExtension(filePathOrKeyName, ".ak"); // enforce correct ext
-
             // check if the full path is provided otherwise
             // fallback to the battle.net app's data directory
             string filepath = filePathOrKeyName;
             if (!File.Exists(filePathOrKeyName))
-                filepath = Path.Combine(AppDataPath, filePathOrKeyName);
+                filepath = Path.Combine(AppDataPath, Path.ChangeExtension(filePathOrKeyName, ".ak"));
 
             if (!File.Exists(filepath))
                 return false;
