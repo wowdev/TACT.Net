@@ -125,6 +125,13 @@ namespace TACT.Net.Tests
             }
         }
 
+        [TestMethod]
+        public void TestArmadillo()
+        {
+            var armadillo = new Cryptography.Armadillo();
+            Assert.IsTrue(armadillo.LoadKey(Path.Combine(PATH, "sc1Dev.ak")));
+        }
+
 
         [TestMethod]
         public void TestDebugStuff()
