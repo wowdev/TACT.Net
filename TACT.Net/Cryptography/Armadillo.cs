@@ -26,7 +26,7 @@ namespace TACT.Net.Cryptography
         #region Methods
 
         /// <summary>
-        /// Attempts to load an Armadillo key. Attempts to use a filepath with a fallback to the Battle.Net key directory
+        /// Attempts to load an Armadillo key. Supports both filepaths and Battle.Net key directory lookups
         /// </summary>
         /// <param name="filePathOrKeyName"></param>
         /// <returns></returns>
