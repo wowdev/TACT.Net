@@ -12,6 +12,7 @@ namespace TACT.Net.Patch
         public MD5Hash Checksum { get; private set; }
         public IEnumerable<PatchEntry> PatchEntries => _PatchEntries.Values;
 
+        private byte[] Unknown;
 
         private readonly SortedDictionary<MD5Hash, PatchEntry> _PatchEntries;
 
@@ -29,7 +30,7 @@ namespace TACT.Net.Patch
         /// <summary>
         /// Loads an existing PatchFile
         /// </summary>
-        /// <param name="path">BLTE encoded file path</param>
+        /// <param name="path"></param>
         public PatchFile(string path) : this()
         {
             using (var fs = File.OpenRead(path))
@@ -78,6 +79,9 @@ namespace TACT.Net.Patch
                 }
 
                 #region Unknown Data
+
+                Unknown = br.ReadBytes((int)(br.BaseStream.Length - br.BaseStream.Position));
+
                 /*
                 // the following is unknown entries that comprise of:
                 // a keysize byte followed by either a CKey or Ekey
@@ -107,8 +111,7 @@ namespace TACT.Net.Patch
                 // }
                 */
                 #endregion
-
-
+                
                 Checksum = stream.MD5Hash();
             }
         }
