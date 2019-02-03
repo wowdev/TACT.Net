@@ -28,23 +28,25 @@ namespace TACT.Net
         }
 
         #endregion
-        
+
         #region Methods
 
-        ///// <summary>
-        ///// Creates a new TACT container populated with the necessary base files
-        ///// </summary>
-        ///// <param name="product"></param>
-        ///// <param name="locale"></param>
-        //public void Create(string product, Locale locale)
-        //{
-        //    new Configs.ConfigContainer(product, this);
-        //    new Archives.ArchiveContainer(this);
-        //    new Root.RootFile(this);
-        //    new Encoding.EncodingFile(this);
-        //    new Install.InstallFile(this);
-        //    new Download.DownloadFile(this);
-        //}
+        /// <summary>
+        /// Creates a new TACT container populated with the necessary base files
+        /// </summary>
+        /// <param name="product"></param>
+        /// <param name="locale"></param>
+        public void Create(string product, Locale locale)
+        {
+            ConfigContainer = new Configs.ConfigContainer(product, locale);
+            ConfigContainer.Create();
+
+            IndexContainer = new Indices.IndexContainer();
+            RootFile = new Root.RootFile(this);
+            EncodingFile = new Encoding.EncodingFile();
+            InstallFile = new Install.InstallFile();
+            DownloadFile = new Download.DownloadFile();
+        }
 
         ///// <summary>
         ///// Opens an existing TACT container and loads the Root and Encoding files

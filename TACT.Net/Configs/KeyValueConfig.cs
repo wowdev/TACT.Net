@@ -82,14 +82,10 @@ namespace TACT.Net.Configs
         /// <param name="type"></param>
         public KeyValueConfig(string hash, string directory, ConfigType type) : this()
         {
-            string path = Helpers.GetCDNPath(hash, "config", directory);
-            if (!File.Exists(path))
-                throw new FileNotFoundException($"Unable to load {type}");
-
             Type = type;
             Checksum = new MD5Hash(hash);
 
-            using (var sr = new StreamReader(path))
+            using (var sr = new StreamReader(Helpers.GetCDNPath(hash, "config", directory)))
                 Read(sr);
         }
 
@@ -220,17 +216,13 @@ namespace TACT.Net.Configs
                     continue;
                 }
 
-                // special case for PatchConfig's patch entries; store the entry as the systemfile type
+                tokens = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+                // special case for PatchConfig's patch entries; store the entry as the SystemFile type
                 if (Type == ConfigType.PatchConfig && line.StartsWith("patch-entry"))
-                {
-                    tokens = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
                     _data.Add(tokens[2].Trim(), tokens.Skip(3).ToList());
-                }
                 else
-                {
-                    tokens = line.Split('=', StringSplitOptions.RemoveEmptyEntries);
-                    _data.Add(tokens[0].Trim(), tokens[1].Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries).ToList());
-                }
+                    _data.Add(tokens[0].Trim(), tokens.Skip(2).ToList());
             }
         }
 
@@ -268,13 +260,9 @@ namespace TACT.Net.Configs
                     {
                         // special case for PatchConfig's patch entries
                         if (Type == ConfigType.PatchConfig && !data.Key.StartsWith("patch"))
-                        {
                             sw.WriteLine($"patch-entry = {data.Key} {string.Join(" ", data.Value)}");
-                        }
                         else
-                        {
                             sw.WriteLine($"{data.Key} = {string.Join(" ", data.Value)}");
-                        }
                     }
                 }
 

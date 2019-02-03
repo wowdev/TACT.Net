@@ -25,19 +25,21 @@ namespace TACT.Net.Configs
 
         private readonly Dictionary<Locale, Dictionary<string, string>> _data;
         private string[] _fields;
-        private readonly string _localeKey;
 
         #region Constructors
+
+        private VariableConfig()
+        {
+            _data = new Dictionary<Locale, Dictionary<string, string>>();
+        }
 
         /// <summary>
         /// Creates a new config of <paramref name="type"/>
         /// </summary>
         /// <param name="type"></param>
-        public VariableConfig(ConfigType type)
+        public VariableConfig(ConfigType type) : this()
         {
-            Type = type;
-            _data = new Dictionary<Locale, Dictionary<string, string>>();
-            _localeKey = type == ConfigType.CDNs ? "Name" : "Region";
+            Type = type;            
 
             string[] tokens;
             switch (Type)
@@ -55,10 +57,10 @@ namespace TACT.Net.Configs
             }
 
             // generate all Locales
-            string[] fields = _fields.Select(x => x.Split('!')[0].Replace(" ", "")).ToArray();
+            string[] fields = _fields.Select(x => x.Split('!')[0]).ToArray();
             foreach (var locale in Enum.GetValues(typeof(Locale)))
             {
-                tokens[0] = locale.ToString();
+                tokens[0] = locale.ToString().ToLower();
                 PopulateCollection(fields, tokens, (Locale)locale);
             }
         }
@@ -68,19 +70,11 @@ namespace TACT.Net.Configs
         /// </summary>
         /// <param name="directory">Root Directory</param>
         /// <param name="type"></param>
-        public VariableConfig(string directory, ConfigType type)
+        public VariableConfig(string directory, ConfigType type) : this()
         {
             Type = type;
-            _data = new Dictionary<Locale, Dictionary<string, string>>();
-            _localeKey = type == ConfigType.CDNs ? "Name" : "Region";
 
-            string path = Path.Combine(directory, type.ToString());
-            if (!File.Exists(path))
-                throw new FileNotFoundException($"Unable to load {type}");
-
-            Type = type;
-
-            using (var sr = new StreamReader(path))
+            using (var sr = new StreamReader(Path.Combine(directory, type.ToString())))
                 Read(sr);
         }
 
@@ -89,11 +83,9 @@ namespace TACT.Net.Configs
         /// </summary>
         /// <param name="stream"></param>
         /// <param name="type"></param>
-        public VariableConfig(Stream stream, ConfigType type)
+        public VariableConfig(Stream stream, ConfigType type) : this()
         {
             Type = type;
-            _data = new Dictionary<Locale, Dictionary<string, string>>();
-            _localeKey = type == ConfigType.CDNs ? "Name" : "Region";
 
             using (var sr = new StreamReader(stream))
                 Read(sr);
@@ -198,7 +190,7 @@ namespace TACT.Net.Configs
                 {
                     // define fields and locale index
                     fields = tokens.Select(x => x.Split('!')[0].Replace(" ", "")).ToArray();
-                    localeIndex = Array.FindIndex(fields, t => t.Equals(_localeKey, StringComparison.OrdinalIgnoreCase));
+                    localeIndex = Array.FindIndex(fields, t => t.Equals(GetLocaleKey, StringComparison.OrdinalIgnoreCase));
                     _fields = tokens;
 
                     if (localeIndex == -1)
@@ -253,6 +245,8 @@ namespace TACT.Net.Configs
 
             _data.Add(locale, collection);
         }
+
+        private string GetLocaleKey => Type == ConfigType.CDNs ? "Name" : "Region";
 
         #endregion
     }
