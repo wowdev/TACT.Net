@@ -7,7 +7,7 @@ namespace TACT.Net.FileLookup
         /// <summary>
         /// Opens the FileLookup and loads its contents
         /// </summary>
-        void Open();
+        void Open(bool fillIdGaps);
         /// <summary>
         /// Saves the FileLookup to it's backing storage
         /// </summary>

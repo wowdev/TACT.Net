@@ -32,18 +32,20 @@ namespace TACT.Net.FileLookup
             _filename = filepath;
             _seperator = seperator;
             _minFileId = minimumFileId;
-            
+
             _fileLookup = new Dictionary<string, uint>(StringComparer.OrdinalIgnoreCase);
             _sync = new SemaphoreSlim(1, 1);
-
-            LoadUnusedIDs();
         }
 
         #endregion
 
         #region IO
 
-        public void Open()
+        /// <summary>
+        /// Loads the CSV lookup and optional fills unused ids
+        /// </summary>
+        /// <param name="fillIdGaps"></param>
+        public void Open(bool fillIdGaps)
         {
             using (var sr = File.OpenText(_filename))
             {
@@ -62,6 +64,9 @@ namespace TACT.Net.FileLookup
 
             // store the current max id/wanted max id
             _curMaxId = Math.Max(_fileLookup.Values.Max(), _minFileId);
+
+            if (fillIdGaps)
+                LoadUnusedIDs();
         }
 
         public async Task Sync()
