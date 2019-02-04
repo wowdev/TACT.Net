@@ -42,7 +42,7 @@ namespace TACT.Net.FileLookup
         #region IO
 
         /// <summary>
-        /// Loads the CSV lookup and optional fills unused ids
+        /// Loads the CSV lookup and optionally prioritises unused ids
         /// </summary>
         /// <param name="fillIdGaps"></param>
         public void Open(bool fillIdGaps)
