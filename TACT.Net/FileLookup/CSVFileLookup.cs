@@ -18,17 +18,21 @@ namespace TACT.Net.FileLookup
         private uint _curMaxId;
 
         private readonly string _filename;
+        private readonly char _seperator;
         private readonly uint _minFileId;
         private readonly Dictionary<string, uint> _fileLookup;
 
         #region Constructors
 
         /// <param name="filepath"></param>
+        /// <param name="seperator"></param>
         /// <param name="minimumFileId">Minimum file ID for new files</param>
-        public CSVFileLookup(string filepath, uint minimumFileId = 0)
+        public CSVFileLookup(string filepath, char seperator = ';', uint minimumFileId = 0)
         {
-            _minFileId = minimumFileId;
             _filename = filepath;
+            _seperator = seperator;
+            _minFileId = minimumFileId;
+            
             _fileLookup = new Dictionary<string, uint>(StringComparer.OrdinalIgnoreCase);
             _sync = new SemaphoreSlim(1, 1);
 
@@ -49,7 +53,7 @@ namespace TACT.Net.FileLookup
                 while (!sr.EndOfStream)
                 {
                     line = sr.ReadLine();
-                    seperatorIdx = line.IndexOf(';');
+                    seperatorIdx = line.IndexOf(_seperator);
 
                     if (seperatorIdx > -1 && uint.TryParse(line.Substring(0, seperatorIdx), out uint id))
                         _fileLookup[line.Substring(seperatorIdx)] = id;
@@ -67,7 +71,7 @@ namespace TACT.Net.FileLookup
             {
                 using (var sw = new StreamWriter(_filename))
                     foreach (var lookup in _fileLookup)
-                        await sw.WriteLineAsync(lookup.Value + ";" + lookup.Key);
+                        await sw.WriteLineAsync(lookup.Value + _seperator + lookup.Key);
             }
             finally
             {
