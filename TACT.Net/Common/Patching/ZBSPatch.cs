@@ -29,7 +29,7 @@ namespace TACT.Net.Common.Patching
 
         private void ApplyImpl(Stream input, Stream patch, Stream output)
         {
-            long outputSize = CreatePatchStreams(input, out Stream ctrl, out Stream diff, out Stream extra);
+            long outputSize = CreatePatchStreams(patch, out Stream ctrl, out Stream diff, out Stream extra);
 
             if (!input.CanRead || !input.CanSeek)
                 throw new ArgumentException("Input stream must be readable and seekable");
@@ -51,10 +51,11 @@ namespace TACT.Net.Common.Patching
                     long extraBlockSize = ctrl.ReadInt64BS();
                     long seekInInput = ctrl.ReadInt64BS();
 
-                    if (output.Position + diffBlockSize > outputSize)
+                    if (output.Position + diffBlockSize + extraBlockSize > outputSize)
                         throw new InvalidOperationException("Corrupt patch");
 
                     // read diff block
+                    // TODO test uint unrolling performance
                     foreach (byte[] newData in BufferedRead(diff, diffBlockSize))
                     {
                         // add old data to diff
@@ -64,9 +65,6 @@ namespace TACT.Net.Common.Patching
 
                         output.Write(newData);
                     }
-
-                    if (output.Position + extraBlockSize > outputSize)
-                        throw new InvalidOperationException("Corrupt patch");
 
                     // flat copy the extra block data into the output
                     extra.PartialCopyTo(output, extraBlockSize);
