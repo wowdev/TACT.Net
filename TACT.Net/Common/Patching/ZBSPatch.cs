@@ -9,6 +9,8 @@ namespace TACT.Net.Common.Patching
     {
         private const long Signature = 0x314646494453425A; // ZBSDIFF1
 
+        #region Constructors
+
         /// <summary>
         /// Applies a patch to a specific file
         /// </summary>
@@ -17,44 +19,18 @@ namespace TACT.Net.Common.Patching
         /// <param name="output">Output of the updated file</param>
         public void Apply(Stream input, Stream patch, Stream output)
         {
-            var outputSize = CreatePatchStreams(input, out Stream controlStream, out Stream diffStream, out Stream extraStream);
-            ApplyInternal(outputSize, patch, controlStream, diffStream, extraStream, output);
+            ApplyImpl(input, patch, output);
         }
 
+        #endregion
 
-        private long CreatePatchStreams(Stream patch, out Stream ctrl, out Stream diff, out Stream extra)
+
+        #region Implementation
+
+        private void ApplyImpl(Stream input, Stream patch, Stream output)
         {
-            // read the header
-            using (var br = new BinaryReader(patch))
-            {
-                // check patch stream capabilities
-                if (!patch.CanRead || !patch.CanSeek)
-                    throw new ArgumentException("Patch stream must be readable and seekable");
+            long outputSize = CreatePatchStreams(input, out Stream ctrl, out Stream diff, out Stream extra);
 
-                // check the magic
-                var signature = patch.ReadInt64BS();
-                if (signature != Signature)
-                    throw new FormatException($"Invalid signature. Expected {Signature} got {signature}.");
-
-                // read lengths from header
-                long controlSize = patch.ReadInt64BS();
-                long diffSize = patch.ReadInt64BS();
-                long outputSize = patch.ReadInt64BS();
-
-                if (controlSize < 0 || diffSize < 0 || outputSize < 0)
-                    throw new InvalidOperationException("Corrupt patch");
-
-                // create a stream for each block
-                ctrl = DecompressBlock(br.ReadBytes((int)controlSize));
-                diff = DecompressBlock(br.ReadBytes((int)diffSize));
-                extra = DecompressBlock(br.ReadBytes((int)(br.BaseStream.Length - br.BaseStream.Position))); // to EOF
-
-                return outputSize;
-            }
-        }
-
-        private void ApplyInternal(long outputSize, Stream input, Stream ctrl, Stream diff, Stream extra, Stream output)
-        {
             if (!input.CanRead || !input.CanSeek)
                 throw new ArgumentException("Input stream must be readable and seekable");
             if (!output.CanWrite)
@@ -101,6 +77,38 @@ namespace TACT.Net.Common.Patching
             }
         }
 
+        private long CreatePatchStreams(Stream patch, out Stream ctrl, out Stream diff, out Stream extra)
+        {
+            // read the header
+            using (var br = new BinaryReader(patch))
+            {
+                // check patch stream capabilities
+                if (!patch.CanRead || !patch.CanSeek)
+                    throw new ArgumentException("Patch stream must be readable and seekable");
+
+                // check the magic
+                var signature = patch.ReadInt64BS();
+                if (signature != Signature)
+                    throw new FormatException($"Invalid signature. Expected {Signature} got {signature}.");
+
+                // read lengths from header
+                long controlSize = patch.ReadInt64BS();
+                long diffSize = patch.ReadInt64BS();
+                long outputSize = patch.ReadInt64BS();
+
+                if (controlSize < 0 || diffSize < 0 || outputSize < 0)
+                    throw new InvalidOperationException("Corrupt patch");
+
+                // create a stream for each block
+                ctrl = DecompressBlock(br.ReadBytes((int)controlSize));
+                diff = DecompressBlock(br.ReadBytes((int)diffSize));
+                extra = DecompressBlock(br.ReadBytes((int)(br.BaseStream.Length - br.BaseStream.Position))); // to EOF
+
+                return outputSize;
+            }
+        }
+
+        #endregion
 
         #region Helpers
 
