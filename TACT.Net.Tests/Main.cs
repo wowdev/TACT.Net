@@ -136,6 +136,19 @@ namespace TACT.Net.Tests
         [TestMethod]
         public void TestDebugStuff()
         {
+            byte[] buffer = File.ReadAllBytes(@"C:\Users\TomSpearman\Downloads\01a481d7a2ddeb598a0bbb9e0eb4032f");
+            Array.Resize(ref buffer, 0x741B);
+
+            using (var output = new MemoryStream())
+            using (var patch = new MemoryStream(buffer))
+            using (var input = new MemoryStream())
+            {
+                var zbsPatch = new Common.Patching.ZBSPatch();
+                zbsPatch.Apply(input, patch, output);
+            }
+
+
+
             //WOW-28807patch8.1.0_PTR
 
             //Archives.ArchiveIndex index = new Archives.ArchiveIndex(@"C:\Users\TomSpearman\Downloads\0052ea9a56fd7b3b6fe7d1d906e6cdef.index");

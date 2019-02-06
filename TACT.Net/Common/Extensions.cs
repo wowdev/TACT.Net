@@ -57,6 +57,7 @@ namespace TACT.Net.Common
         #endregion
 
         #region BinaryReader Extensions
+
         public static ulong ReadUInt40BE(this BinaryReader reader) => ReadUIntBE(reader, 5);
         public static uint ReadUInt32BE(this BinaryReader reader) => (uint)ReadUIntBE(reader, 4);
         public static uint ReadUInt24BE(this BinaryReader reader) => (uint)ReadUIntBE(reader, 3);
@@ -88,9 +89,11 @@ namespace TACT.Net.Common
 
             return sb.ToString();
         }
+
         #endregion
 
         #region BinaryWriter Extensions
+
         public static void WriteUInt40BE(this BinaryWriter writer, ulong value) => WriteUIntBE(writer, value, 5);
         public static void WriteUInt32BE(this BinaryWriter writer, uint value) => WriteUIntBE(writer, value, 4);
         public static void WriteUInt24BE(this BinaryWriter writer, uint value) => WriteUIntBE(writer, value, 3);
@@ -115,6 +118,47 @@ namespace TACT.Net.Common
             writer.Write(System.Text.Encoding.UTF8.GetBytes(value));
             writer.Write((byte)0);
         }
+
+        #endregion
+
+        #region ZBS Stream Extensions
+
+        public static long ReadInt64BS(this Stream reader)
+        {
+            byte[] buffer = new byte[8];
+            if (reader.Read(buffer) != 8)
+                throw new EndOfStreamException();
+
+            long y = buffer[7] & 0x7F;
+            y <<= 8; y += buffer[6];
+            y <<= 8; y += buffer[5];
+            y <<= 8; y += buffer[4];
+            y <<= 8; y += buffer[3];
+            y <<= 8; y += buffer[2];
+            y <<= 8; y += buffer[1];
+            y <<= 8; y += buffer[0];
+            return (buffer[7] & 0x80) != 0 ? -y : y;
+        }
+
+        public static void WriteInt64BS(this Stream writer, long value)
+        {
+            bool neg = value != (value = Math.Abs(value));
+
+            byte[] buffer = new byte[8];
+            buffer[0] = (byte)value;
+            buffer[1] = (byte)(value >>= 8);
+            buffer[2] = (byte)(value >>= 8);
+            buffer[3] = (byte)(value >>= 8);
+            buffer[4] = (byte)(value >>= 8);
+            buffer[5] = (byte)(value >>= 8);
+            buffer[6] = (byte)(value >>= 8);
+            buffer[7] = (byte)(value >> 8);
+            if (neg)
+                buffer[7] |= 0x80;
+
+            writer.Write(buffer);
+        }
+
         #endregion
 
         #region Misc
@@ -196,11 +240,11 @@ namespace TACT.Net.Common
             }
 
             // final block < buffer size
-            if(remaining > 0)
+            if (remaining > 0)
             {
                 read = stream.Read(buffer, 0, (int)remaining);
                 destination.Write(buffer, 0, read);
-            }            
+            }
         }
 
         #endregion
