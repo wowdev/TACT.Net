@@ -23,8 +23,7 @@ namespace TACT.Net.Common.Patching
         }
 
         #endregion
-
-
+        
         #region Implementation
 
         private void ApplyImpl(Stream input, Stream patch, Stream output)
