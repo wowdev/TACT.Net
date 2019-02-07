@@ -413,7 +413,7 @@ namespace TACT.Net.Root
         /// </summary>
         /// <param name="rootRecord"></param>
         /// <returns></returns>
-        public BlockTableStreamReader OpenFile(RootRecord rootRecord)
+        public Stream OpenFile(RootRecord rootRecord)
         {
             return OpenFile(rootRecord.CKey);
         }
@@ -422,7 +422,7 @@ namespace TACT.Net.Root
         /// </summary>
         /// <param name="ckey"></param>
         /// <returns></returns>
-        public BlockTableStreamReader OpenFile(MD5Hash ckey)
+        public Stream OpenFile(MD5Hash ckey)
         {
             if (TACTInstance == null)
                 return null;

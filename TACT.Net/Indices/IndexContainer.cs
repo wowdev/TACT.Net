@@ -123,22 +123,18 @@ namespace TACT.Net.Indices
 
 
         /// <summary>
-        /// Opens a file stream to a file stored in the archives
+        /// Opens a stream to a data file stored in the archives
         /// </summary>
         /// <param name="hash"></param>
-        /// <param name="ispatch"></param>
         /// <returns></returns>
-        public BlockTableStreamReader OpenFile(MD5Hash hash, bool ispatch = false)
+        public Stream OpenFile(MD5Hash hash)
         {
-            string directory = ispatch ? "patch" : "data";
-
-            var enumerable = ispatch ? PatchIndices : DataIndices;
-            foreach (var index in enumerable)
+            foreach (var index in DataIndices)
             {
                 if (!index.IsGroupIndex && index.TryGet(hash, out var indexEntry))
                 {
                     // blob file location
-                    string blobpath = Helpers.GetCDNPath(index.Checksum.ToString(), directory, _sourceDirectory);
+                    string blobpath = Helpers.GetCDNPath(index.Checksum.ToString(), "data", _sourceDirectory);
 
                     if (File.Exists(blobpath))
                     {
@@ -148,6 +144,41 @@ namespace TACT.Net.Indices
                             Position = indexEntry.Offset
                         };
                         return new BlockTableStreamReader(fs);
+                    }
+
+                    return null;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Opens a stream to a patch entry stored in the archives
+        /// </summary>
+        /// <param name="hash"></param>
+        /// <returns></returns>
+        public Stream OpenPatch(MD5Hash hash)
+        {
+            foreach (var index in PatchIndices)
+            {
+                if (!index.IsGroupIndex && index.TryGet(hash, out var indexEntry))
+                {
+                    // blob file location
+                    string blobpath = Helpers.GetCDNPath(index.Checksum.ToString(), "patch", _sourceDirectory);
+
+                    if (File.Exists(blobpath))
+                    {
+                        // open a shared stream, set the offset and return a new BLTE reader
+                        var fs = new FileStream(blobpath, FileMode.Open, FileAccess.Read, FileShare.Read)
+                        {
+                            Position = indexEntry.Offset
+                        };
+
+                        // segment this entry only
+                        byte[] buffer = new byte[indexEntry.CompressedSize];
+                        fs.Read(buffer);
+                        return new MemoryStream(buffer);
                     }
 
                     return null;

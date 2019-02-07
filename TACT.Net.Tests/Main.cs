@@ -133,7 +133,7 @@ namespace TACT.Net.Tests
         }
 
         [TestMethod]
-        public void TestZBSPatching()
+        public void TestZBSPatchingDummy()
         {
             string originalText = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. In et pulvinar eros, id vulputate nibh.";
             string modifiedText = "Lorem ipsum dolor amet sit, consectetur adipiscing elit. nibh. id vulputate et pulvinar eros, In";
@@ -152,6 +152,43 @@ namespace TACT.Net.Tests
 
                 string resultText = System.Text.Encoding.UTF8.GetString(output.ToArray());
                 Assert.AreEqual(modifiedText, resultText);
+            }
+        }
+
+        [TestMethod]
+        public void TestZBSPatchingReal()
+        {
+            // create an instance
+            TACT tact = new TACT(@"D:\Backup\")
+            {
+                ConfigContainer = new ConfigContainer("wowt", Locale.US)
+            };
+
+            // open the configs
+            tact.ConfigContainer.OpenLocal(tact.BaseDirectory, tact.BaseDirectory);
+
+            // load the archives
+            tact.IndexContainer = new Indices.IndexContainer();
+            tact.IndexContainer.Open(tact.BaseDirectory);
+
+            // open the patch file
+            tact.PatchFile = new Patch.PatchFile(tact.BaseDirectory, tact.ConfigContainer.PatchMD5);
+
+            // get the seagiant2.m2 patch
+            Assert.IsTrue(tact.PatchFile.TryGet(new Cryptography.MD5Hash("8fbb9c89e91e0b30ab5eeec1cee0666d"), out var patchEntry));
+
+            // read the patch entry from the archives
+            // load the original file from disk - build 27826
+            // apply the ZBSPatch (patch entry) to the original
+            // verify the produced output is byte identical with the patched model - build 28807
+            using (var patch = tact.IndexContainer.OpenPatch(patchEntry.Records[0].PatchEKey))
+            using (var original = File.OpenRead(Path.Combine(PATH, "seagiant2_27826.m2")))
+            using (var output = new MemoryStream())
+            {
+                Common.Patching.ZBSPatch.Apply(original, patch, output);
+
+                var b = File.ReadAllBytes(Path.Combine(PATH, "seagiant2_28807.m2"));
+                Assert.IsTrue(b.SequenceEqual(output.ToArray()));
             }
         }
 
