@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -9,11 +10,13 @@ namespace TACT.Net.Tests
     [TestClass]
     public class Main
     {
-        const string PATH = @"C:\Users\spear\Downloads\";
+        const string PATH = @"D:\Backup\";
 
         [TestInitialize()]
         public void Startup()
         {
+            if (Directory.Exists("test"))
+                Directory.Delete("test", true);
             Directory.CreateDirectory("test");
         }
 
@@ -27,30 +30,30 @@ namespace TACT.Net.Tests
         [TestMethod]
         public void TestCKeys()
         {
-            string ckey = "0052ea9a56fd7b3b6fe7d1d906e6cdef";
-            Indices.IndexFile index = new Indices.IndexFile(Path.Combine(PATH, "0052ea9a56fd7b3b6fe7d1d906e6cdef.index"));
+            string ckey = "1a5047b2eebe491069f2f718aee082eb";
+            Indices.IndexFile index = new Indices.IndexFile(Path.Combine(PATH, @"tpr\wow\data\1a\50", "1a5047b2eebe491069f2f718aee082eb.index"));
             index.Write("test");
             Assert.AreEqual(ckey, index.Checksum.ToString());
 
-            ckey = "499a7e060cdbb4de3cebc92aef4b90f8";
-            Root.RootFile rootFile = new Root.RootFile(Path.Combine(PATH, "b785e5c1ff3a3fc9805baef91ea732e8"));
+            ckey = "1228b5ef225fa4b85eebc5e32b1ca238";
+            Root.RootFile rootFile = new Root.RootFile(PATH, new Cryptography.MD5Hash("fc52ef45efbbc6beca39076f89bad99f"));
             Assert.AreEqual(ckey, rootFile.Write(@"test").CKey.ToString());
 
-            ckey = "03387434f35c215499a27b96dc3aeac4";
-            Encoding.EncodingFile encodingFile = new Encoding.EncodingFile(Path.Combine(PATH, "992b470cdeac795d7134920593b5997d"));
+            ckey = "eb25fe8bd9e5b9400cc236d196975972";
+            Encoding.EncodingFile encodingFile = new Encoding.EncodingFile(PATH, new Cryptography.MD5Hash("fc8bb2fcd439453504e8758ddd7e7535"));
             Assert.AreEqual(ckey, encodingFile.Write("test").CKey.ToString());
 
-            ckey = "3a5f72cb49b57206a0a1b3d586008dae";
-            Install.InstallFile installFile = new Install.InstallFile(Path.Combine(PATH, "9e85df74a6280ee0d1c78b96c75d2384"));
+            ckey = "e42b5c7faa58e88534192c2ad0fe2245";
+            Install.InstallFile installFile = new Install.InstallFile(PATH, new Cryptography.MD5Hash("9b926ccdf5c51ff2cb5461cac7d9112b"));
             Assert.AreEqual(ckey, installFile.Write("test").CKey.ToString());
 
-            ckey = "e792910ee5d0c50dd89fc48562a4b80a";
-            Download.DownloadFile downloadFile = new Download.DownloadFile(Path.Combine(PATH, "64318bc48003848f6fb5f1604d314935"));
+            ckey = "430df253ca137be4778763a02d25d9c3";
+            Download.DownloadFile downloadFile = new Download.DownloadFile(PATH, new Cryptography.MD5Hash("eab82b2c1d2bf7dd315c87b28ed92cd5"));
             downloadFile.DownloadHeader.IncludeChecksum = true;
             Assert.AreEqual(ckey, downloadFile.Write("test").CKey.ToString());
 
-            ckey = "a6173b06ed490cdc8c94b7c2a521278d";
-            Download.DownloadSizeFile downloadSizeFile = new Download.DownloadSizeFile(Path.Combine(PATH, "07373402cad6fa1ade7d9075ab14cc69"));
+            ckey = "408833604e3cc75670e283e51743e9a9";
+            Download.DownloadSizeFile downloadSizeFile = new Download.DownloadSizeFile(PATH, new Cryptography.MD5Hash("af083d582f98a708881576df14e3c606"));
             Assert.AreEqual(ckey, downloadSizeFile.Write("test").CKey.ToString());
         }
 
