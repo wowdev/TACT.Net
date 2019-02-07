@@ -181,7 +181,7 @@ Process:
                 throw new Exception("Invalid IV size");
 
             byte[] IV = new byte[8];
-            Buffer.BlockCopy(data, keyNameSize + 3, IV, 0, IVSize);
+            Array.Copy(data, keyNameSize + 3, IV, 0, IVSize);
             Array.Reverse(IV);
 
             if (data.Length < IVSize + keyNameSize + 4)
