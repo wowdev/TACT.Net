@@ -136,7 +136,7 @@ namespace TACT.Net.Tests
         public void TestZBSPatching()
         {
             string originalText = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. In et pulvinar eros, id vulputate nibh.";
-            string modifiedText = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. nibh. id vulputate et pulvinar eros, In";
+            string modifiedText = "Lorem ipsum dolor amet sit, consectetur adipiscing elit. nibh. id vulputate et pulvinar eros, In";
 
             byte[] original = System.Text.Encoding.UTF8.GetBytes(originalText);
             byte[] modified = System.Text.Encoding.UTF8.GetBytes(modifiedText);
