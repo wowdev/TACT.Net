@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
+using System.Runtime.CompilerServices;
 
 /*
     The original bsdiff.c source code (http://www.daemonology.net/bsdiff/) is
@@ -29,30 +30,31 @@ using System.IO.Compression;
     POSSIBILITY OF SUCH DAMAGE.
 */
 
+[assembly: InternalsVisibleTo("TACT.Net.Tests")]
 namespace TACT.Net.Common.Patching
 {
-    public class ZBSPatch
+    internal static class ZBSPatch
     {
         private const long Signature = 0x314646494453425A; // ZBSDIFF1
 
-        #region Constructors
+        #region Methods
 
         /// <summary>
         /// Applies a patch to a specific file
         /// </summary>
         /// <param name="input">Original unmodified file</param>
-        /// <param name="patch">Stream of the ZBSDIFF1 patch</param>
+        /// <param name="patch">Stream of the ZBSDIFF1 patch entry</param>
         /// <param name="output">Output of the updated file</param>
-        public void Apply(Stream input, Stream patch, Stream output)
+        public static void Apply(Stream input, Stream patch, Stream output)
         {
             ApplyImpl(input, patch, output);
         }
 
         #endregion
-        
+
         #region Implementation
 
-        private void ApplyImpl(Stream input, Stream patch, Stream output)
+        private static void ApplyImpl(Stream input, Stream patch, Stream output)
         {
             long outputSize = CreatePatchStreams(patch, out Stream ctrl, out Stream diff, out Stream extra);
 
@@ -100,7 +102,7 @@ namespace TACT.Net.Common.Patching
             }
         }
 
-        private long CreatePatchStreams(Stream patch, out Stream ctrl, out Stream diff, out Stream extra)
+        private static long CreatePatchStreams(Stream patch, out Stream ctrl, out Stream diff, out Stream extra)
         {
             // read the header
             using (var br = new BinaryReader(patch))
@@ -142,15 +144,18 @@ namespace TACT.Net.Common.Patching
         /// <param name="count"></param>
         /// <param name="bufferSize"></param>
         /// <returns></returns>
-        private IEnumerable<byte[]> BufferedRead(Stream stream, long count, int bufferSize = 0x1000)
+        private static IEnumerable<byte[]> BufferedRead(Stream stream, long count, int bufferSize = 0x1000)
         {
             int length = (int)count;
             if (length <= 0)
                 yield break;
 
-            using (var br = new BinaryReader(stream))
-                for (; length > 0; length -= bufferSize)
-                    yield return br.ReadBytes(Math.Min(length, bufferSize));
+            for (; length > 0; length -= bufferSize)
+            {
+                byte[] buffer = new byte[Math.Min(length, bufferSize)];
+                stream.Read(buffer);
+                yield return buffer;
+            }
         }
 
         /// <summary>
@@ -158,13 +163,13 @@ namespace TACT.Net.Common.Patching
         /// </summary>
         /// <param name="data"></param>
         /// <returns></returns>
-        private Stream DecompressBlock(byte[] data)
+        private static Stream DecompressBlock(byte[] data)
         {
             MemoryStream outStream = new MemoryStream(data.Length);
 
             using (var ms = new MemoryStream(data, 2, data.Length - 2))
-            using (var stream = new DeflateStream(ms, CompressionMode.Decompress))
-                stream.CopyTo(outStream);
+            using (var ds = new DeflateStream(ms, CompressionMode.Decompress))
+                ds.CopyTo(outStream);
 
             outStream.Position = 0;
             return outStream;
