@@ -164,8 +164,8 @@ Process:
 
             // ignore EType and ZLib header
             using (var ms = new MemoryStream(data, 3, data.Length - 3))
-            using (var stream = new DeflateStream(ms, CompressionMode.Decompress))
-                stream.CopyTo(outStream);
+            using (var ds = new DeflateStream(ms, CompressionMode.Decompress))
+                ds.CopyTo(outStream);
         }
 
         private byte[] Decrypt(EBlock block, byte[] data, int index)

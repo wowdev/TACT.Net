@@ -171,6 +171,7 @@ namespace TACT.Net.Common.Patching
             using (var ds = new DeflateStream(ms, CompressionMode.Decompress))
                 ds.CopyTo(outStream);
 
+            outStream.Capacity = (int)outStream.Length;
             outStream.Position = 0;
             return outStream;
         }
