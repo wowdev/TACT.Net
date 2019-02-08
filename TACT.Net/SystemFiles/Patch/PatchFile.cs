@@ -169,7 +169,7 @@ namespace TACT.Net.Patch
                         return false;
 
                     ZBSPatch.Apply(input, patch, output);
-                }                    
+                }
             }
 
             return true;
