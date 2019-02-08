@@ -60,7 +60,7 @@ namespace TACT.Net.BlockTable
                     return Position;
             }
         }
-        public override void SetLength(long value) => _innerStream.SetLength(_startPos + value);
+        public override void SetLength(long value) => _innerStream.SetLength(Math.Max(_startPos, _startPos + value));
         public override void Flush() => _innerStream.Flush();
 
         #endregion

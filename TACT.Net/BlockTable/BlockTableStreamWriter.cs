@@ -69,7 +69,7 @@ namespace TACT.Net.BlockTable
 
             using (var md5 = MD5.Create())
             using (var ms = new MemoryStream((int)memStream.Length + 0x100))
-            using (var bw = new BinaryWriter(ms, System.Text.Encoding.UTF8, true))
+            using (var bw = new BinaryWriter(ms))
             {
                 // replace the stream contents with the BLTE structure
                 uint headerSize = (uint)(_blocks.Count == 1 ? 0 : 0x18 * _blocks.Count + 0xC);
@@ -121,12 +121,11 @@ namespace TACT.Net.BlockTable
                 // set ESpec
                 eSpec = string.Join(",", _blocks);
 
-                // merge the streams and kill the temporary one
-                memStream.SetLength(0);
+                // merge the streams
+                memStream.Position = 0;
+                memStream.SetLength(ms.Length);
                 memStream.Capacity = (int)ms.Length;
                 ms.WriteTo(memStream);
-                ms.SetLength(0);
-                ms.Capacity = 0;
 
                 // cleanup
                 _blocks.Clear();
