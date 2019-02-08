@@ -3,7 +3,6 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-[assembly: InternalsVisibleTo("TACT.Net.Tests")]
 namespace TACT.Net.Common.ZLib
 {
     internal sealed class ZLibStream : Stream

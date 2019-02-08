@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Runtime.CompilerServices;
 using TACT.Net.Common.ZLib;
 
 /*
@@ -29,7 +28,6 @@ using TACT.Net.Common.ZLib;
     POSSIBILITY OF SUCH DAMAGE.
 */
 
-[assembly: InternalsVisibleTo("TACT.Net.Tests")]
 namespace TACT.Net.Common.Patching
 {
     internal static class ZBSDiff

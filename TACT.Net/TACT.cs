@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
+[assembly: InternalsVisibleTo("TACT.Net.Tests")]
 namespace TACT.Net
 {
     public sealed class TACT

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
-using System.Runtime.CompilerServices;
 
 /*
     The original bsdiff.c source code (http://www.daemonology.net/bsdiff/) is
@@ -30,7 +29,6 @@ using System.Runtime.CompilerServices;
     POSSIBILITY OF SUCH DAMAGE.
 */
 
-[assembly: InternalsVisibleTo("TACT.Net.Tests")]
 namespace TACT.Net.Common.Patching
 {
     internal static class ZBSPatch
