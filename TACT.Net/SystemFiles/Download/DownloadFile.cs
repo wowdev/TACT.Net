@@ -145,7 +145,7 @@ namespace TACT.Net.Download
         /// Adds a CASRecord, this will overwrite existing entries
         /// </summary>
         /// <param name="record"></param>
-        /// <param name="priority">0 = highest, 2 = lowest</param>
+        /// <param name="priority">0 = highest, 2 = lowest, -1 for system files</param>
         /// <param name="tags"></param>
         public void AddOrUpdate(CASRecord record, sbyte priority, params string[] tags)
         {

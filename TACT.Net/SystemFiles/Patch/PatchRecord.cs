@@ -10,11 +10,11 @@ namespace TACT.Net.Patch
     public class PatchRecord
     {
         /// <summary>
-        /// Post patch file's EKey
+        /// Post patch EKey
         /// </summary>
         public MD5Hash EKey;
         /// <summary>
-        /// Post patch file's decompressed size
+        /// Post patch decompressed size
         /// </summary>
         public ulong DecompressedSize;
         /// <summary>
@@ -28,7 +28,7 @@ namespace TACT.Net.Patch
         /// <summary>
         /// Order of application
         /// </summary>
-        public byte PatchOrdinal;
+        public byte Ordinal;
 
         #region IO
 
@@ -38,7 +38,7 @@ namespace TACT.Net.Patch
             DecompressedSize = br.ReadUInt40BE();
             PatchEKey = new MD5Hash(br.ReadBytes(header.PatchEKeySize));
             PatchSize = br.ReadUInt32BE();
-            PatchOrdinal = br.ReadByte();
+            Ordinal = br.ReadByte();
         }
 
         #endregion

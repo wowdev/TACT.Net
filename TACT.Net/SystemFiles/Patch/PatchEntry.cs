@@ -11,10 +11,6 @@ namespace TACT.Net.Patch
     public class PatchEntry
     {
         /// <summary>
-        /// Number of patches for this file
-        /// </summary>
-        public byte PatchCount;
-        /// <summary>
         /// The current CKey of the file
         /// </summary>
         public MD5Hash CKey;
@@ -28,15 +24,15 @@ namespace TACT.Net.Patch
         #region IO
         public bool Read(BinaryReader br, PatchHeader header)
         {
-            PatchCount = br.ReadByte();
-            if (PatchCount == 0)
+            byte entryCount = br.ReadByte();
+            if (entryCount == 0)
                 return false;
 
             CKey = new MD5Hash(br.ReadBytes(header.FileKeySize));
             DecompressedSize = br.ReadUInt40BE();
 
-            Records = new List<PatchRecord>(PatchCount);
-            for (int i = 0; i < PatchCount; i++)
+            Records = new List<PatchRecord>(entryCount);
+            for (int i = 0; i < entryCount; i++)
             {
                 var entry = new PatchRecord();
                 entry.Read(br, header);
