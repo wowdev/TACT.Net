@@ -80,7 +80,6 @@ namespace TACT.Net.Common.Patching
                         throw new InvalidOperationException("Corrupt patch");
 
                     // read diff block
-                    // TODO test uint unrolling performance
                     foreach (byte[] newData in BufferedRead(diff, diffBlockSize))
                     {
                         // add old data to diff

@@ -149,7 +149,7 @@ namespace TACT.Net.Tests
             using (var output = new MemoryStream())
             {
                 Common.Patching.ZBSDiff.Create(original, modified, patch);
-
+                
                 patch.Position = 0;
                 Common.Patching.ZBSPatch.Apply(input, patch, output);
 

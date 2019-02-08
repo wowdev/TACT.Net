@@ -126,8 +126,7 @@ namespace TACT.Net.Common
         public static long ReadInt64BS(this Stream reader)
         {
             byte[] buffer = new byte[8];
-            if (reader.Read(buffer) != 8)
-                throw new EndOfStreamException();
+            reader.Read(buffer);
 
             long y = buffer[7] & 0x7F;
             y <<= 8; y += buffer[6];

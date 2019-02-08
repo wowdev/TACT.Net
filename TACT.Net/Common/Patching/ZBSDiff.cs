@@ -45,7 +45,7 @@ namespace TACT.Net.Common.Patching
 
         #region Implementation
 
-        private static void CreateImpl(byte[] original, byte[] modified, Stream output)
+        private static void CreateImpl(Span<byte> original, Span<byte> modified, Stream output)
         {
             if (original == null || original.Length == 0)
                 throw new ArgumentException(nameof(original));
@@ -147,7 +147,7 @@ namespace TACT.Net.Common.Patching
                         // write extra chunk
                         var extraLength = scan - lenb - (lastscan + lenf);
                         if (extraLength > 0)
-                            extr.Write(modified, lastscan + lenf, extraLength);
+                            extr.Write(modified.Slice(lastscan + lenf, extraLength));
 
                         // write ctrl chunk
                         ctrl.WriteInt64BS(lenf);
@@ -183,12 +183,12 @@ namespace TACT.Net.Common.Patching
         /// </summary>
         /// <param name="data"></param>
         /// <returns></returns>
-        private static int[] SuffixSort(byte[] data)
+        private static int[] SuffixSort(Span<byte> data)
         {
             int[] buckets = new int[256];
 
-            foreach (byte oldByte in data)
-                buckets[oldByte]++;
+            foreach (byte b in data)
+                buckets[b]++;
             for (int i = 1; i < 256; i++)
                 buckets[i] += buckets[i - 1];
             for (int i = 255; i > 0; i--)
@@ -340,12 +340,12 @@ namespace TACT.Net.Common.Patching
         }
 
 
-        private static int Search(int[] I, byte[] oldData, byte[] newData, int newOffset, int start, int end, out int pos)
+        private static int Search(int[] I, Span<byte> original, Span<byte> modified, int newOffset, int start, int end, out int pos)
         {
             if (end - start < 2)
             {
-                int startLength = MatchLength(oldData, I[start], newData, newOffset);
-                int endLength = MatchLength(oldData, I[end], newData, newOffset);
+                int startLength = MatchLength(original, I[start], modified, newOffset);
+                int endLength = MatchLength(original, I[end], modified, newOffset);
 
                 if (startLength > endLength)
                 {
@@ -359,30 +359,30 @@ namespace TACT.Net.Common.Patching
             else
             {
                 int midPoint = start + (end - start) / 2;
-                return CompareBytes(oldData, I[midPoint], newData, newOffset) < 0 ?
-                    Search(I, oldData, newData, newOffset, midPoint, end, out pos) :
-                    Search(I, oldData, newData, newOffset, start, midPoint, out pos);
+                return CompareBytes(original, I[midPoint], modified, newOffset) < 0 ?
+                    Search(I, original, modified, newOffset, midPoint, end, out pos) :
+                    Search(I, original, modified, newOffset, start, midPoint, out pos);
             }
         }
 
-        private static int CompareBytes(byte[] left, int leftOffset, byte[] right, int rightOffset)
+        private static int CompareBytes(Span<byte> left, int leftOffset, Span<byte> right, int rightOffset)
         {
             int diff;
             for (int index = 0; index < left.Length - leftOffset && index < right.Length - rightOffset; index++)
             {
                 diff = left[index + leftOffset] - right[index + rightOffset];
                 if (diff != 0)
-                    return diff;
+                    return diff;                 
             }
 
             return 0;
         }
 
-        private static int MatchLength(byte[] oldData, int oldOffset, byte[] newData, int newOffset)
+        private static int MatchLength(Span<byte> original, int orgOffset, Span<byte> modified, int modOffset)
         {
             int i;
-            for (i = 0; i < oldData.Length - oldOffset && i < newData.Length - newOffset; i++)
-                if (oldData[i + oldOffset] != newData[i + newOffset])
+            for (i = 0; i < original.Length - orgOffset && i < modified.Length - modOffset; i++)
+                if (original[i + orgOffset] != modified[i + modOffset])
                     break;
 
             return i;
