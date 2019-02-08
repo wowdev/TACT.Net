@@ -61,6 +61,9 @@ namespace TACT.Net.Common.Patching
             if (!output.CanWrite)
                 throw new ArgumentException("Output stream must be writable");
 
+            // clear the output in the case of input == output
+            output.SetLength(0);
+
             using (ctrl)
             using (diff)
             using (extra)

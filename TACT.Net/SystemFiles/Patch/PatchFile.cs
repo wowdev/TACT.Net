@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using TACT.Net.Common;
+using TACT.Net.Common.Patching;
 using TACT.Net.Cryptography;
 using TACT.Net.SystemFiles;
 
@@ -111,7 +112,7 @@ namespace TACT.Net.Patch
                 // }
                 */
                 #endregion
-                
+
                 Checksum = stream.MD5Hash();
             }
         }
@@ -134,6 +135,45 @@ namespace TACT.Net.Patch
         /// <param name="ckey"></param>
         /// <returns></returns>
         public bool ContainsKey(MD5Hash ckey) => _PatchEntries.ContainsKey(ckey);
+
+        /// <summary>
+        /// Applies all patches to a file
+        /// </summary>
+        /// <param name="patchEntry"></param>
+        /// <param name="indexContainer"></param>
+        /// <param name="input"></param>
+        /// <param name="output"></param>
+        /// <returns></returns>
+        public bool ApplyPatch(PatchEntry patchEntry, Indices.IndexContainer indexContainer, Stream input, Stream output)
+        {
+            if (indexContainer == null || input == null || output == null || patchEntry == null)
+                return false;
+
+            if (patchEntry.Records.Count == 0)
+                return false;
+
+            // get the correct order - just in case
+            patchEntry.Records.Sort((x, y) => x.Ordinal - y.Ordinal);
+
+            // iterate the patches
+            for (int i = 0; i < patchEntry.Records.Count; i++)
+            {
+                // if applying more than one the previous output is required
+                // as patches are incremental
+                if (i > 0)
+                    input = output;
+
+                using (var patch = indexContainer.OpenPatch(patchEntry.Records[i].PatchEKey))
+                {
+                    if (patch == null)
+                        return false;
+
+                    ZBSPatch.Apply(input, patch, output);
+                }                    
+            }
+
+            return true;
+        }
 
         #endregion
 
