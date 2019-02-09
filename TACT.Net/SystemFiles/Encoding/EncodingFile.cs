@@ -9,8 +9,8 @@ using TACT.Net.SystemFiles;
 
 namespace TACT.Net.Encoding
 {
-    using CKeyPageTable = SortedDictionary<MD5Hash, EncodingContentEntry>;
-    using EKeyPageTable = SortedDictionary<MD5Hash, EncodingEncodedEntry>;
+    using CKeyPageTable = SortedList<MD5Hash, EncodingContentEntry>;
+    using EKeyPageTable = SortedList<MD5Hash, EncodingEncodedEntry>;
     using PageIndexTable = Dictionary<MD5Hash, MD5Hash>;
 
     using Text = System.Text;
@@ -102,12 +102,14 @@ namespace TACT.Net.Encoding
                 stream.Seek((int)EncodingHeader.CKeyPageCount * (EncodingHeader.CKeyHashSize + 16), SeekOrigin.Current);
 
                 // read CKey entries
+                _CKeyEntries.Capacity = (int)EncodingHeader.CKeyPageCount * 40;
                 ReadPage(br, EncodingHeader.CKeyPageSize << 10, EncodingHeader.CKeyPageCount, _CKeyEntries);
 
                 // skip EKey page table indices
                 stream.Seek((int)EncodingHeader.EKeyPageCount * (EncodingHeader.EKeyHashSize + 16), SeekOrigin.Current);
 
                 // read EKey entries
+                _EKeyEntries.Capacity = (int)EncodingHeader.CKeyPageCount * 25;
                 ReadPage(br, EncodingHeader.EKeyPageSize << 10, EncodingHeader.EKeyPageCount, _EKeyEntries);
 
                 // remainder is an ESpec block for the file itself
@@ -188,7 +190,7 @@ namespace TACT.Net.Encoding
                 CKey = record.CKey,
                 DecompressedSize = record.EBlock.DecompressedSize
             };
-            cKeyEntry.EKeys.Add(record.EKey);
+            cKeyEntry.EKey = record.EKey;
             _CKeyEntries[record.CKey] = cKeyEntry;
 
             // EKeyPageTable - overwrite existing
@@ -261,7 +263,7 @@ namespace TACT.Net.Encoding
         public IEnumerable<EncodingContentEntry> GetContentEntryByEKey(MD5Hash hash)
         {
             foreach (var ckeyEntry in _CKeyEntries.Values)
-                if (ckeyEntry.EKeys.Contains(hash))
+                if (ckeyEntry.EKey == hash)
                     yield return ckeyEntry;
         }
         /// <summary>
@@ -407,8 +409,8 @@ namespace TACT.Net.Encoding
 
         private void RebuildLookups()
         {
-            if (!_requiresRebuild)
-                return;
+            //if (!_requiresRebuild)
+            //    return;
 
             // TODO need to revisit this
             // do something about broken CKeyEntries links - throw ex?
@@ -416,18 +418,18 @@ namespace TACT.Net.Encoding
             // should this be moved to a general "Clean TACT" function that checks for all broken joins/unused files?
 
             // remove entries that are x-ref to missing keys
-            var eKeys = _EKeyEntries.Keys.ToHashSet();
-            foreach (var ckeyentry in _CKeyEntries)
-            {
-                ckeyentry.Value.EKeys.RemoveWhere(x => !_EKeyEntries.ContainsKey(x));
-                eKeys.ExceptWith(ckeyentry.Value.EKeys);
-            }
+            //var eKeys = _EKeyEntries.Keys.ToHashSet();
+            //foreach (var ckeyentry in _CKeyEntries)
+            //{
+            //    ckeyentry.Value.EKeys.RemoveWhere(x => !_EKeyEntries.ContainsKey(x));
+            //    eKeys.ExceptWith(ckeyentry.Value.EKeys);
+            //}
 
-            // remove unreferenced EKeys
-            foreach (var ekey in eKeys)
-                _EKeyEntries.Remove(ekey);
+            //// remove unreferenced EKeys
+            //foreach (var ekey in eKeys)
+            //    _EKeyEntries.Remove(ekey);
 
-            _requiresRebuild = false;
+            //_requiresRebuild = false;
         }
 
         #endregion

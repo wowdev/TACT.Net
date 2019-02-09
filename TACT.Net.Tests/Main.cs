@@ -106,7 +106,7 @@ namespace TACT.Net.Tests
             Assert.IsTrue(tact.EncodingFile.TryGetContentEntry(tact.ConfigContainer.RootMD5, out var rootCEntry));
 
             // open the root
-            tact.RootFile = new Root.RootFile(tact.BaseDirectory, rootCEntry.EKeys.First(), tact);
+            tact.RootFile = new Root.RootFile(tact.BaseDirectory, rootCEntry.EKey, tact);
 
             // try and get a file
             var fileEntry = tact.RootFile.Get("world/arttest/boxtest/xyz.m2").FirstOrDefault();
@@ -116,7 +116,7 @@ namespace TACT.Net.Tests
             Assert.IsTrue(tact.EncodingFile.TryGetContentEntry(fileEntry.CKey, out var fileEntryCEntry));
 
             // open the file from the blobs
-            using (var fs = tact.IndexContainer.OpenFile(fileEntryCEntry.EKeys.First()))
+            using (var fs = tact.IndexContainer.OpenFile(fileEntryCEntry.EKey))
             {
                 Assert.IsNotNull(fs);
 
@@ -199,6 +199,12 @@ namespace TACT.Net.Tests
         [TestMethod]
         public void TestDebugStuff()
         {
+            var sw = Stopwatch.StartNew();
+            Encoding.EncodingFile encodingFile = new Encoding.EncodingFile(PATH, new Cryptography.MD5Hash("fc8bb2fcd439453504e8758ddd7e7535"));
+            sw.Stop();
+            Console.WriteLine(sw.ElapsedMilliseconds);
+            Console.Write("");
+
             //WOW-28807patch8.1.0_PTR
 
             //Archives.ArchiveIndex index = new Archives.ArchiveIndex(@"C:\Users\TomSpearman\Downloads\0052ea9a56fd7b3b6fe7d1d906e6cdef.index");

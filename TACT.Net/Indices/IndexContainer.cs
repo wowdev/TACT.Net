@@ -30,7 +30,7 @@ namespace TACT.Net.Indices
         /// <summary>
         /// Files enqueued to be added to a new archive
         /// </summary>
-        private readonly SortedDictionary<MD5Hash, CASRecord> _fileQueue;
+        private readonly SortedList<MD5Hash, CASRecord> _fileQueue;
 
         private List<IndexFile> _indices;
         private string _sourceDirectory;
@@ -40,7 +40,7 @@ namespace TACT.Net.Indices
         public IndexContainer()
         {
             _indices = new List<IndexFile>();
-            _fileQueue = new SortedDictionary<MD5Hash, CASRecord>(new HashComparer());
+            _fileQueue = new SortedList<MD5Hash, CASRecord>(new HashComparer());
         }
 
         #endregion

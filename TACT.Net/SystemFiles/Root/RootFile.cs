@@ -429,8 +429,8 @@ namespace TACT.Net.Root
 
             if (TACTInstance.EncodingFile != null && TACTInstance.IndexContainer != null)
             {
-                if (TACTInstance.EncodingFile.TryGetContentEntry(ckey, out EncodingContentEntry encodingCKey) && encodingCKey.EKeys.Count > 0)
-                    return TACTInstance.IndexContainer.OpenFile(encodingCKey.EKeys.First());
+                if (TACTInstance.EncodingFile.TryGetContentEntry(ckey, out EncodingContentEntry encodingCKey))
+                    return TACTInstance.IndexContainer.OpenFile(encodingCKey.EKey);
             }
 
             return null;

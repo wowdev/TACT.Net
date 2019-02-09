@@ -6,12 +6,12 @@ using TACT.Net.Cryptography;
 namespace TACT.Net.Patch
 {
     /// <summary>
-    /// Documents what patches are available for a specific CKey
+    /// Documents what patches are available for a specific file
     /// </summary>
     public class PatchEntry
     {
         /// <summary>
-        /// The current CKey of the file
+        /// The current content hash of the file
         /// </summary>
         public MD5Hash CKey;
         /// <summary>

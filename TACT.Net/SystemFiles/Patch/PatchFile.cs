@@ -15,7 +15,7 @@ namespace TACT.Net.Patch
 
         private byte[] Unknown;
 
-        private readonly SortedDictionary<MD5Hash, PatchEntry> _PatchEntries;
+        private readonly SortedList<MD5Hash, PatchEntry> _PatchEntries;
 
         #region Constructors
 
@@ -25,7 +25,7 @@ namespace TACT.Net.Patch
         public PatchFile()
         {
             PatchHeader = new PatchHeader();
-            _PatchEntries = new SortedDictionary<MD5Hash, PatchEntry>(new HashComparer());
+            _PatchEntries = new SortedList<MD5Hash, PatchEntry>(new HashComparer());
         }
 
         /// <summary>

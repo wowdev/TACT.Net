@@ -10,10 +10,11 @@ namespace TACT.Net.Common
         public int Compare(MD5Hash x, MD5Hash y) => Compare(x.Value, y.Value);
         public int Compare(string x, string y) => Compare(x.ToByteArray(), y.ToByteArray());
         public int Compare(EncodingEntryBase x, EncodingEntryBase y) => Compare(x.Key.Value, y.Key.Value);
+        public int Compare(byte[] x, byte[] y) => Compare(x, y, 16);
 
-        public int Compare(byte[] x, byte[] y)
+        private int Compare(byte[] x, byte[] y, int length)
         {
-            int length = Math.Min(x.Length, y.Length), c;
+            int c;
             for (int i = 0; i < length; i++)
             {
                 c = x[i] - y[i];
@@ -29,7 +30,7 @@ namespace TACT.Net.Common
             if (x.Value.Length == y.Value.Length)
                 return x == y;
 
-            return Compare(x, y) == 0;
+            return Compare(x.Value, y.Value, Math.Min(x.Value.Length, y.Value.Length)) == 0;
         }
 
         public int GetHashCode(MD5Hash obj)

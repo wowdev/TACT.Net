@@ -58,16 +58,15 @@ namespace TACT.Net.Common
 
         #region BinaryReader Extensions
 
-        public static ulong ReadUInt40BE(this BinaryReader reader) => ReadUIntBE(reader, 5);
-        public static uint ReadUInt32BE(this BinaryReader reader) => (uint)ReadUIntBE(reader, 4);
-        public static uint ReadUInt24BE(this BinaryReader reader) => (uint)ReadUIntBE(reader, 3);
-        public static ushort ReadUInt16BE(this BinaryReader reader) => (ushort)ReadUIntBE(reader, 2);
+        public static ulong ReadUInt40BE(this BinaryReader reader) => Endian.SwapUInt40(reader.ReadBytes(5));
+        public static uint ReadUInt32BE(this BinaryReader reader) => Endian.SwapUInt32(reader.ReadUInt32());
+        public static uint ReadUInt24BE(this BinaryReader reader) => Endian.SwapUInt24(reader.ReadBytes(3));
+        public static ushort ReadUInt16BE(this BinaryReader reader) => Endian.SwapUInt16(reader.ReadUInt16());
         public static ulong ReadUIntBE(this BinaryReader reader, int size)
         {
-            byte[] buffer = reader.ReadBytes(size);
-            Array.Reverse(buffer);
-            Array.Resize(ref buffer, 8);
-            return BitConverter.ToUInt64(buffer);
+            byte[] buffer = new byte[8];
+            reader.Read(buffer, 8 - size, size);
+            return Endian.SwapUInt64(buffer);
         }
 
         public static Span<T> ReadStructArray<T>(this BinaryReader reader, int count) where T : unmanaged
@@ -95,13 +94,12 @@ namespace TACT.Net.Common
         #region BinaryWriter Extensions
 
         public static void WriteUInt40BE(this BinaryWriter writer, ulong value) => WriteUIntBE(writer, value, 5);
-        public static void WriteUInt32BE(this BinaryWriter writer, uint value) => WriteUIntBE(writer, value, 4);
+        public static void WriteUInt32BE(this BinaryWriter writer, uint value) => writer.Write(Endian.SwapUInt32(value));
         public static void WriteUInt24BE(this BinaryWriter writer, uint value) => WriteUIntBE(writer, value, 3);
-        public static void WriteUInt16BE(this BinaryWriter writer, ushort value) => WriteUIntBE(writer, value, 2);
+        public static void WriteUInt16BE(this BinaryWriter writer, ushort value) => writer.Write(Endian.SwapUInt16(value));
         public static void WriteUIntBE(this BinaryWriter writer, ulong value, int size)
         {
-            byte[] buffer = BitConverter.GetBytes(value);
-            Array.Reverse(buffer);
+            byte[] buffer = BitConverter.GetBytes(Endian.SwapUInt64(value));
             writer.Write(buffer, 8 - size, size);
         }
 

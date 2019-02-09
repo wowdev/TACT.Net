@@ -17,21 +17,13 @@ namespace TACT.Net.Encoding
         /// </summary>
         public MD5Hash CKey;
         /// <summary>
-        /// Encoding keys; one for each block
+        /// Encoding key
+        /// <para>Note: The implementation states this can be >1 however this has never been the case for WoW</para>
         /// </summary>
-        public HashSet<MD5Hash> EKeys;
+        public MD5Hash EKey;
 
         internal override MD5Hash Key => CKey;
-        internal override int Size => 6 + CKey.Value.Length + (EKeys.Count > 0 ? EKeys.Count * EKeys.First().Value.Length : 0);
-
-        #region Constructors
-
-        public EncodingContentEntry()
-        {
-            EKeys = new HashSet<MD5Hash>();
-        }
-
-        #endregion
+        internal override int Size => 6 + CKey.Value.Length + EKey.Value.Length;
 
         #region IO
 
@@ -44,21 +36,19 @@ namespace TACT.Net.Encoding
             DecompressedSize = br.ReadUInt40BE();
             CKey = new MD5Hash(br.ReadBytes(header.CKeyHashSize));
 
-            EKeys = new HashSet<MD5Hash>(keyCount);
-            for (int i = 0; i < keyCount; i++)
-                EKeys.Add(new MD5Hash(br.ReadBytes(header.EKeyHashSize)));
+            EKey = new MD5Hash(br.ReadBytes(header.EKeyHashSize));
+            if (keyCount > 1)
+                br.BaseStream.Position += (keyCount - 1) * header.EKeyHashSize;
 
             return true;
         }
 
         public override void Write(BinaryWriter bw, EncodingHeader header)
         {
-            bw.Write((byte)EKeys.Count);
+            bw.Write((byte)1); // EKey count
             bw.WriteUInt40BE(DecompressedSize);
             bw.Write(CKey.Value);
-
-            foreach (var ekey in EKeys)
-                bw.Write(ekey.Value);
+            bw.Write(EKey.Value);
         }
 
         #endregion
@@ -67,10 +57,10 @@ namespace TACT.Net.Encoding
 
         internal override void Validate()
         {
-            EKeys?.RemoveWhere(x => x.IsEmpty);
-
-            if (EKeys == null || EKeys.Count == 0)
-                throw new InvalidDataException("Entry contains no EKeys");
+            if (EKey.Value == null || EKey.Value.Length == 0)
+                throw new InvalidDataException("Entry contains no EKey");
+            if (CKey.Value == null || CKey.Value.Length == 0)
+                throw new InvalidDataException("Entry contains no CKey");
 
             base.Validate();
         }
