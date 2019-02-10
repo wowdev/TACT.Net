@@ -31,7 +31,7 @@ namespace TACT.Net.Cryptography
 
         #endregion
 
-        public bool IsEmpty => Value == null || Value.Length == 0 || Value.All(x => x == 0);
+        public bool IsEmpty => Value == null || Value.Length == 0 || Array.TrueForAll(Value, x => x == 0);
 
         #region Operators
 

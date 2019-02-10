@@ -77,6 +77,8 @@ namespace TACT.Net.Indices
                 int entriesPerPage = pageSize / (0x14 + IndexFooter.OffsetBytes);
                 int pageCount = (int)(IndexFooter.EntryCount + entriesPerPage - 1) / entriesPerPage;
 
+                // read the entries
+                _indexEntries.Capacity = (int)IndexFooter.EntryCount;
                 stream.Position = 0;
                 for (int i = 0; i < pageCount; i++)
                 {

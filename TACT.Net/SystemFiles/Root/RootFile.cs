@@ -110,6 +110,8 @@ namespace TACT.Net.Root
 
         private void Read(Stream stream)
         {
+            _blocks.Capacity = 0x400; // arbitrary number based on 8.1.5
+
             using (var br = new BinaryReader(stream))
             {
                 long length = stream.Length;
@@ -119,19 +121,22 @@ namespace TACT.Net.Root
                     RootBlock block = new RootBlock()
                     {
                         ContentFlags = (ContentFlags)br.ReadUInt32(),
-                        LocaleFlags = (LocaleFlags)br.ReadUInt32(),
-                        Records = new Dictionary<ulong, RootRecord>(),
+                        LocaleFlags = (LocaleFlags)br.ReadUInt32()
                     };
 
-                    uint currentId = 0;
+                    // load the deltas, set the block's record capacity
                     var fileIdDeltas = br.ReadStructArray<uint>(count);
-                    foreach (var delta in fileIdDeltas)
+                    block.Records = new Dictionary<ulong, RootRecord>(fileIdDeltas.Length);
+
+                    // calculate the records
+                    uint currentId = 0;
+                    RootRecord record;
+                    foreach (uint delta in fileIdDeltas)
                     {
-                        var record = new RootRecord();
+                        record = new RootRecord { FileIdDelta = delta };
                         record.Read(br);
 
-                        record.FileIdDelta = delta;
-                        currentId += record.FileIdDelta;
+                        currentId += delta;
                         record.FileId = currentId++;
 
                         block.Records[record.NameHash] = record;
@@ -141,6 +146,7 @@ namespace TACT.Net.Root
                     _blocks.Add(block);
                 }
 
+                _blocks.TrimExcess();
                 Checksum = stream.MD5Hash();
             }
 

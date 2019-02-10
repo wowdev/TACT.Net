@@ -104,6 +104,7 @@ namespace TACT.Net.Encoding
                 // read CKey entries
                 _CKeyEntries.Capacity = (int)EncodingHeader.CKeyPageCount * 40;
                 ReadPage(br, EncodingHeader.CKeyPageSize << 10, EncodingHeader.CKeyPageCount, _CKeyEntries);
+                _CKeyEntries.TrimExcess();
 
                 // skip EKey page table indices
                 stream.Seek((int)EncodingHeader.EKeyPageCount * (EncodingHeader.EKeyHashSize + 16), SeekOrigin.Current);
@@ -111,6 +112,7 @@ namespace TACT.Net.Encoding
                 // read EKey entries
                 _EKeyEntries.Capacity = (int)EncodingHeader.CKeyPageCount * 25;
                 ReadPage(br, EncodingHeader.EKeyPageSize << 10, EncodingHeader.EKeyPageCount, _EKeyEntries);
+                _EKeyEntries.TrimExcess();
 
                 // remainder is an ESpec block for the file itself
 

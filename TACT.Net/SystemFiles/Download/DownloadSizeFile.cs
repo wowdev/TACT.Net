@@ -73,6 +73,7 @@ namespace TACT.Net.Download
                 ReadTags(br, DownloadSizeHeader.TagCount, DownloadSizeHeader.EntryCount);
 
                 // File Entries
+                _FileEntries.EnsureCapacity((int)DownloadSizeHeader.EntryCount);
                 for (int i = 0; i < DownloadSizeHeader.EntryCount; i++)
                 {
                     var fileEntry = new DownloadSizeFileEntry();

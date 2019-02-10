@@ -14,9 +14,9 @@
 
         public static ulong SwapUInt64(byte[] b)
         {
-            int i1 = (b[0] << 24) | (b[1] << 16) | (b[2] << 8) | b[3];
-            int i2 = (b[4] << 24) | (b[5] << 16) | (b[6] << 8) | b[7];
-            return (ulong)((uint)i2 | ((long)i1 << 32));
+            ulong i1 = (uint)((b[0] << 24) | (b[1] << 16) | (b[2] << 8) | b[3]);
+            uint i2 = (uint)((b[4] << 24) | (b[5] << 16) | (b[6] << 8) | b[7]);
+            return i2 | (i1 << 32);
         }
     }
 }

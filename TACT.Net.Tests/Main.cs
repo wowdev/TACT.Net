@@ -200,7 +200,7 @@ namespace TACT.Net.Tests
         public void TestDebugStuff()
         {
             var sw = Stopwatch.StartNew();
-            Encoding.EncodingFile encodingFile = new Encoding.EncodingFile(PATH, new Cryptography.MD5Hash("fc8bb2fcd439453504e8758ddd7e7535"));
+            Download.DownloadFile downloadFile = new Download.DownloadFile(PATH, new Cryptography.MD5Hash("eab82b2c1d2bf7dd315c87b28ed92cd5"));
             sw.Stop();
             Console.WriteLine(sw.ElapsedMilliseconds);
             Console.Write("");

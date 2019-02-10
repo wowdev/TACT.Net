@@ -71,12 +71,14 @@ namespace TACT.Net.Download
                 // parse the header
                 DownloadHeader.Read(br);
 
+                _FileEntries.EnsureCapacity((int)DownloadHeader.EntryCount);
                 for (int i = 0; i < DownloadHeader.EntryCount; i++)
                 {
                     var fileEntry = new DownloadFileEntry();
                     fileEntry.Read(br, DownloadHeader);
                     _FileEntries[fileEntry.EKey] = fileEntry;
                 }
+                _FileEntries.TrimExcess();
 
                 // Tags
                 ReadTags(br, DownloadHeader.TagCount, DownloadHeader.EntryCount);

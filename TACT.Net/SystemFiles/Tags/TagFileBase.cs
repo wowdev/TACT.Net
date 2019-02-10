@@ -28,12 +28,16 @@ namespace TACT.Net.Tags
 
         protected void ReadTags(BinaryReader br, uint tagCount, uint entryCount)
         {
+            _TagEntries.EnsureCapacity((int)tagCount);
+
             for (int i = 0; i < tagCount; i++)
             {
                 var tagEntry = new TagEntry();
                 tagEntry.Read(br, entryCount);
                 _TagEntries.Add(tagEntry.Name, tagEntry);
             }
+
+            _TagEntries.TrimExcess();
         }
 
         protected void WriteTags(BinaryWriter bw)

@@ -64,7 +64,7 @@ namespace TACT.Net.Download
         public bool TryGet(MD5Hash ekey, out T fileEntry) => _FileEntries.TryGetValue(ekey, out fileEntry);
 
         /// <summary>
-        /// Determin where the specific FileEntry exists
+        /// Determine if the specific FileEntry exists
         /// </summary>
         /// <param name="ekey"></param>
         /// <returns></returns>
