@@ -68,7 +68,11 @@ namespace TACT.Net.Common
 
         public bool Remove(bool item) => throw new NotImplementedException();
 
-        public void CopyTo(bool[] array, int arrayIndex) => throw new NotImplementedException();
+        public void CopyTo(bool[] array, int arrayIndex)
+        {
+            for (int i = 0; i < Count; i++)
+                array[arrayIndex + i] = this[i];
+        }
 
         public IEnumerator<bool> GetEnumerator()
         {
