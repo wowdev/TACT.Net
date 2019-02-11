@@ -54,7 +54,7 @@ namespace TACT.Net.Tags
         {
             // initialise the mask for new entries
             if (!_TagEntries.ContainsKey(tagEntry.Name))
-                tagEntry.FileMask = new BoolArray((fileCount + 7) / 8);
+                tagEntry.FileMask = new BoolArray((uint)fileCount);
 
             _TagEntries[tagEntry.Name] = tagEntry;
         }

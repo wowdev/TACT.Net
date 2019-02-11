@@ -17,7 +17,7 @@ namespace TACT.Net.Tags
         {
             Name = br.ReadCString();
             TypeId = br.ReadUInt16BE();
-            FileMask = new BoolArray(br.ReadBytes((int)(entryCount + 7) / 8));
+            FileMask = new BoolArray(br, entryCount);
         }
 
         public virtual void Write(BinaryWriter bw)

@@ -1,28 +1,32 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 
 namespace TACT.Net.Common
 {
-    /// <summary>
-    /// Resizable BE Boolean Collection
-    /// </summary>
     internal class BoolArray : ICollection<bool>
     {
-        private readonly List<bool> _values;
+        private byte[] _bytes;
 
         #region Constructors
 
-        public BoolArray(byte[] bytes)
+        public BoolArray(byte[] array, uint count)
         {
-            _values = new List<bool>(bytes.Length * 8);
-            for (int i = 0; i < bytes.Length * 8; i++)
-                _values.Add((bytes[i / 8] & (1 << 7 - (i % 8))) != 0);
+            Count = (int)count;
+            _bytes = array;
         }
 
-        public BoolArray(int count)
+        public BoolArray(BinaryReader br, uint count)
         {
-            _values = new List<bool>(new bool[count]);
+            Count = (int)count;
+            _bytes = br.ReadBytes((Count + 7) / 8);
+        }
+
+        public BoolArray(uint count)
+        {
+            Count = (int)count;
+            _bytes = new byte[(Count + 7) / 8];
         }
 
         #endregion
@@ -31,42 +35,39 @@ namespace TACT.Net.Common
 
         public bool this[int index]
         {
-            get => _values[index];
+            get => (_bytes[index / 8] & GetMask(index)) != 0;
             set
             {
                 // expand the collection automatically
-                int diff = index - _values.Count + 1;
+                int diff = ((index + 7) / 8) - _bytes.Length;
                 if (diff > 0)
-                    _values.AddRange(new bool[diff]);
+                    Array.Resize(ref _bytes, _bytes.Length + diff);
 
-                _values[index] = value;
+                // (un)set the bit
+                if (value)
+                    _bytes[index / 8] |= (byte)GetMask(index);
+                else
+                    _bytes[index / 8] &= (byte)~GetMask(index);
             }
         }
 
-        public void Add(bool v) => _values.Add(v);
+        public void Add(bool v) => this[++Count] = v;
 
-        public void Remove(int index) => _values.RemoveAt(index);
+        public void Remove(int index) => BlitAndRotate(index);
 
-        public void Insert(int i, bool v) => _values.Insert(i, v);
-
-        public void Clear() => _values.Clear();
-
-        public byte[] ToByteArray()
+        public void Clear()
         {
-            byte[] bytes = new byte[(_values.Count + 7) / 8];
-
-            for (int i = 0; i < _values.Count; i++)
-                if (_values[i])
-                    bytes[i / 8] |= (byte)(1 << (7 - (i % 8)));
-
-            return bytes;
+            _bytes = new byte[0];
+            Count = 0;
         }
+
+        public byte[] ToByteArray() => _bytes;
 
         #endregion
 
         #region Interface Methods
 
-        public int Count => _values.Count;
+        public int Count { get; private set; }
 
         public bool IsReadOnly => false;
 
@@ -74,11 +75,52 @@ namespace TACT.Net.Common
 
         public bool Remove(bool item) => throw new NotImplementedException();
 
-        public void CopyTo(bool[] array, int arrayIndex) => _values.CopyTo(array, arrayIndex);
+        public void CopyTo(bool[] array, int arrayIndex)
+        {
+            for (int i = 0; i < Count; i++)
+                array[arrayIndex + i] = this[i];
+        }
 
-        public IEnumerator<bool> GetEnumerator() => _values.GetEnumerator();
+        public IEnumerator<bool> GetEnumerator()
+        {
+            for (int i = 0; i < Count; i++)
+                yield return this[i];
+        }
 
-        IEnumerator IEnumerable.GetEnumerator() => _values.GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+        #endregion
+
+        #region Helpers
+
+        /// <summary>
+        /// Purges a specific bit by rotating the whole array from the specified index
+        /// </summary>
+        /// <param name="index">Global bit index</param>
+        private void BlitAndRotate(int index)
+        {
+            if (index < 0)
+                throw new ArgumentException("Index must be >= 0");
+
+            // blit the specified bit from the target byte
+            int mask = ~0 << (7 - (index % 8));
+            index /= 8;
+            _bytes[index] = (byte)(((_bytes[index] << 1) & ~mask) | ((_bytes[index] << 1) & mask));
+
+            // shift all the proceeding bytes to fill the gap
+            for (int i = ++index; i < _bytes.Length; i++)
+            {
+                // transpose the last bit of the current byte to the first of the previous
+                _bytes[i - 1] |= (byte)((_bytes[i] & 0x80) >> 7);
+                _bytes[i] <<= 1;
+            }
+
+            // update the count and resize the array if necessary
+            if ((--Count + 7) / 8 < _bytes.Length)
+                Array.Resize(ref _bytes, _bytes.Length - 1);
+        }
+
+        private int GetMask(int index) => 1 << 7 - (index % 8);
 
         #endregion
 
