@@ -32,7 +32,7 @@ namespace TACT.Net.Common
             set
             {
                 // expand the collection automatically
-                int diff = (index / 8) - _bytes.Length + 1;
+                int diff = ((index + 7) / 8) - _bytes.Length;
                 if (diff > 0)
                     Array.Resize(ref _bytes, _bytes.Length + diff);
 
@@ -95,12 +95,10 @@ namespace TACT.Net.Common
             if (index < 0)
                 throw new ArgumentException("Index must be >= 0");
 
-            int bitIndex = 7 - (index % 8);
-            index /= 8; // byte array index
-
             // blit the specified bit from the target byte
-            int mask = ~0 << bitIndex;
-            _bytes[index] = (byte)((_bytes[index] & ~mask) | ((_bytes[index] >> 1) & mask));
+            int mask = ~0 << (7 - (index % 8));
+            index /= 8;
+            _bytes[index] = (byte)(((_bytes[index] << 1) & ~mask) | ((_bytes[index] << 1) & mask));
 
             // shift all the proceeding bytes to fill the gap
             for (int i = ++index; i < _bytes.Length; i++)
@@ -111,7 +109,7 @@ namespace TACT.Net.Common
             }
 
             // update the count and resize the array if necessary
-            if (--Count / 8 < _bytes.Length)
+            if ((--Count + 7) / 8 < _bytes.Length)
                 Array.Resize(ref _bytes, _bytes.Length - 1);
         }
 
