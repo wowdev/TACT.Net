@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 
 namespace TACT.Net.Common
 {
@@ -10,16 +11,16 @@ namespace TACT.Net.Common
 
         #region Constructors
 
-        public BoolArrayV2(byte[] bytes, int count)
+        public BoolArrayV2(BinaryReader br, uint count)
         {
-            _bytes = bytes;
-            Count = count;
+            Count = (int)count;
+            _bytes = br.ReadBytes((Count + 7) / 8);
         }
 
-        public BoolArrayV2(int count)
+        public BoolArrayV2(uint count)
         {
-            _bytes = new byte[count / 8];
-            Count = count;
+            Count = (int)count;
+            _bytes = new byte[(Count + 7) / 8];
         }
 
         #endregion
