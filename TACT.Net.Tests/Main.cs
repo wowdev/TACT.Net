@@ -61,7 +61,7 @@ namespace TACT.Net.Tests
         public void TestRibbit()
         {
             var rc = new Network.RibbitClient(Locale.US);
-            var resp = rc.GetString("v1/products/wowt/cdns");
+            var resp = rc.GetString("v1/products/wowt/versions");
             Assert.IsTrue(resp.Contains("CDNConfig!"));
         }
 
