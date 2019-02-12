@@ -6,6 +6,10 @@ using TACT.Net.Common;
 
 namespace TACT.Net.Ribbit
 {
+    /// <summary>
+    /// A signed TCP implementation of retrieving product information
+    /// <para>See https://wowdev.wiki/Ribbit</para>
+    /// </summary>
     public class RibbitClient
     {
         private const string Host = ".version.battle.net";
@@ -13,10 +17,26 @@ namespace TACT.Net.Ribbit
         private readonly string _endpoint;
         private readonly ushort _port;
 
+        #region Constructors
+
         public RibbitClient(Locale locale, ushort port = 1119)
         {
             _endpoint = locale + Host;
             _port = port;
+        }
+
+        #endregion
+
+        #region Methods
+
+        public string GetString(RibbitCommand command, string product)
+        {
+            return GetString(CommandToPayload(command, product));
+        }
+
+        public Stream GetStream(RibbitCommand command, string product)
+        {
+            return GetStream(CommandToPayload(command, product));
         }
 
         public string GetString(string payload)
@@ -41,5 +61,27 @@ namespace TACT.Net.Ribbit
             return new MemoryStream(GetString(payload).GetBytes("ASCII"));
         }
 
+        #endregion
+
+        #region Helpers
+
+        private string CommandToPayload(RibbitCommand command, string product)
+        {
+            switch(command)
+            {
+                case RibbitCommand.Bgdl:
+                    return $"v1/products/{product}/bgdl";
+                case RibbitCommand.CDNs:
+                    return $"v1/products/{product}/cdns";
+                case RibbitCommand.Summary:
+                    return $"v1/products/summary";
+                case RibbitCommand.Versions:
+                    return $"v1/products/{product}/versions";
+            }
+
+            return "";
+        }
+
+        #endregion
     }
 }

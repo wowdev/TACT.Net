@@ -15,15 +15,15 @@ namespace TACT.Net.Tests
         [TestInitialize()]
         public void Startup()
         {
-            if (Directory.Exists("test"))
-                Directory.Delete("test", true);
+            Cleanup();
             Directory.CreateDirectory("test");
         }
 
         [TestCleanup()]
         public void Cleanup()
         {
-            Directory.Delete("test", true);
+            if (Directory.Exists("test"))
+                Directory.Delete("test", true);
         }
 
 
@@ -188,6 +188,8 @@ namespace TACT.Net.Tests
             using (var original = File.OpenRead(Path.Combine(PATH, "seagiant2_27826.m2")))
             using (var output = new MemoryStream())
             {
+                Assert.IsNotNull(patch);
+
                 Common.Patching.ZBSPatch.Apply(original, patch, output);
 
                 var b = File.ReadAllBytes(Path.Combine(PATH, "seagiant2_28807.m2"));
