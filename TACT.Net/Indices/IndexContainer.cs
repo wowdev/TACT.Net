@@ -10,18 +10,9 @@ namespace TACT.Net.Indices
 {
     public class IndexContainer : ISystemFile
     {
-        public IEnumerable<IndexFile> DataIndices
-        {
-            get => _indices.Where(x => (x.Type & IndexType.Data) == IndexType.Data);
-        }
-        public IEnumerable<IndexFile> LooseIndices
-        {
-            get => _indices.Where(x => (x.Type & IndexType.Loose) == IndexType.Loose);
-        }
-        public IEnumerable<IndexFile> PatchIndices
-        {
-            get => _indices.Where(x => (x.Type & IndexType.Patch) == IndexType.Patch);
-        }
+        public IEnumerable<IndexFile> DataIndices => _indices.Where(x => (x.Type & IndexType.Data) == IndexType.Data);
+        public IEnumerable<IndexFile> LooseIndices => _indices.Where(x => (x.Type & IndexType.Loose) == IndexType.Loose);
+        public IEnumerable<IndexFile> PatchIndices => _indices.Where(x => (x.Type & IndexType.Patch) == IndexType.Patch);
 
         public MD5Hash Checksum { get; }
 
@@ -129,28 +120,16 @@ namespace TACT.Net.Indices
         /// <returns></returns>
         public Stream OpenFile(MD5Hash hash)
         {
-            foreach (var index in DataIndices)
+            string path = GetIndexEntryAndPath(DataIndices, "data", hash, out var indexEntry);
+            if (path == null)
+                return null;
+
+            // open a shared stream, set the offset and return a new BLTE reader
+            var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read)
             {
-                if (!index.IsGroupIndex && index.TryGet(hash, out var indexEntry))
-                {
-                    // blob file location
-                    string blobpath = Helpers.GetCDNPath(index.Checksum.ToString(), "data", _sourceDirectory);
-
-                    if (File.Exists(blobpath))
-                    {
-                        // open a shared stream, set the offset and return a new BLTE reader
-                        var fs = new FileStream(blobpath, FileMode.Open, FileAccess.Read, FileShare.Read)
-                        {
-                            Position = indexEntry.Offset
-                        };
-                        return new BlockTableStreamReader(fs);
-                    }
-
-                    return null;
-                }
-            }
-
-            return null;
+                Position = indexEntry.Offset
+            };
+            return new BlockTableStreamReader(fs);
         }
 
         /// <summary>
@@ -160,32 +139,19 @@ namespace TACT.Net.Indices
         /// <returns></returns>
         public Stream OpenPatch(MD5Hash hash)
         {
-            foreach (var index in PatchIndices)
+            string path = GetIndexEntryAndPath(PatchIndices, "patch", hash, out var indexEntry);
+            if (path == null)
+                return null;
+
+            using (var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
-                if (!index.IsGroupIndex && index.TryGet(hash, out var indexEntry))
-                {
-                    // blob file location
-                    string blobpath = Helpers.GetCDNPath(index.Checksum.ToString(), "patch", _sourceDirectory);
+                fs.Position = indexEntry.Offset;
 
-                    if (File.Exists(blobpath))
-                    {
-                        // open a shared stream, set the offset and return a new BLTE reader
-                        var fs = new FileStream(blobpath, FileMode.Open, FileAccess.Read, FileShare.Read)
-                        {
-                            Position = indexEntry.Offset
-                        };
-
-                        // segment this entry only
-                        byte[] buffer = new byte[indexEntry.CompressedSize];
-                        fs.Read(buffer);
-                        return new MemoryStream(buffer);
-                    }
-
-                    return null;
-                }
+                // segment this entry only
+                byte[] buffer = new byte[indexEntry.CompressedSize];
+                fs.Read(buffer);
+                return new MemoryStream(buffer);
             }
-
-            return null;
         }
 
         /// <summary>
@@ -210,6 +176,30 @@ namespace TACT.Net.Indices
         /// <param name="index"></param>
         /// <returns></returns>
         public bool Remove(IndexFile index) => _indices.Remove(index);
+
+        #endregion
+
+        #region Helpers
+
+        private string GetIndexEntryAndPath(IEnumerable<IndexFile> indices, string path, MD5Hash hash, out IndexEntry indexEntry)
+        {
+            indexEntry = null;
+
+            foreach (var index in indices)
+            {
+                if (!index.IsGroupIndex && index.TryGet(hash, out indexEntry))
+                {
+                    // blob file location
+                    string blobpath = Helpers.GetCDNPath(index.Checksum.ToString(), path, _sourceDirectory);
+                    if (File.Exists(blobpath))
+                        return blobpath;
+
+                    return null;
+                }
+            }
+
+            return null;
+        }
 
         #endregion
     }
