@@ -35,9 +35,9 @@ namespace TACT.Net.Cryptography
             // check if the full path is provided otherwise
             // fallback to the battle.net app's data directory
             string filepath = filePathOrKeyName;
+
             if (!File.Exists(filePathOrKeyName))
                 filepath = Path.Combine(AppDataPath, Path.ChangeExtension(filePathOrKeyName, ".ak"));
-
             if (!File.Exists(filepath))
                 return false;
 

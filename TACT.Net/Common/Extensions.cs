@@ -28,7 +28,7 @@ namespace TACT.Net.Common
 
         public static string ToHex(this byte[] array)
         {
-            var c = new char[array.Length * 2].AsSpan();
+            Span<char> c = new char[array.Length * 2];
 
             byte b;
             for (int i = 0; i < array.Length; ++i)

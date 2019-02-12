@@ -10,7 +10,7 @@ namespace TACT.Net.Ribbit
     /// A signed TCP implementation of retrieving product information
     /// <para>See https://wowdev.wiki/Ribbit</para>
     /// </summary>
-    public class RibbitClient
+    public sealed class RibbitClient
     {
         private const string Host = ".version.battle.net";
 
