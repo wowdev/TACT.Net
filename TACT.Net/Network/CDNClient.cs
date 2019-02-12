@@ -102,10 +102,7 @@ namespace TACT.Net.Network
                     using (var stream = resp.GetResponseStream())
                     using (var fs = File.Create(filepath))
                     {
-                        if (Decrypt)
-                            Armadillo.Decrypt(cdnpath, stream).CopyTo(fs);
-
-                        stream.CopyTo(fs);
+                        (Decrypt ? Armadillo.Decrypt(cdnpath, stream) : stream).CopyTo(fs);
                     }
 
                     return true;
