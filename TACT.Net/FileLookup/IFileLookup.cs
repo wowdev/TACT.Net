@@ -16,7 +16,7 @@ namespace TACT.Net.FileLookup
         /// Syncs and Closes the FileLookup
         /// </summary>
         void Close();
-        
+
         /// <summary>
         /// Returns the fileid associated to the specified filename
         /// </summary>

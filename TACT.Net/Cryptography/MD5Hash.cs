@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections;
-using System.Linq;
 using TACT.Net.Common;
 
 namespace TACT.Net.Cryptography

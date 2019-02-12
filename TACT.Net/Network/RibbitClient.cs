@@ -67,7 +67,7 @@ namespace TACT.Net.Network
 
         private string CommandToPayload(RibbitCommand command, string product)
         {
-            switch(command)
+            switch (command)
             {
                 case RibbitCommand.Bgdl:
                     return $"v1/products/{product}/bgdl";

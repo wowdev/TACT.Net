@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("TACT.Net.Tests")]
 namespace TACT.Net
@@ -15,7 +13,7 @@ namespace TACT.Net
         public Indices.IndexContainer IndexContainer { get; set; }
         public Encoding.EncodingFile EncodingFile { get; set; }
         public Root.RootFile RootFile { get; set; }
-        public Download.DownloadFile DownloadFile {get;set;}
+        public Download.DownloadFile DownloadFile { get; set; }
         public Download.DownloadSizeFile DownloadSizeFile { get; set; }
         public Install.InstallFile InstallFile { get; set; }
         public Patch.PatchFile PatchFile { get; set; }

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace TACT.Net.Network
+﻿namespace TACT.Net.Network
 {
     public enum RibbitCommand
     {

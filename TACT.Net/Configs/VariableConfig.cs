@@ -39,7 +39,7 @@ namespace TACT.Net.Configs
         /// <param name="type"></param>
         public VariableConfig(ConfigType type) : this()
         {
-            Type = type;            
+            Type = type;
 
             string[] tokens;
             switch (Type)
