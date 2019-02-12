@@ -101,7 +101,7 @@ namespace TACT.Net.Configs
         /// </summary>
         public void OpenRemote(string directory)
         {
-            var ribbit = new Ribbit.RibbitClient(Locale);
+            var ribbit = new Network.RibbitClient(Locale);
             CDNsFile = new VariableConfig(ribbit.GetStream($"v1/products/{Product}/cdns"), ConfigType.CDNs);
             VersionsFile = new VariableConfig(ribbit.GetStream($"v1/products/{Product}/versions"), ConfigType.Versions);
 

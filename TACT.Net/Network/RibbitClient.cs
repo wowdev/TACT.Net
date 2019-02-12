@@ -4,7 +4,7 @@ using System.Net.Sockets;
 using MimeKit;
 using TACT.Net.Common;
 
-namespace TACT.Net.Ribbit
+namespace TACT.Net.Network
 {
     /// <summary>
     /// A signed TCP implementation of retrieving product information

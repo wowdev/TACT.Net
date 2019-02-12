@@ -8,7 +8,7 @@ namespace TACT.Net.Cryptography
 {
     public sealed class Armadillo
     {
-        public byte[] Key { get; set; }
+        public byte[] Key { get; private set; }
 
         private readonly Salsa20 Salsa20;
         private readonly string AppDataPath;
@@ -30,7 +30,7 @@ namespace TACT.Net.Cryptography
         /// </summary>
         /// <param name="filePathOrKeyName"></param>
         /// <returns></returns>
-        public bool LoadKey(string filePathOrKeyName)
+        public bool SetKey(string filePathOrKeyName)
         {
             // check if the full path is provided otherwise
             // fallback to the battle.net app's data directory

@@ -60,8 +60,8 @@ namespace TACT.Net.Tests
         [TestMethod]
         public void TestRibbit()
         {
-            var rc = new Ribbit.RibbitClient(Locale.US);
-            var resp = rc.GetString("v1/products/wowt/versions");
+            var rc = new Network.RibbitClient(Locale.US);
+            var resp = rc.GetString("v1/products/wowt/cdns");
             Assert.IsTrue(resp.Contains("CDNConfig!"));
         }
 
@@ -132,7 +132,7 @@ namespace TACT.Net.Tests
         public void TestArmadillo()
         {
             var armadillo = new Cryptography.Armadillo();
-            Assert.IsTrue(armadillo.LoadKey(Path.Combine(PATH, "sc1Dev.ak")));
+            Assert.IsTrue(armadillo.SetKey(Path.Combine(PATH, "sc1Dev.ak")));
         }
 
         [TestMethod]

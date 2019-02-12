@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace TACT.Net.Ribbit
+namespace TACT.Net.Network
 {
     public enum RibbitCommand
     {
