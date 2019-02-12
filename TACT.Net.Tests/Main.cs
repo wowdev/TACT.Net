@@ -199,19 +199,8 @@ namespace TACT.Net.Tests
         [TestMethod]
         public void TestDebugStuff()
         {
-            //byte[] b = BitConverter.GetBytes(ulong.MaxValue);
-            //Common.BoolArray ba = new Common.BoolArray(b, 8 * 8);
-            //ba[7] = false;
-            //ba[8] = false;
-            //ba[63] = false;
-            //ba.Remove(1);
-            //ba.Remove(30);
-            //ba.Remove(1);
-            //ba.Remove(1);
-
-
             var sw = Stopwatch.StartNew();
-            Download.DownloadFile downloadFile = new Download.DownloadFile(PATH, new Cryptography.MD5Hash("eab82b2c1d2bf7dd315c87b28ed92cd5"));
+            Download.DownloadSizeFile downloadSizeFile = new Download.DownloadSizeFile(PATH, new Cryptography.MD5Hash("af083d582f98a708881576df14e3c606"));
             sw.Stop();
             Console.WriteLine(sw.ElapsedMilliseconds);
             Console.Write("");
