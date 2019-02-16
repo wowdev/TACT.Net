@@ -58,6 +58,7 @@ namespace TACT.Net.Network
         /// <returns></returns>
         public async Task<Stream> OpenStream(string cdnpath)
         {
+            // used as a 404 check
             if (await GetContentLength(cdnpath) == -1)
                 return null;
 
@@ -89,6 +90,7 @@ namespace TACT.Net.Network
         /// <returns></returns>
         public async Task<bool> DownloadFile(string cdnpath, string filepath)
         {
+            // used as a 404 check
             if (await GetContentLength(cdnpath) == -1)
                 return false;
 
@@ -106,7 +108,6 @@ namespace TACT.Net.Network
                     }
 
                     return true;
-
                 }
                 catch (WebException) { }
             }
