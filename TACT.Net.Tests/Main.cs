@@ -184,15 +184,12 @@ namespace TACT.Net.Tests
             // load the original file from disk - build 27826
             // apply the ZBSPatch (patch entry) to the original
             // verify the produced output is byte identical with the patched model - build 28807
-            using (var patch = tact.IndexContainer.OpenPatch(patchEntry.Records[0].PatchEKey))
-            using (var original = File.OpenRead(Path.Combine(PATH, "seagiant2_27826.m2")))
+            using (var original = File.OpenRead("Resources/seagiant2_27826.m2"))
             using (var output = new MemoryStream())
             {
-                Assert.IsNotNull(patch);
+                Assert.IsTrue(tact.PatchFile.ApplyPatch(patchEntry, tact.IndexContainer, original, output));
 
-                Common.Patching.ZBSPatch.Apply(original, patch, output);
-
-                var b = File.ReadAllBytes(Path.Combine(PATH, "seagiant2_28807.m2"));
+                var b = File.ReadAllBytes("Resources/seagiant2_28807.m2");
                 Assert.IsTrue(b.SequenceEqual(output.ToArray()));
             }
         }
