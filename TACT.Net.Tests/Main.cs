@@ -30,6 +30,8 @@ namespace TACT.Net.Tests
         [TestMethod]
         public void TestCKeys()
         {
+            // WOW-28807patch8.1.0_PTR
+
             string ckey = "1a5047b2eebe491069f2f718aee082eb";
             Indices.IndexFile index = new Indices.IndexFile(Path.Combine(PATH, @"tpr\wow\data\1a\50", "1a5047b2eebe491069f2f718aee082eb.index"));
             index.Write("test");
@@ -203,58 +205,6 @@ namespace TACT.Net.Tests
             sw.Stop();
             Console.WriteLine(sw.ElapsedMilliseconds);
             Console.Write("");
-
-            //WOW-28807patch8.1.0_PTR
-
-            //Archives.ArchiveIndex index = new Archives.ArchiveIndex(@"C:\Users\TomSpearman\Downloads\0052ea9a56fd7b3b6fe7d1d906e6cdef.index");
-            //var entry = index.Entries.First(x => x.Offset == 0);
-
-            //Patch.PatchFile patchFile = new Patch.PatchFile(@"C:\Users\TomSpearman\Downloads\284bff5cb89beb6ba2de5e012eb9ed1c");
-
-            //Install.InstallFile installFile = new Install.InstallFile(@"C:\Users\spear\Downloads\9e85df74a6280ee0d1c78b96c75d2384");
-            //installFile.Write("");
-
-            //index.Write(@"C:\Users\TomSpearman\Downloads\Arctium WoW Client Launcher");
-
-            //Root.RootFile rootFile = new Root.RootFile(@"C:\Users\TomSpearman\Downloads\b785e5c1ff3a3fc9805baef91ea732e8");
-            //rootFile.Write("");
-
-            //Encoding.EncodingFile encodingFile = new Encoding.EncodingFile(@"C:\Users\TomSpearman\Downloads\fc8bb2fcd439453504e8758ddd7e7535");
-            //var b1 = encodingFile.GetContentEntryByEKey(new Common.Cryptography.MD5Hash("3afb13d370fe03be2d0b8622952621c3")).First();
-            //encodingFile.TryGetEncodedEntry(new Common.Cryptography.MD5Hash("3afb13d370fe03be2d0b8622952621c3"), out var b);
-
-
-            //encodingFile.Write("");
-
-            //var b = encodingFile.Get(index.Entries.First().EKey, out Encoding.EncodingEKeyEntry entry);
-            //var b2 = encodingFile.GetByEKey(entry.EKey).First();
-            //var b3 = rootFile.Get(b2.CKey).FirstOrDefault();
-
-
-            //Download.DownloadFile downloadFile = new Download.DownloadFile(@"C:\Users\spear\Downloads\64318bc48003848f6fb5f1604d314935");
-            //downloadFile.Write("");
-
-            //Download.DownloadSizeFile downloadSizeFile = new Download.DownloadSizeFile(@"C:\Users\spear\Downloads\07373402cad6fa1ade7d9075ab14cc69");
-            //downloadSizeFile.Write("");
-
-            //64318bc48003848f6fb5f1604d314935
-
-        }
-
-        public string ToHex(byte[] barray)
-        {
-            char[] c = new char[barray.Length * 2];
-
-            byte b;
-            for (int i = 0; i < barray.Length; ++i)
-            {
-                b = (byte)(barray[i] >> 4);
-                c[i * 2] = (char)(b > 9 ? b + 0x37 : b + 0x30);
-                b = (byte)(barray[i] & 0xF);
-                c[i * 2 + 1] = (char)(b > 9 ? b + 0x37 : b + 0x30);
-            }
-
-            return new string(c).ToLowerInvariant();
         }
     }
 }
