@@ -46,11 +46,11 @@ namespace TACT.Net.Configs
             {
                 case ConfigType.CDNs:
                     _fields = "Name!STRING:0|Path!STRING:0|Hosts!STRING:0|Servers!STRING:0|ConfigPath!STRING:0".Split('|');
-                    tokens = new[] { "", "tpr/wow", "", "", "tpr/configs/data" };
+                    tokens = "|tpr/wow|||tpr/configs/data".Split('|');
                     break;
                 case ConfigType.Versions:
                     _fields = "Region!STRING:0|BuildConfig!HEX:16|CDNConfig!HEX:16|KeyRing!HEX:16|BuildId!DEC:4|VersionsName!String:0|ProductConfig!HEX:16".Split('|');
-                    tokens = new[] { "", "", "", "", "00000", "0.0.0.00000", "" };
+                    tokens = "||||00000|0.0.0.00000|".Split('|');
                     break;
                 default:
                     throw new ArgumentException("Invalid VariableConfig type");
@@ -238,6 +238,9 @@ namespace TACT.Net.Configs
 
         private void PopulateCollection(string[] fields, string[] values, Locale locale)
         {
+            if (Type == ConfigType.CDNs && locale == Locale.XX)
+                return;
+
             var collection = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
             for (int i = 0; i < fields.Length; i++)
