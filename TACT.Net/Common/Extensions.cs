@@ -42,15 +42,11 @@ namespace TACT.Net.Common
             return new string(c).ToLowerInvariant();
         }
 
-        public static byte[] ToByteArray(this string hex, int count = 32)
+        public static byte[] ToByteArray(this string hex)
         {
-            int CharToHex(char c) => c - (c < 0x3A ? 0x30 : 0x57);
-
-            byte[] bytes = new byte[Math.Min(hex.Length / 2, count)];
-
-            for (var i = 0; i < bytes.Length; i++)
-                bytes[i] = (byte)((CharToHex(hex[i << 1]) << 4) + CharToHex(hex[(i << 1) + 1]));
-
+            byte[] bytes = new byte[hex.Length / 2];
+            for (int i = 0; i < bytes.Length; i++)
+                bytes[i] = Convert.ToByte(hex.Substring(i * 2, 2), 16);
             return bytes;
         }
 
