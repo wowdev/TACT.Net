@@ -110,24 +110,29 @@ namespace TACT.Net.Tests
             // open the root
             tact.RootFile = new Root.RootFile(tact.BaseDirectory, rootCEntry.EKey, tact);
 
-            // try and get a file
-            var fileEntry = tact.RootFile.Get("world/arttest/boxtest/xyz.m2").FirstOrDefault();
-            Assert.IsNotNull(fileEntry);
-
-            // get the file's contententry
-            Assert.IsTrue(tact.EncodingFile.TryGetContentEntry(fileEntry.CKey, out var fileEntryCEntry));
-
-            // open the file from the blobs
-            using (var fs = tact.IndexContainer.OpenFile(fileEntryCEntry.EKey))
+            // read a normal file then an encrypted file
+            string[] filenames = new[] { "world/arttest/boxtest/xyz.m2", "creature/encrypted05/encrypted05.m2" };
+            foreach(var filename in filenames)
             {
-                Assert.IsNotNull(fs);
+                // try and get a file
+                var fileEntry = tact.RootFile.Get(filename).FirstOrDefault();
+                Assert.IsNotNull(fileEntry);
 
-                byte[] buffer = new byte[4];
-                fs.Read(buffer);
+                // get the file's contententry
+                Assert.IsTrue(tact.EncodingFile.TryGetContentEntry(fileEntry.CKey, out var fileEntryCEntry));
 
-                // check for MD21 magic
-                Assert.AreEqual(BitConverter.ToUInt32(buffer), 0x3132444Du);
-            }
+                // open the file from the blobs
+                using (var fs = tact.IndexContainer.OpenFile(fileEntryCEntry.EKey))
+                {
+                    Assert.IsNotNull(fs);
+
+                    byte[] buffer = new byte[4];
+                    fs.Read(buffer);
+
+                    // check for MD21 magic
+                    Assert.AreEqual(BitConverter.ToUInt32(buffer), 0x3132444Du);
+                }
+            }            
         }
 
         [TestMethod]
