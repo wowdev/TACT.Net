@@ -19,10 +19,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Resources\" />
-  </ItemGroup>
-
-  <ItemGroup>
+    <None Update="Resources\sc1Dev.ak">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="Resources\seagiant2_27826.m2">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

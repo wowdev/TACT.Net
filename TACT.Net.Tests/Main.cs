@@ -12,15 +12,15 @@ namespace TACT.Net.Tests
     {
         const string PATH = @"D:\Backup\";
 
-        [TestInitialize()]
-        public void Startup()
+        [ClassInitialize()]
+        public static void Startup(TestContext context)
         {
             Cleanup();
             Directory.CreateDirectory("test");
         }
 
-        [TestCleanup()]
-        public void Cleanup()
+        [ClassCleanup()]
+        public static void Cleanup()
         {
             if (Directory.Exists("test"))
                 Directory.Delete("test", true);
@@ -139,7 +139,7 @@ namespace TACT.Net.Tests
         public void TestArmadillo()
         {
             var armadillo = new Cryptography.Armadillo();
-            Assert.IsTrue(armadillo.SetKey(Path.Combine(PATH, "sc1Dev.ak")));
+            Assert.IsTrue(armadillo.SetKey("Resources/sc1Dev.ak"));
         }
 
         [TestMethod]
