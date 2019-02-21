@@ -9,8 +9,6 @@ namespace TACT.Net.Cryptography
     public sealed class Lookup3 : HashAlgorithm
     {
         public ulong Result { get; private set; }
-        public uint PB { get; private set; }
-        public uint PC { get; private set; }
 
         public ulong ComputeHash(string str, bool normalize = true)
         {
@@ -18,16 +16,6 @@ namespace TACT.Net.Cryptography
                 str = str.Replace('/', '\\').ToUpperInvariant();
 
             ComputeHash(System.Text.Encoding.ASCII.GetBytes(str));
-            return Result;
-        }
-
-        public ulong ComputeHash(byte[] data, out uint pC, bool reset = false)
-        {
-            if (reset)
-                pC = PB = 0;
-
-            ComputeHash(data);
-            pC = PC;
             return Result;
         }
 
@@ -39,8 +27,7 @@ namespace TACT.Net.Cryptography
 
             uint length = (uint)array.Length;
             uint a, b, c;
-            a = b = c = 0xdeadbeef + length + PC;
-            c += PB;
+            a = b = c = 0xdeadbeef + length;
 
             if (length == 0)
             {
@@ -85,9 +72,6 @@ namespace TACT.Net.Cryptography
                 a ^= c; a -= rot(c, 4);
                 b ^= a; b -= rot(a, 14);
                 c ^= b; c -= rot(b, 24);
-
-                PB = b;
-                PC = c;
 
                 Result = ((ulong)c << 32) | b;
             }
