@@ -130,16 +130,15 @@ namespace TACT.Net.BlockTable
             long startPos = memStream.Position;
             memStream.Position = memStream.Length;
 
-            var block = EBlocks[blockIndex++];
+            var block = EBlocks[blockIndex];
             byte[] data = reader.ReadBytes((int)block.CompressedSize);
-            block.EncodingMap.Type = (EType)data[0];
 
 Process:
+            block.EncodingMap.Type = (EType)data[0];
             switch (block.EncodingMap.Type)
             {
                 case EType.Encrypted:
                     data = Decrypt(block, data, blockIndex);
-                    block.EncodingMap.Type = (EType)data[0];
                     goto Process;
                 case EType.ZLib:
                     Decompress(block, data, memStream);
@@ -151,6 +150,7 @@ Process:
                     throw new NotImplementedException($"Unknown BLTE block type {(char)block.EncodingMap.Type} (0x{block.EncodingMap.Type.ToString("X2")})");
             }
 
+            blockIndex++;
             memStream.Position = startPos;
             return true;
         }
@@ -182,7 +182,9 @@ Process:
 
             byte[] IV = new byte[8];
             Array.Copy(data, keyNameSize + 3, IV, 0, IVSize);
-            Array.Reverse(IV);
+
+            for (int shift = 0, i = 0; i < 4; shift += 8, i++)
+                IV[i] ^= (byte)((index >> shift) & 0xFF);
 
             if (data.Length < IVSize + keyNameSize + 4)
                 throw new Exception("Not enough data");
