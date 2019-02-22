@@ -205,8 +205,7 @@ namespace TACT.Net.Root
         #region Methods
 
         /// <summary>
-        /// Inserts a CASRecord into the RootFile, if no block is found the Common block is used
-        /// <para>Note: This will override existing records</para>
+        /// Adds or Updates a RootRecord and amends all associated system files. If no block is found the Common block is used.
         /// </summary>
         /// <param name="record"></param>
         /// <param name="locale"></param>
@@ -232,8 +231,7 @@ namespace TACT.Net.Root
             }
         }
         /// <summary>
-        /// Inserts a RootRecord into the RootFile, if no block is found the Common block is used
-        /// <para>Note: This will override existing records</para>
+        /// Adds or Updates a RootRecord. If no block is found the Common block is used
         /// </summary>
         /// <param name="rootRecord"></param>
         /// <param name="locale"></param>
@@ -265,7 +263,7 @@ namespace TACT.Net.Root
         }
 
         /// <summary>
-        /// Removes files based on their <paramref name="fileId"/> and optionally their flags
+        /// Removes files based on their <paramref name="fileId"/>
         /// </summary>
         /// <param name="fileId"></param>
         /// <param name="locale"></param>
@@ -280,7 +278,7 @@ namespace TACT.Net.Root
                         block.Records.Remove(namehash);
         }
         /// <summary>
-        /// Removes files based on their <paramref name="namehash"/> and optionally their flags
+        /// Removes files based on their <paramref name="namehash"/>
         /// </summary>
         /// <param name="namehash"></param>
         /// <param name="locale"></param>
@@ -289,13 +287,11 @@ namespace TACT.Net.Root
         {
             var blocks = GetRootBlocks(LocaleFlags, ContentFlags);
             foreach (var block in blocks)
-            {
                 if (block.Records.TryGetValue(namehash, out var record))
                     block.Records.Remove(namehash);
-            }
         }
         /// <summary>
-        /// Removes files based on their <paramref name="filepath"/> and optionall their flags
+        /// Removes files based on their <paramref name="filepath"/>
         /// </summary>
         /// <param name="filepath"></param>
         /// <param name="locale"></param>
@@ -307,7 +303,7 @@ namespace TACT.Net.Root
         }
 
         /// <summary>
-        /// Returns RootRecords based on their <paramref name="fileId"/> and optionally their flags
+        /// Returns RootRecords based on their <paramref name="fileId"/>
         /// </summary>
         /// <param name="fileId"></param>
         /// <param name="locale"></param>
@@ -323,7 +319,7 @@ namespace TACT.Net.Root
                         yield return block.Records[namehash];
         }
         /// <summary>
-        /// Returns RootRecords based on their <paramref name="namehash"/> and optionally their flags
+        /// Returns RootRecords based on their <paramref name="namehash"/>
         /// </summary>
         /// <param name="namehash"></param>
         /// <param name="locale"></param>
@@ -332,13 +328,12 @@ namespace TACT.Net.Root
         public IEnumerable<RootRecord> Get(ulong namehash)
         {
             var blocks = GetRootBlocks(LocaleFlags, ContentFlags);
-
             foreach (var block in blocks)
                 if (block.Records.TryGetValue(namehash, out var rootRecord))
                     yield return rootRecord;
         }
         /// <summary>
-        /// Returns RootRecords based on their <paramref name="filepath"/> and optionally their flags
+        /// Returns RootRecords based on their <paramref name="filepath"/>
         /// </summary>
         /// <param name="filepath"></param>
         /// <param name="locale"></param>
@@ -350,7 +345,7 @@ namespace TACT.Net.Root
             return Get(namehash);
         }
         /// <summary>
-        /// Returns RootRecords based on their <paramref name="ckey"/> and optionally their flags
+        /// Returns RootRecords based on their <paramref name="ckey"/>
         /// </summary>
         /// <param name="ckey"></param>
         /// <param name="locale"></param>
@@ -359,7 +354,6 @@ namespace TACT.Net.Root
         public IEnumerable<RootRecord> Get(MD5Hash ckey)
         {
             var blocks = GetRootBlocks(LocaleFlags, ContentFlags);
-
             foreach (var block in blocks)
                 foreach (var record in block.Records.Values)
                     if (record.CKey == ckey)
