@@ -103,9 +103,7 @@ namespace TACT.Net.Network
                     using (var resp = (HttpWebResponse)await req.GetResponseAsync())
                     using (var stream = resp.GetResponseStream())
                     using (var fs = File.Create(filepath))
-                    {
-                        (Decrypt ? Armadillo.Decrypt(cdnpath, stream) : stream).CopyTo(fs);
-                    }
+                        await (Decrypt ? Armadillo.Decrypt(cdnpath, stream) : stream).CopyToAsync(fs);
 
                     return true;
                 }
