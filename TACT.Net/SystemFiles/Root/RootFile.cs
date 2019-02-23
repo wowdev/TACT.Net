@@ -186,7 +186,10 @@ namespace TACT.Net.Root
                 // save
                 string saveLocation = Helpers.GetCDNPath(record.EKey.ToString(), "data", directory, true);
                 using (var fs = File.Create(saveLocation))
+                {
                     bt.WriteTo(fs);
+                    record.FileName = saveLocation;
+                }
 
                 // add to the encoding file and update the build config
                 if (TACTInstance != null)

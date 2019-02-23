@@ -123,7 +123,10 @@ namespace TACT.Net.Download
                 // save
                 string saveLocation = Helpers.GetCDNPath(record.EKey.ToString(), "data", directory, true);
                 using (var fs = File.Create(saveLocation))
+                {
                     bt.WriteTo(fs);
+                    record.FileName = saveLocation;
+                }
             }
 
             // update the build config with the new values
