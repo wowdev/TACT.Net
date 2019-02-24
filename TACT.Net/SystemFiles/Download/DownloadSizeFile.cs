@@ -119,7 +119,7 @@ namespace TACT.Net.Download
                 using (var fs = File.Create(saveLocation))
                 {
                     bt.WriteTo(fs);
-                    record.FileName = saveLocation;
+                    record.BLTEPath = saveLocation;
                 }
             }
 

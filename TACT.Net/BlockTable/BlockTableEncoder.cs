@@ -107,7 +107,7 @@ namespace TACT.Net.BlockTable
                 using (var fs = File.Create(saveLocation))
                 {
                     bt.WriteTo(fs);
-                    record.FileName = saveLocation;
+                    record.BLTEPath = saveLocation;
                 }
 
                 return record;
@@ -136,7 +136,7 @@ namespace TACT.Net.BlockTable
                 using (var fs = File.Create(saveLocation))
                 {
                     bt.WriteTo(fs);
-                    record.FileName = saveLocation;
+                    record.BLTEPath = saveLocation;
                 }
 
                 return record;
@@ -162,7 +162,7 @@ namespace TACT.Net.BlockTable
                 using (var fs = File.Create(saveLocation))
                 {
                     bt.WriteTo(fs);
-                    record.FileName = saveLocation;
+                    record.BLTEPath = saveLocation;
                 }
 
                 return record;

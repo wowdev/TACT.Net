@@ -121,7 +121,7 @@ namespace TACT.Net.Install
                 using (var fs = File.Create(saveLocation))
                 {
                     bt.WriteTo(fs);
-                    record.FileName = saveLocation;
+                    record.BLTEPath = saveLocation;
                 }
             }
 

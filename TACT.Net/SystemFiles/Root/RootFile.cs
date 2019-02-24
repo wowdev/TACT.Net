@@ -188,7 +188,7 @@ namespace TACT.Net.Root
                 using (var fs = File.Create(saveLocation))
                 {
                     bt.WriteTo(fs);
-                    record.FileName = saveLocation;
+                    record.BLTEPath = saveLocation;
                 }
 
                 // add to the encoding file and update the build config
@@ -445,6 +445,8 @@ namespace TACT.Net.Root
 
         private void FixDeltas()
         {
+            uint previousId, currentId;
+
             foreach (var block in _blocks)
             {
                 // order by id
@@ -454,8 +456,8 @@ namespace TACT.Net.Root
                 // re-calculate deltas
                 for (int i = 1; i < records.Count; i++)
                 {
-                    var previousId = records[i - 1].FileId;
-                    var currentId = records[i].FileId;
+                    previousId = records[i - 1].FileId;
+                    currentId = records[i].FileId;
 
                     if (previousId + records[i].FileIdDelta + 1 != currentId)
                         records[i].FileIdDelta = currentId - previousId - 1;

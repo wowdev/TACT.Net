@@ -162,7 +162,7 @@ namespace TACT.Net.Encoding
                 using (var fs = File.Create(saveLocation))
                 {
                     bt.WriteTo(fs);
-                    record.FileName = saveLocation;
+                    record.BLTEPath = saveLocation;
                 }
             }
 
