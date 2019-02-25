@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using TACT.Net.BlockTable;
 using TACT.Net.Common;
 using TACT.Net.Cryptography;
@@ -23,14 +24,15 @@ namespace TACT.Net.Indices
         /// </summary>
         private readonly SortedList<MD5Hash, CASRecord> _fileQueue;
 
-        private List<IndexFile> _indices;
+        private ConcurrentSet<IndexFile> _indices;
         private string _sourceDirectory;
+        private bool _useParallelism = false;
 
         #region Constructors
 
         public IndexContainer()
         {
-            _indices = new List<IndexFile>();
+            _indices = new ConcurrentSet<IndexFile>();
             _fileQueue = new SortedList<MD5Hash, CASRecord>(new HashComparer());
         }
 
@@ -42,13 +44,15 @@ namespace TACT.Net.Indices
         /// Parses all Index files in the provided directory
         /// </summary>
         /// <param name="directory"></param>
-        public void Open(string directory, bool useParallelism = true)
+        public void Open(string directory, bool useParallelism = false)
         {
             _sourceDirectory = directory;
+            _useParallelism = useParallelism;
 
             var indices = Directory.EnumerateFiles(directory, "*.index", SearchOption.AllDirectories);
-            foreach (var index in indices)
-                _indices.Add(new IndexFile(index));
+
+            ParallelOptions options = new ParallelOptions() { MaxDegreeOfParallelism = useParallelism ? -1 : 1 };
+            Parallel.ForEach(indices, options, index => _indices.Add(new IndexFile(index)));
         }
 
         /// <summary>
@@ -82,7 +86,7 @@ namespace TACT.Net.Indices
 
             // reload indices
             _indices.Clear();
-            Open(directory);
+            Open(directory, _useParallelism);
         }
 
 
