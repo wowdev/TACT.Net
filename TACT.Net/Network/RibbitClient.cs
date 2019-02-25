@@ -34,7 +34,11 @@ namespace TACT.Net.Network
         {
             using (var stream = new TcpClient(_endpoint, _port).GetStream())
             {
-                await stream.WriteAsync((payload + "\r\n").GetBytes("ASCII")).ConfigureAwait(false);
+                // apply the terminator
+                if (!payload.EndsWith("\r\n"))
+                    payload += "\r\n";
+
+                await stream.WriteAsync(payload.GetBytes("ASCII")).ConfigureAwait(false);
 
                 try
                 {
