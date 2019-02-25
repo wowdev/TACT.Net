@@ -68,12 +68,10 @@ namespace TACT.Net.Network
 
                 try
                 {
-                    using (var resp = (HttpWebResponse)await req.GetResponseAsync())
+                    using (var resp = (HttpWebResponse)await req.GetResponseAsync().ConfigureAwait(false))
                     {
-                        if (Decrypt)
-                            return Armadillo.Decrypt(cdnpath, resp.GetResponseStream());
-
-                        return resp.GetResponseStream();
+                        var respStream = resp.GetResponseStream();
+                        return Decrypt ? Armadillo.Decrypt(cdnpath, respStream) : respStream;
                     }
                 }
                 catch (WebException) { }
@@ -96,16 +94,19 @@ namespace TACT.Net.Network
 
             foreach (var host in Hosts)
             {
-                HttpWebRequest req = WebRequest.CreateHttp("http://" + host + "/" + cdnpath);
-
                 try
                 {
-                    using (var resp = (HttpWebResponse)await req.GetResponseAsync())
+                    HttpWebRequest req = WebRequest.CreateHttp("http://" + host + "/" + cdnpath);
+
+                    using (var resp = (HttpWebResponse)await req.GetResponseAsync().ConfigureAwait(false))
                     using (var stream = resp.GetResponseStream())
                     using (var fs = File.Create(filepath))
-                        await (Decrypt ? Armadillo.Decrypt(cdnpath, stream) : stream).CopyToAsync(fs);
+                    {
+                        var respStream = Decrypt ? Armadillo.Decrypt(cdnpath, stream) : stream;
+                        await respStream.CopyToAsync(fs).ConfigureAwait(false);
 
-                    return true;
+                        return true;
+                    }
                 }
                 catch (WebException) { }
             }
@@ -122,12 +123,12 @@ namespace TACT.Net.Network
         {
             foreach (var host in Hosts)
             {
-                HttpWebRequest req = WebRequest.CreateHttp("http://" + host + "/" + cdnpath);
-                req.Method = "HEAD";
-
                 try
                 {
-                    using (var resp = (HttpWebResponse)await req.GetResponseAsync())
+                    HttpWebRequest req = WebRequest.CreateHttp("http://" + host + "/" + cdnpath);
+                    req.Method = "HEAD";
+
+                    using (var resp = (HttpWebResponse)await req.GetResponseAsync().ConfigureAwait(false))
                         if (resp.StatusCode == HttpStatusCode.OK)
                             return resp.ContentLength;
                 }

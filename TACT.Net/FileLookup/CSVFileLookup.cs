@@ -71,12 +71,12 @@ namespace TACT.Net.FileLookup
 
         public async Task Sync()
         {
-            await _sync.WaitAsync();
+            await _sync.WaitAsync().ConfigureAwait(false);
             try
             {
                 using (var sw = new StreamWriter(_filename))
                     foreach (var lookup in _fileLookup)
-                        await sw.WriteLineAsync(lookup.Value + _seperator + lookup.Key);
+                        await sw.WriteLineAsync(lookup.Value + _seperator + lookup.Key).ConfigureAwait(false);
             }
             finally
             {
@@ -86,7 +86,7 @@ namespace TACT.Net.FileLookup
 
         public void Close()
         {
-            Task.Run(Sync).Wait();
+            Sync().RunSynchronously();
         }
 
         #endregion

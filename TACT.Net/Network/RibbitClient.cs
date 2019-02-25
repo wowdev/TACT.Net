@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Net.Sockets;
+using System.Threading.Tasks;
 using MimeKit;
 using TACT.Net.Common;
 
@@ -29,25 +30,16 @@ namespace TACT.Net.Network
 
         #region Methods
 
-        public string GetString(RibbitCommand command, string product)
-        {
-            return GetString(CommandToPayload(command, product));
-        }
-
-        public Stream GetStream(RibbitCommand command, string product)
-        {
-            return GetStream(CommandToPayload(command, product));
-        }
-
-        public string GetString(string payload)
+        public async Task<string> GetString(string payload)
         {
             using (var stream = new TcpClient(_endpoint, _port).GetStream())
             {
-                stream.Write((payload + "\r\n").GetBytes("ASCII"));
+                await stream.WriteAsync((payload + "\r\n").GetBytes("ASCII")).ConfigureAwait(false);
 
                 try
                 {
-                    return MimeMessage.Load(stream).TextBody;
+                    var msg = await MimeMessage.LoadAsync(stream).ConfigureAwait(false);
+                    return msg.TextBody;
                 }
                 catch (FormatException)
                 {
@@ -56,9 +48,20 @@ namespace TACT.Net.Network
             }
         }
 
-        public Stream GetStream(string payload)
+        public async Task<Stream> GetStream(string payload)
         {
-            return new MemoryStream(GetString(payload).GetBytes("ASCII"));
+            var response = await GetString(payload);
+            return new MemoryStream(response.GetBytes("ASCII"));
+        }
+
+        public async Task<string> GetString(RibbitCommand command, string product)
+        {
+            return await GetString(CommandToPayload(command, product));
+        }
+
+        public async Task<Stream> GetStream(RibbitCommand command, string product)
+        {
+            return await GetStream(CommandToPayload(command, product));
         }
 
         #endregion

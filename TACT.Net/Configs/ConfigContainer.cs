@@ -1,5 +1,6 @@
 ﻿using System;
 using TACT.Net.Cryptography;
+using TACT.Net.Network;
 using TACT.Net.SystemFiles;
 
 namespace TACT.Net.Configs
@@ -101,9 +102,14 @@ namespace TACT.Net.Configs
         /// </summary>
         public void OpenRemote(string directory)
         {
-            var ribbit = new Network.RibbitClient(Locale);
-            CDNsFile = new VariableConfig(ribbit.GetStream($"v1/products/{Product}/cdns"), ConfigType.CDNs);
-            VersionsFile = new VariableConfig(ribbit.GetStream($"v1/products/{Product}/versions"), ConfigType.Versions);
+            var ribbit = new RibbitClient(Locale);
+
+            using (var cdnstream = ribbit.GetStream(RibbitCommand.CDNs, Product).Result)
+            using (var verstream = ribbit.GetStream(RibbitCommand.Versions, Product).Result)
+            {
+                CDNsFile = new VariableConfig(cdnstream, ConfigType.CDNs);
+                VersionsFile = new VariableConfig(verstream, ConfigType.Versions);
+            }
 
             LoadConfigs(directory);
         }
