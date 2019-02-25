@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Text;
 
 namespace TACT.Net.Common
 {
@@ -89,7 +88,7 @@ namespace TACT.Net.Common
 
             public T Current => _kvpEnumerator.Current.Key;
 
-            public bool MoveNext() =>  _kvpEnumerator.MoveNext();
+            public bool MoveNext() => _kvpEnumerator.MoveNext();
 
             public void Reset() => _kvpEnumerator.Reset();
         }
