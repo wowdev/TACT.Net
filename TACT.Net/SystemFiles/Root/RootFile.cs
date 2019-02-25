@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using TACT.Net.BlockTable;
@@ -215,6 +216,9 @@ namespace TACT.Net.Root
         /// <param name="content"></param>
         public void AddOrUpdate(CASRecord record)
         {
+            if (FileLookup == null)
+                throw new NullReferenceException($"{nameof(FileLookup)} has not be instantiated");
+
             var rootRecord = new RootRecord()
             {
                 CKey = record.CKey,
