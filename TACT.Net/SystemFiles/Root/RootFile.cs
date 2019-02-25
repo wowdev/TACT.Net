@@ -17,19 +17,6 @@ namespace TACT.Net.Root
     /// </summary>
     public class RootFile : ISystemFile
     {
-        // TODO kill this
-        public TACT TACTInstance
-        {
-            get => _instance;
-            set
-            {
-                if (value != null)
-                    value.RootFile = this; // autoset c ref
-
-                _instance = value;
-            }
-        }
-
         /// <summary>
         /// File lookup for filedataids-to-filenames
         /// </summary>
@@ -56,12 +43,10 @@ namespace TACT.Net.Root
         /// <summary>
         /// Creates a new RootFile
         /// </summary>
-        public RootFile(TACT tactInstance = null)
+        public RootFile()
         {
             _idLookup = new Dictionary<uint, ulong>();
             _lookup3 = new Lookup3();
-
-            TACTInstance = tactInstance;
 
             // add the default global block
             _blocks = new List<RootBlock>
@@ -78,7 +63,7 @@ namespace TACT.Net.Root
         /// Loads an existing RootFile
         /// </summary>
         /// <param name="path">/// <param name="path">BLTE encoded file path</param></param>
-        public RootFile(string path, TACT tactInstance = null) : this()
+        public RootFile(string path) : this()
         {
             _blocks.Clear();
 
@@ -92,13 +77,13 @@ namespace TACT.Net.Root
         /// </summary>
         /// <param name="directory">Base directory</param>
         /// <param name="hash">RootFile MD5</param>
-        public RootFile(string directory, MD5Hash hash, TACT tactInstance = null) : this(Helpers.GetCDNPath(hash.ToString(), "data", directory), tactInstance) { }
+        public RootFile(string directory, MD5Hash hash) : this(Helpers.GetCDNPath(hash.ToString(), "data", directory)) { }
 
         /// <summary>
         /// Loads an existing RootFile
         /// </summary>
         /// <param name="stream"></param>
-        public RootFile(BlockTableStreamReader stream, TACT tactInstance = null) : this()
+        public RootFile(BlockTableStreamReader stream) : this()
         {
             _blocks.Clear();
 
@@ -162,7 +147,7 @@ namespace TACT.Net.Root
         /// </summary>
         /// <param name="directory"></param>
         /// <returns></returns>
-        public CASRecord Write(string directory)
+        public CASRecord Write(string directory, TACT tactInstance = null)
         {
             FixDeltas();
 
@@ -193,10 +178,10 @@ namespace TACT.Net.Root
                 }
 
                 // add to the encoding file and update the build config
-                if (TACTInstance != null)
+                if (tactInstance != null)
                 {
-                    TACTInstance.EncodingFile?.AddOrUpdate(record);
-                    TACTInstance.ConfigContainer?.BuildConfig?.SetValue("root", record.CKey, 0);
+                    tactInstance.EncodingFile?.AddOrUpdate(record);
+                    tactInstance.ConfigContainer?.BuildConfig?.SetValue("root", record.CKey, 0);
                 }
 
                 Checksum = record.CKey;
@@ -212,9 +197,8 @@ namespace TACT.Net.Root
         /// Adds or Updates a RootRecord and amends all associated system files. If no block is found the Common block is used.
         /// </summary>
         /// <param name="record"></param>
-        /// <param name="locale"></param>
-        /// <param name="content"></param>
-        public void AddOrUpdate(CASRecord record)
+        /// <param name="tactInstance">If provided, will add the entry to all relevant system files</param>
+        public void AddOrUpdate(CASRecord record, TACT tactInstance = null)
         {
             if (FileLookup == null)
                 throw new NullReferenceException($"{nameof(FileLookup)} has not be instantiated");
@@ -229,20 +213,18 @@ namespace TACT.Net.Root
             AddOrUpdate(rootRecord);
 
             // add the record to all referenced files
-            if (TACTInstance != null)
+            if (tactInstance != null)
             {
-                TACTInstance.EncodingFile?.AddOrUpdate(record);
-                TACTInstance.IndexContainer?.Enqueue(record);
-                TACTInstance.DownloadFile?.AddOrUpdate(record, 2);
-                TACTInstance.DownloadSizeFile?.AddOrUpdate(record);
+                tactInstance.EncodingFile?.AddOrUpdate(record);
+                tactInstance.IndexContainer?.Enqueue(record);
+                tactInstance.DownloadFile?.AddOrUpdate(record, 2);
+                tactInstance.DownloadSizeFile?.AddOrUpdate(record);
             }
         }
         /// <summary>
         /// Adds or Updates a RootRecord. If no block is found the Common block is used
         /// </summary>
         /// <param name="rootRecord"></param>
-        /// <param name="locale"></param>
-        /// <param name="content"></param>
         public void AddOrUpdate(RootRecord rootRecord)
         {
             ulong nameHash = rootRecord.NameHash;
@@ -273,8 +255,6 @@ namespace TACT.Net.Root
         /// Removes files based on their <paramref name="fileId"/>
         /// </summary>
         /// <param name="fileId"></param>
-        /// <param name="locale"></param>
-        /// <param name="content"></param>
         public void Remove(uint fileId)
         {
             var blocks = GetRootBlocks(LocaleFlags, ContentFlags);
@@ -288,8 +268,6 @@ namespace TACT.Net.Root
         /// Removes files based on their <paramref name="namehash"/>
         /// </summary>
         /// <param name="namehash"></param>
-        /// <param name="locale"></param>
-        /// <param name="content"></param>
         public void Remove(ulong namehash)
         {
             var blocks = GetRootBlocks(LocaleFlags, ContentFlags);
@@ -301,8 +279,6 @@ namespace TACT.Net.Root
         /// Removes files based on their <paramref name="filepath"/>
         /// </summary>
         /// <param name="filepath"></param>
-        /// <param name="locale"></param>
-        /// <param name="content"></param>
         public void Remove(string filepath)
         {
             ulong namehash = _lookup3.ComputeHash(filepath);
@@ -313,8 +289,6 @@ namespace TACT.Net.Root
         /// Returns RootRecords based on their <paramref name="fileId"/>
         /// </summary>
         /// <param name="fileId"></param>
-        /// <param name="locale"></param>
-        /// <param name="content"></param>
         /// <returns></returns>
         public IEnumerable<RootRecord> Get(uint fileId)
         {
@@ -329,8 +303,6 @@ namespace TACT.Net.Root
         /// Returns RootRecords based on their <paramref name="namehash"/>
         /// </summary>
         /// <param name="namehash"></param>
-        /// <param name="locale"></param>
-        /// <param name="content"></param>
         /// <returns></returns>
         public IEnumerable<RootRecord> Get(ulong namehash)
         {
@@ -343,8 +315,6 @@ namespace TACT.Net.Root
         /// Returns RootRecords based on their <paramref name="filepath"/>
         /// </summary>
         /// <param name="filepath"></param>
-        /// <param name="locale"></param>
-        /// <param name="content"></param>
         /// <returns></returns>
         public IEnumerable<RootRecord> Get(string filepath)
         {
@@ -355,8 +325,6 @@ namespace TACT.Net.Root
         /// Returns RootRecords based on their <paramref name="ckey"/>
         /// </summary>
         /// <param name="ckey"></param>
-        /// <param name="locale"></param>
-        /// <param name="content"></param>
         /// <returns></returns>
         public IEnumerable<RootRecord> Get(MD5Hash ckey)
         {
@@ -420,24 +388,24 @@ namespace TACT.Net.Root
         /// </summary>
         /// <param name="rootRecord"></param>
         /// <returns></returns>
-        public Stream OpenFile(RootRecord rootRecord)
+        public Stream OpenFile(RootRecord rootRecord, TACT tactInstance)
         {
-            return OpenFile(rootRecord.CKey);
+            return OpenFile(rootRecord.CKey, tactInstance);
         }
         /// <summary>
         /// Opens a stream to the data of the supplied CKey. Returns null if not found
         /// </summary>
         /// <param name="ckey"></param>
         /// <returns></returns>
-        public Stream OpenFile(MD5Hash ckey)
+        public Stream OpenFile(MD5Hash ckey, TACT tactInstance)
         {
-            if (TACTInstance == null)
+            if (tactInstance == null)
                 return null;
 
-            if (TACTInstance.EncodingFile != null && TACTInstance.IndexContainer != null)
+            if (tactInstance.EncodingFile != null && tactInstance.IndexContainer != null)
             {
-                if (TACTInstance.EncodingFile.TryGetContentEntry(ckey, out EncodingContentEntry encodingCKey))
-                    return TACTInstance.IndexContainer.OpenFile(encodingCKey.EKey);
+                if (tactInstance.EncodingFile.TryGetContentEntry(ckey, out EncodingContentEntry encodingCKey))
+                    return tactInstance.IndexContainer.OpenFile(encodingCKey.EKey);
             }
 
             return null;

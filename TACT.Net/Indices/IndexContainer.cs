@@ -57,7 +57,7 @@ namespace TACT.Net.Indices
         /// <param name="directory"></param>
         /// <param name="dispose">Delete old files</param>
         /// <param name="configContainer"></param>
-        public void Save(string directory, bool dispose = false, Configs.ConfigContainer configContainer = null)
+        public void Save(string directory, Configs.ConfigContainer configContainer = null)
         {
             // save altered Data archive indices
             foreach (var index in DataIndices)
@@ -67,13 +67,6 @@ namespace TACT.Net.Indices
                     string prevBlob = Helpers.GetCDNPath(index.Checksum.ToString(), "data", _sourceDirectory);
                     index.Write(directory, configContainer);
                     index.WriteBlob(directory, prevBlob);
-
-                    // remove old archives
-                    if (dispose)
-                    {
-                        Helpers.Delete(prevBlob);
-                        Helpers.Delete(prevBlob + ".index");
-                    }
                 }
             }
 
