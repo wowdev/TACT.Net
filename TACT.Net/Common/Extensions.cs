@@ -192,9 +192,9 @@ namespace TACT.Net.Common
         public static int IndexOfKey<TKey, TValue>(this Dictionary<TKey, TValue> dictionary, Func<TKey, bool> comparer)
         {
             int i = 0;
-            foreach (var key in dictionary.Keys)
+            foreach (var kvp in dictionary)
             {
-                if (comparer.Invoke(key))
+                if (comparer.Invoke(kvp.Key))
                     return i;
                 i++;
             }
