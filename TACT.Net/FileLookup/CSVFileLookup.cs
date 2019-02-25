@@ -57,8 +57,9 @@ namespace TACT.Net.FileLookup
                     line = sr.ReadLine();
                     seperatorIdx = line.IndexOf(_seperator);
 
-                    if (seperatorIdx > -1 && uint.TryParse(line.Substring(0, seperatorIdx), out uint id))
-                        _fileLookup[line.Substring(seperatorIdx)] = id;
+                    if (seperatorIdx > -1)
+                        if (uint.TryParse(line.Substring(0, seperatorIdx), out uint id))
+                            _fileLookup[line.Substring(seperatorIdx)] = id;
                 }
             }
 
@@ -99,7 +100,7 @@ namespace TACT.Net.FileLookup
             if (!_fileLookup.TryGetValue(filename, out uint id))
             {
                 // attempt to load an unusedid
-                if (!_unusedIds.TryDequeue(out id))
+                if (_unusedIds == null || !_unusedIds.TryDequeue(out id))
                     id = ++_curMaxId; // used the next highest id
 
                 _fileLookup.Add(filename, id);
