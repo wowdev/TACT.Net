@@ -15,14 +15,18 @@ namespace TACT.Net.BlockTable
         /// Encodes a byte array
         /// </summary>
         /// <param name="data"></param>
-        /// <param name="encodingmap"></param>
+        /// <param name="encodingMap"></param>
+        /// <param name="rootName">Root filename</param>
         /// <returns></returns>
-        public static CASRecord Encode(byte[] data, EMap encodingmap)
+        public static CASRecord Encode(byte[] data, EMap encodingMap, string rootName = null)
         {
-            using (var bt = new BlockTableStreamWriter(encodingmap))
+            using (var bt = new BlockTableStreamWriter(encodingMap))
             {
                 bt.Write(data);
-                return bt.Finalise();
+
+                var record = bt.Finalise();
+                record.FileName = rootName;
+                return record;
             }
         }
 
@@ -30,14 +34,18 @@ namespace TACT.Net.BlockTable
         /// Encodes a file using Blizzard-esque rules
         /// </summary>
         /// <param name="filename"></param>
+        /// <param name="rootName">Root filename</param>
         /// <returns></returns>
-        public static CASRecord Encode(string filename)
+        public static CASRecord Encode(string filename, string rootName = null)
         {
             using (var fs = File.OpenRead(filename))
             using (var bt = new BlockTableStreamWriter(GetEMapFromExtension(filename)))
             {
                 fs.CopyTo(bt);
-                return bt.Finalise();
+
+                var record = bt.Finalise();
+                record.FileName = rootName;
+                return record;
             }
         }
 
@@ -45,15 +53,19 @@ namespace TACT.Net.BlockTable
         /// Encodes a stream
         /// </summary>
         /// <param name="stream"></param>
-        /// <param name="encodingmap"></param>
+        /// <param name="encodingMap"></param>
+        /// <param name="rootName">Root filename</param>
         /// <returns></returns>
-        public static CASRecord Encode(Stream stream, EMap encodingmap)
+        public static CASRecord Encode(Stream stream, EMap encodingMap, string rootName = null)
         {
-            using (var bt = new BlockTableStreamWriter(encodingmap))
+            using (var bt = new BlockTableStreamWriter(encodingMap))
             {
                 stream.Position = 0;
                 stream.CopyTo(bt);
-                return bt.Finalise();
+
+                var record = bt.Finalise();
+                record.FileName = rootName;
+                return record;
             }
         }
 
@@ -65,23 +77,25 @@ namespace TACT.Net.BlockTable
         /// Bulk encodes a directory of files
         /// </summary>
         /// <param name="directory">Input directory, this is recursively enumerated</param>
+        /// <param name="nameFactory">Root name generation function, input is the source filename</param>
         /// <returns></returns>
-        public static IDictionary<string, CASRecord> BulkEncode(string directory)
+        public static IDictionary<string, CASRecord> BulkEncode(string directory, Func<string, string> nameFactory = null)
         {
             var files = Directory.EnumerateFiles(directory, "*", SearchOption.AllDirectories);
-            return BulkEncode(files);
+            return BulkEncode(files, nameFactory);
         }
 
         /// <summary>
         /// Bulk encodes a list of file names
         /// </summary>
         /// <param name="filenames"></param>
+        /// <param name="nameFactory">Root name generation function, input is the source filename</param>
         /// <returns></returns>
-        public static IDictionary<string, CASRecord> BulkEncode(IEnumerable<string> filenames)
+        public static IDictionary<string, CASRecord> BulkEncode(IEnumerable<string> filenames, Func<string, string> nameFactory = null)
         {
             var resultSet = new ConcurrentDictionary<string, CASRecord>();
 
-            Parallel.ForEach(filenames, file => resultSet.TryAdd(file, Encode(file)));
+            Parallel.ForEach(filenames, file => resultSet.TryAdd(file, Encode(file, nameFactory?.Invoke(file))));
             return resultSet;
         }
 
@@ -93,12 +107,13 @@ namespace TACT.Net.BlockTable
         /// Encodes a byte array and saves the result to disk
         /// </summary>
         /// <param name="data"></param>
-        /// <param name="encodingmap"></param>
+        /// <param name="encodingMap"></param>
         /// <param name="directory"></param>
+        /// <param name="rootName">Root filename</param>
         /// <returns></returns>
-        public static CASRecord EncodeAndExport(byte[] data, EMap encodingmap, string directory)
+        public static CASRecord EncodeAndExport(byte[] data, EMap encodingMap, string directory, string rootName = null)
         {
-            using (var bt = new BlockTableStreamWriter(encodingmap))
+            using (var bt = new BlockTableStreamWriter(encodingMap))
             {
                 bt.Write(data);
                 var record = bt.Finalise();
@@ -108,6 +123,7 @@ namespace TACT.Net.BlockTable
                 {
                     bt.WriteTo(fs);
                     record.BLTEPath = saveLocation;
+                    record.FileName = rootName;
                 }
 
                 return record;
@@ -119,8 +135,9 @@ namespace TACT.Net.BlockTable
         /// </summary>
         /// <param name="filename"></param>
         /// <param name="directory"></param>
+        /// <param name="rootName">Root filename</param>
         /// <returns></returns>
-        public static CASRecord EncodeAndExport(string filename, string directory)
+        public static CASRecord EncodeAndExport(string filename, string directory, string rootName = null)
         {
             using (var bt = new BlockTableStreamWriter(GetEMapFromExtension(filename)))
             {
@@ -137,6 +154,7 @@ namespace TACT.Net.BlockTable
                 {
                     bt.WriteTo(fs);
                     record.BLTEPath = saveLocation;
+                    record.FileName = rootName;
                 }
 
                 return record;
@@ -147,12 +165,13 @@ namespace TACT.Net.BlockTable
         /// Encodes a stream using Blizzard-esque rules and saves the result to disk
         /// </summary>
         /// <param name="stream"></param>
-        /// <param name="encodingmap"></param>
+        /// <param name="encodingMap"></param>
         /// <param name="directory"></param>
+        /// <param name="rootName">Root filename</param>
         /// <returns></returns>
-        public static CASRecord EncodeAndExport(Stream stream, EMap encodingmap, string directory)
+        public static CASRecord EncodeAndExport(Stream stream, EMap encodingMap, string directory, string rootName = null)
         {
-            using (var bt = new BlockTableStreamWriter(encodingmap))
+            using (var bt = new BlockTableStreamWriter(encodingMap))
             {
                 stream.Position = 0;
                 stream.CopyTo(bt);
@@ -163,6 +182,7 @@ namespace TACT.Net.BlockTable
                 {
                     bt.WriteTo(fs);
                     record.BLTEPath = saveLocation;
+                    record.FileName = rootName;
                 }
 
                 return record;
@@ -178,13 +198,14 @@ namespace TACT.Net.BlockTable
         /// </summary>
         /// <param name="inputDirectory">Input directory, this is recursively enumerated</param>
         /// <param name="outputDirectory"></param>
+        /// <param name="nameFactory">Root name generation function, input is the source filename</param>
         /// <returns></returns>
-        public static IDictionary<string, CASRecord> BulkEncodeAndExport(string inputDirectory, string outputDirectory)
+        public static IDictionary<string, CASRecord> BulkEncodeAndExport(string inputDirectory, string outputDirectory, Func<string, string> nameFactory = null)
         {
             var resultSet = new ConcurrentDictionary<string, CASRecord>();
             var files = Directory.EnumerateFiles(inputDirectory, "*", SearchOption.AllDirectories);
 
-            return BulkEncodeAndExport(files, outputDirectory);
+            return BulkEncodeAndExport(files, outputDirectory, nameFactory);
         }
 
         /// <summary>
@@ -192,12 +213,13 @@ namespace TACT.Net.BlockTable
         /// </summary>
         /// <param name="filenames"></param>
         /// <param name="directory"></param>
+        /// <param name="nameFactory">Root name generation function, input is the source filename</param>
         /// <returns></returns>
-        public static IDictionary<string, CASRecord> BulkEncodeAndExport(IEnumerable<string> filenames, string directory)
+        public static IDictionary<string, CASRecord> BulkEncodeAndExport(IEnumerable<string> filenames, string directory, Func<string, string> nameFactory = null)
         {
             var resultSet = new ConcurrentDictionary<string, CASRecord>();
 
-            Parallel.ForEach(filenames, file => resultSet.TryAdd(file, EncodeAndExport(directory, file)));
+            Parallel.ForEach(filenames, file => resultSet.TryAdd(file, EncodeAndExport(directory, file, nameFactory?.Invoke(file))));
             return resultSet;
         }
 
@@ -259,7 +281,7 @@ namespace TACT.Net.BlockTable
         #region Helpers
 
         /// <summary>
-        /// Returns the EncodingMap based on Blizzard-esque rules
+        /// Returns the encodingMap based on Blizzard-esque rules
         /// </summary>
         /// <param name="filename"></param>
         /// <param name="filesize">Small files are ignored from compression</param>
