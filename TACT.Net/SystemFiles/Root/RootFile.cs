@@ -386,12 +386,45 @@ namespace TACT.Net.Root
         }
 
         /// <summary>
+        /// Opens a stream to the data of the supplied FileId. Returns null if not found
+        /// </summary>
+        /// <param name="fileid"></param>
+        /// <param name="tactInstance"></param>
+        /// <returns></returns>
+        public Stream OpenFile(uint fileid, TACT tactInstance)
+        {
+            return OpenFile(Get(fileid).FirstOrDefault(), tactInstance);
+        }
+        /// <summary>
+        /// Opens a stream to the data of the supplied namehash. Returns null if not found
+        /// </summary>
+        /// <param name="fileid"></param>
+        /// <param name="tactInstance"></param>
+        /// <returns></returns>
+        public Stream OpenFile(ulong namehash, TACT tactInstance)
+        {
+            return OpenFile(Get(namehash).FirstOrDefault(), tactInstance);
+        }
+        /// <summary>
+        /// Opens a stream to the data of the supplied filepath. Returns null if not found
+        /// </summary>
+        /// <param name="filepath"></param>
+        /// <param name="tactInstance"></param>
+        /// <returns></returns>
+        public Stream OpenFile(string filepath, TACT tactInstance)
+        {
+            return OpenFile(Get(filepath).FirstOrDefault(), tactInstance);
+        }
+        /// <summary>
         /// Opens a stream to the data of the supplied RootRecord. Returns null if not found
         /// </summary>
         /// <param name="rootRecord"></param>
         /// <returns></returns>
         public Stream OpenFile(RootRecord rootRecord, TACT tactInstance)
         {
+            if (rootRecord == null)
+                return null;
+
             return OpenFile(rootRecord.CKey, tactInstance);
         }
         /// <summary>
