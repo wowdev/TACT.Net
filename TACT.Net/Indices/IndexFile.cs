@@ -30,11 +30,12 @@ namespace TACT.Net.Indices
         /// <summary>
         /// Creates a new IndexFile
         /// </summary>
-        public IndexFile()
+        public IndexFile(IndexType type)
         {
             _indexEntries = new SortedList<MD5Hash, IndexEntry>(new HashComparer());
             _newEntries = new Dictionary<MD5Hash, CASRecord>();
 
+            Type = type;
             Checksum = new MD5Hash(new byte[0]);
             IndexFooter = new IndexFooter();
         }
@@ -43,7 +44,7 @@ namespace TACT.Net.Indices
         /// Loads an IndexFile from a filepath
         /// </summary>
         /// <param name="path"></param>
-        public IndexFile(string path) : this()
+        public IndexFile(string path) : this(IndexType.Unknown)
         {
             using (var fs = File.OpenRead(path))
                 Read(fs);
@@ -55,7 +56,7 @@ namespace TACT.Net.Indices
         /// Loads an IndexFile from a stream
         /// </summary>
         /// <param name="stream"></param>
-        public IndexFile(Stream stream, IndexType type) : this()
+        public IndexFile(Stream stream, IndexType type) : this(IndexType.Unknown)
         {
             Read(stream);
 

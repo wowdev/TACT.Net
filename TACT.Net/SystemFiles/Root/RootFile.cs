@@ -54,7 +54,8 @@ namespace TACT.Net.Root
                 new RootBlock()
                 {
                     ContentFlags = ContentFlags.None,
-                    LocaleFlags = LocaleFlags.All_WoW
+                    LocaleFlags = LocaleFlags.All_WoW,
+                    Records = new Dictionary<ulong, RootRecord>()
                 }
             };
         }
@@ -137,7 +138,7 @@ namespace TACT.Net.Root
             }
 
             // validate there is a common block
-            var commonBlockTest = GetRootBlocks(LocaleFlags.All_WoW).Any(x => x.ContentFlags == ContentFlags.None);
+            var commonBlockTest = GetBlocks(LocaleFlags.All_WoW).Any(x => x.ContentFlags == ContentFlags.None);
             if (!commonBlockTest)
                 throw new InvalidDataException("Root is malformed. Missing common block");
         }
@@ -235,7 +236,7 @@ namespace TACT.Net.Root
             // update the lookup
             _idLookup[fileId] = nameHash;
 
-            var blocks = GetRootBlocks(LocaleFlags, ContentFlags);
+            var blocks = GetBlocks(LocaleFlags, ContentFlags);
             bool isupdate = blocks.Any(x => x.Records.ContainsKey(nameHash));
 
             // add or update compliant blocks
@@ -248,7 +249,7 @@ namespace TACT.Net.Root
             // add the record to a common block
             if (!blocks.Any())
             {
-                var block = GetRootBlocks(LocaleFlags.All_WoW).First(x => x.ContentFlags == ContentFlags.None);
+                var block = GetBlocks(LocaleFlags.All_WoW).First(x => x.ContentFlags == ContentFlags.None);
                 block.Records[nameHash] = rootRecord;
             }
         }
@@ -259,7 +260,7 @@ namespace TACT.Net.Root
         /// <param name="fileId"></param>
         public void Remove(uint fileId)
         {
-            var blocks = GetRootBlocks(LocaleFlags, ContentFlags);
+            var blocks = GetBlocks(LocaleFlags, ContentFlags);
 
             if (_idLookup.TryGetValue(fileId, out ulong namehash))
                 foreach (var block in blocks)
@@ -272,7 +273,7 @@ namespace TACT.Net.Root
         /// <param name="namehash"></param>
         public void Remove(ulong namehash)
         {
-            var blocks = GetRootBlocks(LocaleFlags, ContentFlags);
+            var blocks = GetBlocks(LocaleFlags, ContentFlags);
             foreach (var block in blocks)
                 if (block.Records.TryGetValue(namehash, out var record))
                     block.Records.Remove(namehash);
@@ -294,7 +295,7 @@ namespace TACT.Net.Root
         /// <returns></returns>
         public IEnumerable<RootRecord> Get(uint fileId)
         {
-            var blocks = GetRootBlocks(LocaleFlags, ContentFlags);
+            var blocks = GetBlocks(LocaleFlags, ContentFlags);
 
             if (_idLookup.TryGetValue(fileId, out ulong namehash))
                 foreach (var block in blocks)
@@ -308,7 +309,7 @@ namespace TACT.Net.Root
         /// <returns></returns>
         public IEnumerable<RootRecord> Get(ulong namehash)
         {
-            var blocks = GetRootBlocks(LocaleFlags, ContentFlags);
+            var blocks = GetBlocks(LocaleFlags, ContentFlags);
             foreach (var block in blocks)
                 if (block.Records.TryGetValue(namehash, out var rootRecord))
                     yield return rootRecord;
@@ -330,7 +331,7 @@ namespace TACT.Net.Root
         /// <returns></returns>
         public IEnumerable<RootRecord> Get(MD5Hash ckey)
         {
-            var blocks = GetRootBlocks(LocaleFlags, ContentFlags);
+            var blocks = GetBlocks(LocaleFlags, ContentFlags);
             foreach (var block in blocks)
                 foreach (var record in block.Records.Values)
                     if (record.CKey == ckey)
@@ -446,6 +447,58 @@ namespace TACT.Net.Root
             return null;
         }
 
+        /// <summary>
+        /// Adds a new RootBlock to the collection
+        /// </summary>
+        /// <param name="localeFlags"></param>
+        /// <param name="contentFlags"></param>
+        /// <returns></returns>
+        public bool AddBlock(LocaleFlags localeFlags, ContentFlags contentFlags)
+        {
+            // ensure the flag combination doesn't already exist
+            if (_blocks.Find(x => x.ContentFlags == contentFlags && x.LocaleFlags == localeFlags) != null)
+                return false;
+            
+            // add the new block
+            _blocks.Add(new RootBlock()
+            {
+                ContentFlags = contentFlags,
+                LocaleFlags = localeFlags,
+                Records = new Dictionary<ulong, RootRecord>()
+            });
+
+            return true;
+        }
+        /// <summary>
+        /// Returns a collection Blocks filtered by their Locale and Content flags
+        /// </summary>
+        /// <param name="locale"></param>
+        /// <param name="content"></param>
+        /// <returns></returns>
+        public IEnumerable<RootBlock> GetBlocks(LocaleFlags locale, ContentFlags content = ContentFlags.None)
+        {
+            foreach (var block in _blocks)
+                if ((block.LocaleFlags & locale) == locale)
+                    if ((block.ContentFlags & content) == content)
+                        yield return block;
+        }
+        /// <summary>
+        /// Removes a RootBlock from the collection
+        /// </summary>
+        /// <param name="rootBlock"></param>
+        /// <returns></returns>
+        public bool RemoveBlock(RootBlock rootBlock) => _blocks.Remove(rootBlock);
+        /// <summary>
+        /// Removes all RootBlocks with the specified Locale and Content flag combination
+        /// </summary>
+        /// <param name="localeFlags"></param>
+        /// <param name="contentFlags"></param>
+        /// <returns></returns>
+        public bool RemoveBlock(LocaleFlags localeFlags, ContentFlags contentFlags)
+        {
+            return _blocks.RemoveAll(x => x.ContentFlags == contentFlags && x.LocaleFlags == localeFlags) > 0;
+        }
+        
         #endregion
 
         #region Helpers
@@ -473,20 +526,6 @@ namespace TACT.Net.Root
                 // reallocate the sorted records
                 block.Records = records.ToDictionary(x => x.NameHash, x => x);
             }
-        }
-
-        /// <summary>
-        /// Returns a collection Blocks filtered by their Locale and Content flags
-        /// </summary>
-        /// <param name="locale"></param>
-        /// <param name="content"></param>
-        /// <returns></returns>
-        public IEnumerable<RootBlock> GetRootBlocks(LocaleFlags locale, ContentFlags content = ContentFlags.None)
-        {
-            foreach (var block in _blocks)
-                if ((block.LocaleFlags & locale) == locale)
-                    if ((block.ContentFlags & content) == content)
-                        yield return block;
         }
 
         /// <summary>

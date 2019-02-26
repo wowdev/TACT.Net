@@ -39,7 +39,7 @@ namespace TACT.Net.Encoding
         public EncodingFile()
         {
             EncodingHeader = new EncodingHeader();
-            ESpecStringTable = new List<string> { "" };
+            ESpecStringTable = new List<string> { "z", "" };
             _CKeyEntries = new CKeyPageTable(new HashComparer());
             _EKeyEntries = new EKeyPageTable(new HashComparer());
 

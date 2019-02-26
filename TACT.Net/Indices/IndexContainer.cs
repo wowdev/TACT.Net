@@ -78,7 +78,7 @@ namespace TACT.Net.Indices
             var partitions = EnumerablePartitioner.ConcreteBatch(_fileQueue.Values, ArchiveDataSize, (x) => x.EBlock.CompressedSize);
             foreach (var entries in partitions)
             {
-                IndexFile index = new IndexFile();
+                IndexFile index = new IndexFile(IndexType.Data);
                 index.Add(entries);
                 index.Write(directory, configContainer);
                 index.WriteBlob(directory);

@@ -119,7 +119,7 @@ namespace TACT.Net.BlockTable
                 }
 
                 // set ESpec
-                eSpec = string.Join(",", _blocks);
+                eSpec = string.Join(",", _blocks.Values);
 
                 // merge the streams
                 memStream.Position = 0;
