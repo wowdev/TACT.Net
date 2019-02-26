@@ -181,6 +181,8 @@ namespace TACT.Net.Root
                 if (tactInstance != null)
                 {
                     tactInstance.EncodingFile?.AddOrUpdate(record);
+                    tactInstance.DownloadFile?.AddOrUpdate(record, 0);
+                    tactInstance.DownloadSizeFile?.AddOrUpdate(record);
                     tactInstance.ConfigContainer?.BuildConfig?.SetValue("root", record.CKey, 0);
                 }
 

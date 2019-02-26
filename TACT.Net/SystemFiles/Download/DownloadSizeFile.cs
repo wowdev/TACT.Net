@@ -91,7 +91,7 @@ namespace TACT.Net.Download
         /// <param name="directory">Root Directory</param>
         /// <param name="configContainer"></param>
         /// <returns></returns>
-        public override CASRecord Write(string directory, Configs.ConfigContainer configContainer = null)
+        public override CASRecord Write(string directory, TACT tactInstance = null)
         {
             CASRecord record;
             using (var bt = new BlockTableStreamWriter(_EncodingMap[0]))
@@ -123,13 +123,19 @@ namespace TACT.Net.Download
                 }
             }
 
-            // update the build config with the new values
-            if (configContainer?.BuildConfig != null)
+            if (tactInstance != null)
             {
-                configContainer.BuildConfig.SetValue("size-size", record.EBlock.DecompressedSize, 0);
-                configContainer.BuildConfig.SetValue("size-size", record.EBlock.CompressedSize, 1);
-                configContainer.BuildConfig.SetValue("size", record.CKey, 0);
-                configContainer.BuildConfig.SetValue("size", record.EKey, 1);
+                // insert the record into the encoding
+                tactInstance.EncodingFile?.AddOrUpdate(record);
+
+                // update the build config with the new values
+                if (tactInstance.ConfigContainer?.BuildConfig != null)
+                {
+                    tactInstance.ConfigContainer.BuildConfig.SetValue("size", record.EBlock.DecompressedSize, 0);
+                    tactInstance.ConfigContainer.BuildConfig.SetValue("size", record.EBlock.CompressedSize, 1);
+                    tactInstance.ConfigContainer.BuildConfig.SetValue("size", record.CKey, 0);
+                    tactInstance.ConfigContainer.BuildConfig.SetValue("size", record.EKey, 1);
+                }
             }
 
             Checksum = record.CKey;

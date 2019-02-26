@@ -97,7 +97,7 @@ namespace TACT.Net.Download
         /// <param name="directory">Root Directory</param>
         /// <param name="configContainer"></param>
         /// <returns></returns>
-        public override CASRecord Write(string directory, Configs.ConfigContainer configContainer = null)
+        public override CASRecord Write(string directory, TACT tactInstance = null)
         {
             CASRecord record;
             using (var bt = new BlockTableStreamWriter(_EncodingMap[0]))
@@ -129,13 +129,19 @@ namespace TACT.Net.Download
                 }
             }
 
-            // update the build config with the new values
-            if (configContainer?.BuildConfig != null)
+            if (tactInstance != null)
             {
-                configContainer.BuildConfig.SetValue("download-size", record.EBlock.DecompressedSize, 0);
-                configContainer.BuildConfig.SetValue("download-size", record.EBlock.CompressedSize, 1);
-                configContainer.BuildConfig.SetValue("download", record.CKey, 0);
-                configContainer.BuildConfig.SetValue("download", record.EKey, 1);
+                // insert the record into the encoding
+                tactInstance.EncodingFile?.AddOrUpdate(record);
+
+                // update the build config with the new values
+                if (tactInstance.ConfigContainer?.BuildConfig != null)
+                {
+                    tactInstance.ConfigContainer.BuildConfig.SetValue("download-size", record.EBlock.DecompressedSize, 0);
+                    tactInstance.ConfigContainer.BuildConfig.SetValue("download-size", record.EBlock.CompressedSize, 1);
+                    tactInstance.ConfigContainer.BuildConfig.SetValue("download", record.CKey, 0);
+                    tactInstance.ConfigContainer.BuildConfig.SetValue("download", record.EKey, 1);
+                }
             }
 
             Checksum = record.CKey;
@@ -150,10 +156,14 @@ namespace TACT.Net.Download
         /// Adds a CASRecord, this will overwrite existing entries
         /// </summary>
         /// <param name="record"></param>
-        /// <param name="priority">0 = highest, 2 = lowest, -1 for system files</param>
+        /// <param name="priority">0 = highest, 2 = lowest, -1 for Install</param>
         /// <param name="tags"></param>
         public void AddOrUpdate(CASRecord record, sbyte priority, params string[] tags)
         {
+            // prevent overflow for old versions
+            if (DownloadHeader.BasePriority + priority < 0)
+                priority = 0;
+
             var entry = new DownloadFileEntry()
             {
                 EKey = record.EKey,

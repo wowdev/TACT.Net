@@ -95,7 +95,7 @@ namespace TACT.Net.Install
         /// <param name="directory">Root Directory</param>
         /// <param name="configContainer"></param>
         /// <returns></returns>
-        public CASRecord Write(string directory, Configs.ConfigContainer configContainer = null)
+        public CASRecord Write(string directory, TACT tactInstance = null)
         {
             CASRecord record;
 
@@ -125,13 +125,21 @@ namespace TACT.Net.Install
                 }
             }
 
-            // update the build config with the new values
-            if (configContainer?.BuildConfig != null)
+            // insert the record into the encoding and the download files
+            if (tactInstance != null)
             {
-                configContainer.BuildConfig.SetValue("install-size", record.EBlock.DecompressedSize, 0);
-                configContainer.BuildConfig.SetValue("install-size", record.EBlock.CompressedSize, 1);
-                configContainer.BuildConfig.SetValue("install", record.CKey, 0);
-                configContainer.BuildConfig.SetValue("install", record.EKey, 1);
+                tactInstance.EncodingFile?.AddOrUpdate(record);
+                tactInstance.DownloadFile?.AddOrUpdate(record, -1);
+                tactInstance.DownloadSizeFile?.AddOrUpdate(record);
+
+                // update the build config with the new values
+                if (tactInstance.ConfigContainer?.BuildConfig != null)
+                {
+                    tactInstance.ConfigContainer.BuildConfig.SetValue("install-size", record.EBlock.DecompressedSize, 0);
+                    tactInstance.ConfigContainer.BuildConfig.SetValue("install-size", record.EBlock.CompressedSize, 1);
+                    tactInstance.ConfigContainer.BuildConfig.SetValue("install", record.CKey, 0);
+                    tactInstance.ConfigContainer.BuildConfig.SetValue("install", record.EKey, 1);
+                }
             }
 
             Checksum = record.CKey;
