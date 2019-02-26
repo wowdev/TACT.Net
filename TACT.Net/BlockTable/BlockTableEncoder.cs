@@ -281,7 +281,7 @@ namespace TACT.Net.BlockTable
         #region Helpers
 
         /// <summary>
-        /// Returns the encodingMap based on Blizzard-esque rules
+        /// Returns the EncodingMap based on Blizzard-esque rules
         /// </summary>
         /// <param name="filename"></param>
         /// <param name="filesize">Small files are ignored from compression</param>
