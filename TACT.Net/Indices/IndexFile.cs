@@ -174,19 +174,16 @@ namespace TACT.Net.Indices
                 IndexFooter.Write(bw);
 
                 // compute filename - from ContentsHash to EOF
-                var fileHash = ms.HashSlice(md5, footerStartPos + IndexFooter.ChecksumSize, IndexFooter.Size - IndexFooter.ChecksumSize);
+                Checksum = ms.HashSlice(md5, footerStartPos + IndexFooter.ChecksumSize, IndexFooter.Size - IndexFooter.ChecksumSize);
 
-                string saveLocation = Helpers.GetCDNPath(fileHash.ToString() + ".index", "data", directory, true);
+                string saveLocation = Helpers.GetCDNPath(Checksum.ToString() + ".index", "data", directory, true);
                 if (!File.Exists(saveLocation))
                 {
                     // save to disk
                     File.WriteAllBytes(saveLocation, ms.ToArray());
 
                     // update the CDN Config
-                    UpdateConfig(configContainer, fileHash);
-
-                    // store the new checksum
-                    Checksum = fileHash;
+                    UpdateConfig(configContainer, Checksum);
                 }
             }
         }
@@ -209,7 +206,7 @@ namespace TACT.Net.Indices
             FileStream blob = null;
             long blobLength = 0;
 
-            if (!Checksum.IsEmpty)
+            if (!Checksum.IsEmpty && !string.IsNullOrEmpty(prevBlob))
             {
                 if (!File.Exists(prevBlob))
                     throw new FileNotFoundException($"Missing old archive blob {Path.GetFileName(prevBlob)}");

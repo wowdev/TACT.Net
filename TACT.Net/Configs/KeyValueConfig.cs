@@ -268,7 +268,7 @@ namespace TACT.Net.Configs
 
                 Checksum = ms.MD5Hash();
 
-                string saveLocation = Helpers.GetCDNPath(Checksum.ToString(), "config", directory);
+                string saveLocation = Helpers.GetCDNPath(Checksum.ToString(), "config", directory, true);
                 File.WriteAllBytes(saveLocation, ms.ToArray());
             }
         }

@@ -470,7 +470,7 @@ namespace TACT.Net.Root
             return true;
         }
         /// <summary>
-        /// Returns a collection Blocks filtered by their Locale and Content flags
+        /// Returns a collection of RootBlocks filtered by their Locale and Content flags
         /// </summary>
         /// <param name="locale"></param>
         /// <param name="content"></param>

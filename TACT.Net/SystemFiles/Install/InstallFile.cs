@@ -154,8 +154,9 @@ namespace TACT.Net.Install
         /// Adds a CASRecord to the InstallFile, this will overwrite existing entries
         /// </summary>
         /// <param name="record"></param>
+        /// <param name="tactInstance">If provided, will add the entry to all relevant system files</param>
         /// <param name="tags"></param>
-        public void AddOrUpdate(CASRecord record, params string[] tags)
+        public void AddOrUpdate(CASRecord record, TACT tactInstance = null, params string[] tags)
         {
             var entry = new InstallFileEntry()
             {
@@ -165,6 +166,15 @@ namespace TACT.Net.Install
             };
 
             AddOrUpdate(entry, tags);
+
+            // add the record to all referenced files
+            if (tactInstance != null)
+            {
+                tactInstance.EncodingFile?.AddOrUpdate(record);
+                tactInstance.IndexContainer?.Enqueue(record);
+                tactInstance.DownloadFile?.AddOrUpdate(record, 2);
+                tactInstance.DownloadSizeFile?.AddOrUpdate(record);
+            }
         }
 
         public void AddOrUpdate(InstallFileEntry fileEntry, params string[] tags)

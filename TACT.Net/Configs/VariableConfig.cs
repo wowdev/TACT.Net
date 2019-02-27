@@ -227,7 +227,8 @@ namespace TACT.Net.Configs
 
                 sw.Flush();
 
-                string saveLocation = Path.Combine(directory, product, md5.ComputeHash(ms).ToHex());
+                string saveDir = Directory.CreateDirectory(Path.Combine(directory, product)).FullName;
+                string saveLocation = Path.Combine(saveDir, md5.ComputeHash(ms).ToHex());
                 File.WriteAllBytes(saveLocation, ms.ToArray());
             }
         }
