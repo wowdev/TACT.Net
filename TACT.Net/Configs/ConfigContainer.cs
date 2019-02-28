@@ -88,11 +88,12 @@ namespace TACT.Net.Configs
         /// Opens the CDNs, Versions and config files from disk
         /// </summary>
         /// <param name="directory">Directory containing the config files</param>
-        /// <param name="cdnVerDirectory">Directory containing the CDNs and Versions files, if different</param>
-        public void OpenLocal(string directory, string cdnVerDirectory = null)
+        public void OpenLocal(string directory)
         {
-            CDNsFile = new VariableConfig(cdnVerDirectory ?? directory, ConfigType.CDNs);
-            VersionsFile = new VariableConfig(cdnVerDirectory ?? directory, ConfigType.Versions);
+            string productDirectory = System.IO.Path.Combine(directory, Product);
+
+            CDNsFile = new VariableConfig(productDirectory, ConfigType.CDNs);
+            VersionsFile = new VariableConfig(productDirectory, ConfigType.Versions);
 
             LoadConfigs(directory);
         }

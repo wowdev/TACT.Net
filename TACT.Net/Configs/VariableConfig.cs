@@ -7,6 +7,8 @@ using TACT.Net.Common;
 
 namespace TACT.Net.Configs
 {
+    using StringPair = Dictionary<string, string>;
+    
     /// <summary>
     /// A data table config with a Locale primary key
     /// </summary>
@@ -14,7 +16,7 @@ namespace TACT.Net.Configs
     {
         public ConfigType Type { get; private set; }
 
-        public Dictionary<string, string> this[Locale locale]
+        public StringPair this[Locale locale]
         {
             get
             {
@@ -23,14 +25,14 @@ namespace TACT.Net.Configs
             }
         }
 
-        private readonly Dictionary<Locale, Dictionary<string, string>> _data;
+        private readonly Dictionary<Locale, StringPair> _data;
         private string[] _fields;
 
         #region Constructors
 
         private VariableConfig()
         {
-            _data = new Dictionary<Locale, Dictionary<string, string>>();
+            _data = new Dictionary<Locale, StringPair>();
         }
 
         /// <summary>
@@ -41,27 +43,17 @@ namespace TACT.Net.Configs
         {
             Type = type;
 
-            string[] tokens;
-            switch (Type)
-            {
-                case ConfigType.CDNs:
-                    _fields = "Name!STRING:0|Path!STRING:0|Hosts!STRING:0|Servers!STRING:0|ConfigPath!STRING:0".Split('|');
-                    tokens = "|tpr/wow|||tpr/configs/data".Split('|');
-                    break;
-                case ConfigType.Versions:
-                    _fields = "Region!STRING:0|BuildConfig!HEX:16|CDNConfig!HEX:16|KeyRing!HEX:16|BuildId!DEC:4|VersionsName!String:0|ProductConfig!HEX:16".Split('|');
-                    tokens = "||||00000|0.0.0.00000|".Split('|');
-                    break;
-                default:
-                    throw new ArgumentException("Invalid VariableConfig type");
-            }
+            var (Fields, Values) = ConfigDataFactory.GenerateVarData(type);
+
+            // set the field names with structual descriptions
+            _fields = Fields;
 
             // generate all Locales
-            string[] fields = _fields.Select(x => x.Split('!')[0]).ToArray();
+            var fields = DestructFieldNames(Fields);
             foreach (var locale in Enum.GetValues(typeof(Locale)))
             {
-                tokens[0] = locale.ToString().ToLower();
-                PopulateCollection(fields, tokens, (Locale)locale);
+                Values[0] = locale.ToString().ToLower();
+                PopulateCollection(fields, Values, (Locale)locale);
             }
         }
 
@@ -188,11 +180,14 @@ namespace TACT.Net.Configs
 
                 if (fields == null)
                 {
-                    // define fields and locale index
-                    fields = tokens.Select(x => x.Split('!')[0].Replace(" ", "")).ToArray();
-                    localeIndex = Array.FindIndex(fields, t => t.Equals(GetLocaleKey, StringComparison.OrdinalIgnoreCase));
+                    // set the field names with structual descriptions
                     _fields = tokens;
 
+                    // extract the field names without their structual descriptions
+                    fields = DestructFieldNames(tokens);
+
+                    // get the index of the primary key
+                    localeIndex = fields.IndexOf(Type == ConfigType.CDNs ? "Name" : "Region");
                     if (localeIndex == -1)
                         throw new FormatException("Config malformed. Missing Locale informaion.");
                 }
@@ -211,25 +206,19 @@ namespace TACT.Net.Configs
         /// <param name="product"></param>
         public void Write(string directory, string product)
         {
-            using (var md5 = MD5.Create())
-            using (var ms = new MemoryStream())
-            using (var sw = new StreamWriter(ms))
+            string saveDir = Directory.CreateDirectory(Path.Combine(directory, product)).FullName;
+            string saveLocation = Path.Combine(saveDir, Type.ToString().ToLowerInvariant());
+
+            using (var sw = new StreamWriter(saveLocation))
             {
                 sw.NewLine = "\n";
 
-                // write the field tokens
+                // write the field information
                 sw.WriteLine(string.Join("|", _fields));
-                sw.WriteLine();
 
                 // write the values for each locale
                 foreach (var collection in _data.Values)
                     sw.WriteLine(string.Join("|", collection.Values));
-
-                sw.Flush();
-
-                string saveDir = Directory.CreateDirectory(Path.Combine(directory, product)).FullName;
-                string saveLocation = Path.Combine(saveDir, md5.ComputeHash(ms).ToHex());
-                File.WriteAllBytes(saveLocation, ms.ToArray());
             }
         }
 
@@ -239,10 +228,11 @@ namespace TACT.Net.Configs
 
         private void PopulateCollection(string[] fields, string[] values, Locale locale)
         {
+            // unused combination
             if (Type == ConfigType.CDNs && locale == Locale.XX)
                 return;
 
-            var collection = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            var collection = new StringPair(StringComparer.OrdinalIgnoreCase);
 
             for (int i = 0; i < fields.Length; i++)
                 collection.Add(fields[i], values[i]);
@@ -250,7 +240,10 @@ namespace TACT.Net.Configs
             _data.Add(locale, collection);
         }
 
-        private string GetLocaleKey => Type == ConfigType.CDNs ? "Name" : "Region";
+        private string[] DestructFieldNames(string[] fields)
+        {
+            return fields.Select(x => x.Split('!')[0]).ToArray();
+        }
 
         #endregion
     }

@@ -7,6 +7,8 @@ using TACT.Net.Cryptography;
 
 namespace TACT.Net.Configs
 {
+    using StringCollection = Dictionary<string, List<string>>;
+
     /// <summary>
     /// A one-to-many KeyValue pair config
     /// </summary>
@@ -25,13 +27,13 @@ namespace TACT.Net.Configs
             }
         }
 
-        private readonly Dictionary<string, List<string>> _data;
+        private readonly StringCollection _data;
 
         #region Constructors
 
         private KeyValueConfig()
         {
-            _data = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
+            _data = new StringCollection(StringComparer.OrdinalIgnoreCase);
         }
 
         /// <summary>
@@ -41,37 +43,7 @@ namespace TACT.Net.Configs
         public KeyValueConfig(ConfigType type) : this()
         {
             Type = type;
-
-            switch (Type)
-            {
-                case ConfigType.BuildConfig:
-                    _data.Add("root", new List<string> { "" });
-                    _data.Add("install", new List<string> { "", "" });
-                    _data.Add("install-size", new List<string> { "", "" });
-                    _data.Add("download", new List<string> { "", "" });
-                    _data.Add("download-size", new List<string> { "", "" });
-                    _data.Add("size", new List<string>() { "", "" });
-                    _data.Add("size-size", new List<string>() { "", "" });
-                    _data.Add("encoding", new List<string> { "", "" });
-                    _data.Add("encoding-size", new List<string> { "", "" });
-                    _data.Add("build-name", new List<string> { "" });
-                    _data.Add("build-uid", new List<string> { "wow" });
-                    _data.Add("build-product", new List<string> { "WoW" });
-                    _data.Add("build-playbuild-installer", new List<string> { "ngdptool_casc2" });
-                    break;
-                case ConfigType.CDNConfig:
-                    _data.Add("archives", new List<string> { "" });
-                    _data.Add("archives-index-size", new List<string> { "" });
-                    _data.Add("patch-archives", new List<string> { "" });
-                    _data.Add("patch-archives-index-size", new List<string> { "" });
-                    _data.Add("file-index", new List<string> { "" });
-                    _data.Add("file-index-size", new List<string> { "" });
-                    _data.Add("patch-file-index", new List<string> { "" });
-                    _data.Add("patch-file-index-size", new List<string> { "" });
-                    break;
-                default:
-                    throw new ArgumentException("Invalid KeyValueConfig type");
-            }
+            _data = ConfigDataFactory.GenerateKeyValueData(type);
         }
 
         /// <summary>
@@ -256,7 +228,7 @@ namespace TACT.Net.Configs
                 // write the token and values skipping blanks
                 foreach (var data in _data)
                 {
-                    if (!data.Value.All(x => string.IsNullOrWhiteSpace(x)))
+                    if (data.Value.Count > 0 && !data.Value.All(x => string.IsNullOrWhiteSpace(x)))
                     {
                         // special case for PatchConfig's patch entries
                         if (Type == ConfigType.PatchConfig && !data.Key.StartsWith("patch"))
@@ -266,6 +238,7 @@ namespace TACT.Net.Configs
                     }
                 }
 
+                sw.Flush();
                 Checksum = ms.MD5Hash();
 
                 string saveLocation = Helpers.GetCDNPath(Checksum.ToString(), "config", directory, true);
