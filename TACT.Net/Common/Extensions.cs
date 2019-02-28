@@ -240,6 +240,17 @@ namespace TACT.Net.Common
             }
         }
 
+        /// <summary>
+        /// Incasesensitive array search returning the index of the first occurrence
+        /// </summary>
+        /// <param name="array"></param>
+        /// <param name="needle"></param>
+        /// <returns></returns>
+        public static int IndexOf(this string[] array, string needle)
+        {
+            return Array.FindIndex(array, t => t.Equals(needle, StringComparison.OrdinalIgnoreCase));
+        }
+
         #endregion
     }
 }
