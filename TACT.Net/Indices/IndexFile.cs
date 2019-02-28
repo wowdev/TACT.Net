@@ -350,7 +350,6 @@ namespace TACT.Net.Indices
             {
                 collection.Remove(Checksum.ToString());
                 collection.Add(hash.ToString());
-                collection.Sort(new MD5HashComparer());
             }
 
             // TODO sizes - not sure how these are calculated

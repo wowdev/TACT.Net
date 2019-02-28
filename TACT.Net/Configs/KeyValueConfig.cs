@@ -204,6 +204,9 @@ namespace TACT.Net.Configs
         /// <param name="directory">Root Directory</param>
         public void Write(string directory)
         {
+            // sort the CDN Config entries
+            SortEntries();
+
             using (var ms = new MemoryStream())
             using (var sw = new StreamWriter(ms))
             {
@@ -243,6 +246,23 @@ namespace TACT.Net.Configs
 
                 string saveLocation = Helpers.GetCDNPath(Checksum.ToString(), "config", directory, true);
                 File.WriteAllBytes(saveLocation, ms.ToArray());
+            }
+        }
+
+        #endregion
+
+        #region Helpers
+
+        private void SortEntries()
+        {
+            if (Type != ConfigType.CDNConfig)
+                return;
+
+            string[] items = new[] { "patch-file-index", "file-index", "patch-archives", "archives" };
+            foreach(var item in items)
+            {
+                if (_data.ContainsKey(item) && _data[item].Count > 0)
+                    _data[item].Sort(new MD5HashComparer());
             }
         }
 
