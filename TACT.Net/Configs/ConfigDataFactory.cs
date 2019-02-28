@@ -84,7 +84,7 @@ namespace TACT.Net.Configs
             collection[key] = values.Length == 0 ? new List<string>() : new List<string>(values);
         }
 
-        private static void AddValue(Dictionary<string, string> collection, string key, string value = null)
+        private static void AddValue(Dictionary<string, string> collection, string key, string value = "")
         {
             collection[key] = value;
         }

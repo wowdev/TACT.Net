@@ -25,7 +25,7 @@ namespace TACT.Net.Patch
         public PatchFile()
         {
             PatchHeader = new PatchHeader();
-            _PatchEntries = new SortedList<MD5Hash, PatchEntry>(new HashComparer());
+            _PatchEntries = new SortedList<MD5Hash, PatchEntry>(new MD5HashComparer());
         }
 
         /// <summary>

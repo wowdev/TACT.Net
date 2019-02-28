@@ -32,7 +32,6 @@ namespace TACT.Net.Root
 
         public MD5Hash Checksum { get; private set; }
 
-        private TACT _instance;
         private readonly EMap[] _EncodingMap = new[] { new EMap(EType.ZLib, 9) };
         private readonly List<RootBlock> _blocks;
         private readonly Lookup3 _lookup3;

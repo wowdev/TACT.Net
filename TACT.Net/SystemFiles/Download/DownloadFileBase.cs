@@ -16,7 +16,7 @@ namespace TACT.Net.Download
 
         protected DownloadFileBase()
         {
-            _FileEntries = new Dictionary<MD5Hash, T>(new HashComparer());
+            _FileEntries = new Dictionary<MD5Hash, T>(new MD5HashComparer());
         }
 
         #endregion

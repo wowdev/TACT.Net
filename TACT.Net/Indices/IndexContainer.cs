@@ -33,7 +33,7 @@ namespace TACT.Net.Indices
         public IndexContainer()
         {
             _indices = new ConcurrentSet<IndexFile>();
-            _fileQueue = new SortedList<MD5Hash, CASRecord>(new HashComparer());
+            _fileQueue = new SortedList<MD5Hash, CASRecord>(new MD5HashComparer());
         }
 
         #endregion

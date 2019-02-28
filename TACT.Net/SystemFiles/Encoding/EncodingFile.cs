@@ -40,8 +40,8 @@ namespace TACT.Net.Encoding
         {
             EncodingHeader = new EncodingHeader();
             ESpecStringTable = new List<string> { "z", "" };
-            _CKeyEntries = new CKeyPageTable(new HashComparer());
-            _EKeyEntries = new EKeyPageTable(new HashComparer());
+            _CKeyEntries = new CKeyPageTable(new MD5HashComparer());
+            _EKeyEntries = new EKeyPageTable(new MD5HashComparer());
 
             _EncodingMap = new[]
             {

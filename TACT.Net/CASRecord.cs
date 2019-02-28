@@ -39,7 +39,9 @@ namespace TACT.Net
             if (!File.Exists(BLTEPath))
                 return false;
 
-            stream.Write(File.ReadAllBytes(BLTEPath));
+            using (var fs = File.OpenRead(BLTEPath))
+                fs.CopyTo(stream);
+
             if (dispose)
                 Helpers.Delete(BLTEPath);
 

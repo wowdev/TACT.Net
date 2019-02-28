@@ -32,7 +32,7 @@ namespace TACT.Net.Indices
         /// </summary>
         public IndexFile(IndexType type)
         {
-            _indexEntries = new SortedList<MD5Hash, IndexEntry>(new HashComparer());
+            _indexEntries = new SortedList<MD5Hash, IndexEntry>(new MD5HashComparer());
             _newEntries = new Dictionary<MD5Hash, CASRecord>();
 
             Type = type;
@@ -350,7 +350,7 @@ namespace TACT.Net.Indices
             {
                 collection.Remove(Checksum.ToString());
                 collection.Add(hash.ToString());
-                collection.Sort(new HashComparer());
+                collection.Sort(new MD5HashComparer());
             }
 
             // TODO sizes - not sure how these are calculated
