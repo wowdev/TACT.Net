@@ -1,7 +1,7 @@
 ﻿using System;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TACT.Net.Configs;
 
@@ -63,7 +63,7 @@ namespace TACT.Net.Tests
         public void TestRibbit()
         {
             var rc = new Network.RibbitClient(Locale.US);
-            var resp = rc.GetString("v1/products/wowt/versions");
+            var resp = rc.GetString("v1/products/wowt/versions").Result;
             Assert.IsTrue(resp.Contains("CDNConfig!"));
         }
 
@@ -78,7 +78,7 @@ namespace TACT.Net.Tests
             //configContainer.OpenRemote(@"D:\Backup\");
             //Assert.IsNotNull(configContainer.VersionsFile);
 
-            tact.ConfigContainer.OpenLocal(@"D:\Backup\", @"D:\Backup\");
+            tact.ConfigContainer.OpenLocal(@"D:\Backup\");
             Assert.IsNotNull(tact.ConfigContainer.VersionsFile);
             Assert.IsNotNull(tact.ConfigContainer.BuildConfig);
             Assert.IsFalse(tact.ConfigContainer.RootMD5.IsEmpty);
@@ -94,7 +94,7 @@ namespace TACT.Net.Tests
             };
 
             // open the configs
-            tact.ConfigContainer.OpenLocal(tact.BaseDirectory, tact.BaseDirectory);
+            tact.ConfigContainer.OpenLocal(tact.BaseDirectory);
 
             // load the archives
             tact.IndexContainer = new Indices.IndexContainer();
@@ -108,21 +108,18 @@ namespace TACT.Net.Tests
             Assert.IsTrue(tact.EncodingFile.TryGetContentEntry(tact.ConfigContainer.RootMD5, out var rootCEntry));
 
             // open the root
-            tact.RootFile = new Root.RootFile(tact.BaseDirectory, rootCEntry.EKey, tact);
+            tact.RootFile = new Root.RootFile(tact.BaseDirectory, rootCEntry.EKey);
 
             // read a normal file then an encrypted file
             string[] filenames = new[] { "world/arttest/boxtest/xyz.m2", "creature/encrypted05/encrypted05.m2" };
-            foreach(var filename in filenames)
+            foreach (var filename in filenames)
             {
-                // try and get a file
-                var fileEntry = tact.RootFile.Get(filename).FirstOrDefault();
-                Assert.IsNotNull(fileEntry);
-
-                // get the file's contententry
-                Assert.IsTrue(tact.EncodingFile.TryGetContentEntry(fileEntry.CKey, out var fileEntryCEntry));
-
-                // open the file from the blobs
-                using (var fs = tact.IndexContainer.OpenFile(fileEntryCEntry.EKey))
+                // open a stream to the file
+                // gets the file's ckey from the root
+                // gets the file's ekey from the encoding
+                // loads the IndexEntry from the IndexContainer
+                // returns a BLTE stream to the file segment in the data blob
+                using (var fs = tact.RootFile.OpenFile(filename, tact))
                 {
                     Assert.IsNotNull(fs);
 
@@ -132,7 +129,7 @@ namespace TACT.Net.Tests
                     // check for MD21 magic
                     Assert.AreEqual(BitConverter.ToUInt32(buffer), 0x3132444Du);
                 }
-            }            
+            }
         }
 
         [TestMethod]
@@ -175,7 +172,7 @@ namespace TACT.Net.Tests
             };
 
             // open the configs
-            tact.ConfigContainer.OpenLocal(tact.BaseDirectory, tact.BaseDirectory);
+            tact.ConfigContainer.OpenLocal(tact.BaseDirectory);
 
             // load the archives
             tact.IndexContainer = new Indices.IndexContainer();
@@ -201,15 +198,53 @@ namespace TACT.Net.Tests
             }
         }
 
+        [TestMethod]
+        //[Ignore]
+        public void CreateNewTactRepo()
+        {
+            string buildName = "WOW-15595patch4.3.4_Alpha";
+            string buildId = "15595";
+            string versionName = "4.3.4";
+
+            string tempPath = Path.Combine("test", "temp");
+            Directory.CreateDirectory(tempPath);
+
+            if (Directory.Exists(@"C:\wamp64\www\tpr"))
+                Directory.Delete(@"C:\wamp64\www\tpr", true);
+            if (Directory.Exists(@"C:\wamp64\www\wow"))
+                Directory.Delete(@"C:\wamp64\www\wow", true);
+
+            // open a new tact instance
+            TACT tact = new TACT(@"C:\wamp64\www");
+            tact.Create("wow", Locale.US);
+
+            // update the configs
+            // build info and server locations
+            tact.ConfigContainer.VersionsFile.SetValue("BuildId", buildId);
+            tact.ConfigContainer.VersionsFile.SetValue("VersionsName", versionName);
+            tact.ConfigContainer.BuildConfig.SetValue("Build-Name", buildName, 0);
+            tact.ConfigContainer.CDNsFile.SetValue("Hosts", "localhost");
+            tact.ConfigContainer.CDNsFile.SetValue("Servers", "http://127.0.0.1");
+
+            // set root variables
+            tact.RootFile.LocaleFlags = Root.LocaleFlags.enUS;
+            tact.RootFile.FileLookup = new MockFileLookup();
+
+            var record = BlockTable.BlockTableEncoder.EncodeAndExport("Resources/seagiant2_27826.m2", tempPath, "creature/seagiant2/seagiant2.m2");
+            tact.RootFile.AddOrUpdate(record, tact);
+
+            record.FileName = "WoW.exe";
+            tact.InstallFile.AddOrUpdate(record, tact);
+
+            tact.Save(tact.BaseDirectory);
+        }
+
 
         [TestMethod]
         public void TestDebugStuff()
         {
-            var sw = Stopwatch.StartNew();
-            Download.DownloadSizeFile downloadSizeFile = new Download.DownloadSizeFile(PATH, new Cryptography.MD5Hash("af083d582f98a708881576df14e3c606"));
-            sw.Stop();
-            Console.WriteLine(sw.ElapsedMilliseconds);
-            Console.Write("");
+           
+
         }
     }
 }
