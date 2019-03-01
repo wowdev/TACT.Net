@@ -29,7 +29,6 @@ namespace TACT.Net.Encoding
         private readonly EMap[] _EncodingMap;
         private CKeyPageTable _CKeyEntries;
         private EKeyPageTable _EKeyEntries;
-        private bool _requiresRebuild = false;
 
         #region Constructors
 
@@ -215,20 +214,16 @@ namespace TACT.Net.Encoding
                 ESpecIndex = (uint)especIndex
             };
             _EKeyEntries[record.EKey] = eKeyEntry;
-
-            _requiresRebuild = true;
         }
         public void AddOrUpdate(EncodingContentEntry entry)
         {
             entry.Validate();
             _CKeyEntries[entry.CKey] = entry;
-            _requiresRebuild = true;
         }
         public void AddOrUpdate(EncodingEncodedEntry entry)
         {
             entry.Validate();
             _EKeyEntries[entry.EKey] = entry;
-            _requiresRebuild = true;
         }
 
         /// <summary>
@@ -244,13 +239,11 @@ namespace TACT.Net.Encoding
         }
         public void Remove(EncodingContentEntry entry)
         {
-            if (_CKeyEntries.Remove(entry.CKey))
-                _requiresRebuild = true;
+            _CKeyEntries.Remove(entry.CKey);
         }
         public void Remove(EncodingEncodedEntry entry)
         {
-            if (_EKeyEntries.Remove(entry.EKey))
-                _requiresRebuild = true;
+            _EKeyEntries.Remove(entry.EKey);
         }
 
         /// <summary>
@@ -410,31 +403,6 @@ namespace TACT.Net.Encoding
             sb.Append($"*={(char)substreams.Last().EncodingMap.Type}");
 
             return "b:{" + sb.ToString().ToLowerInvariant() + "}";
-        }
-
-        private void RebuildLookups()
-        {
-            //if (!_requiresRebuild)
-            //    return;
-
-            // TODO need to revisit this
-            // do something about broken CKeyEntries links - throw ex?
-            // should this check if the Root entry counterpart exists and delete from the archives?
-            // should this be moved to a general "Clean TACT" function that checks for all broken joins/unused files?
-
-            // remove entries that are x-ref to missing keys
-            //var eKeys = _EKeyEntries.Keys.ToHashSet();
-            //foreach (var ckeyentry in _CKeyEntries)
-            //{
-            //    ckeyentry.Value.EKeys.RemoveWhere(x => !_EKeyEntries.ContainsKey(x));
-            //    eKeys.ExceptWith(ckeyentry.Value.EKeys);
-            //}
-
-            //// remove unreferenced EKeys
-            //foreach (var ekey in eKeys)
-            //    _EKeyEntries.Remove(ekey);
-
-            //_requiresRebuild = false;
         }
 
         #endregion

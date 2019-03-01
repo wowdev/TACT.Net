@@ -39,6 +39,8 @@ namespace TACT.Net.Indices
         /// </summary>
         public MD5Hash FooterChecksum;
 
+        internal int Size => 12 + (ChecksumSize * 3);
+
         #region IO
 
         public void Read(BinaryReader br)
@@ -87,8 +89,6 @@ namespace TACT.Net.Indices
                 ms.WriteTo(bw.BaseStream);
             }
         }
-
-        public int Size => 12 + (ChecksumSize * 3);
 
         #endregion
     }
