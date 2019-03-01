@@ -246,6 +246,14 @@ namespace TACT.Net.Install
             SetTags(index, value, tags);
         }
 
+        /// <summary>
+        /// Resets the Tags to the BfA default values and clears all file associations
+        /// </summary>
+        public void SetDefaultTags()
+        {
+            SetDefaultTags(_FileEntries.Count);
+        }
+
         #endregion
     }
 }

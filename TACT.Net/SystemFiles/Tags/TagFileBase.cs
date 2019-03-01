@@ -50,6 +50,17 @@ namespace TACT.Net.Tags
 
         #region Methods
 
+        protected void Add(string name, ushort typeId, int fileCount)
+        {
+            TagEntry tagEntry = new TagEntry()
+            {
+                Name = name,
+                TypeId = typeId
+            };
+
+            AddOrUpdateTag(tagEntry, fileCount);
+        }
+
         protected void AddOrUpdateTag(TagEntry tagEntry, int fileCount)
         {
             // initialise the mask for new entries
@@ -116,6 +127,36 @@ namespace TACT.Net.Tags
                     if (_TagEntries.TryGetValue(tag, out var tagEntry))
                         tagEntry.FileMask[index] = value;
             }
+        }
+
+        protected void SetDefaultTags(int fileCount)
+        {
+            _TagEntries.Clear();
+
+            Add("OSX", 1, fileCount);
+            Add("Web", 1, fileCount);
+            Add("Windows", 1, fileCount);
+            Add("x86_32", 2, fileCount);
+            Add("x86_64", 2, fileCount);
+            Add("Alternate", 0x4000, fileCount);
+            Add("deDE", 3, fileCount);
+            Add("enUS", 3, fileCount);
+            Add("esES", 3, fileCount);
+            Add("esMX", 3, fileCount);
+            Add("frFR", 3, fileCount);
+            Add("itIT", 3, fileCount);
+            Add("koKR", 3, fileCount);
+            Add("ptBR", 3, fileCount);
+            Add("ruRU", 3, fileCount);
+            Add("zhCN", 3, fileCount);
+            Add("zhTW", 3, fileCount);
+            Add("CN", 4, fileCount);
+            Add("EU", 4, fileCount);
+            Add("KR", 4, fileCount);
+            Add("TW", 4, fileCount);
+            Add("US", 4, fileCount);
+            Add("speech", 5, fileCount);
+            Add("text", 5, fileCount);
         }
 
         #endregion
