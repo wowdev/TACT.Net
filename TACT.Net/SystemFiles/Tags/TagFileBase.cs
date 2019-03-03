@@ -138,38 +138,61 @@ namespace TACT.Net.Tags
         {
             _TagEntries.Clear();
 
-            Add("OSX", 1, fileCount);
-            Add("Web", 1, fileCount);
-            Add("Windows", 1, fileCount);
-            Add("x86_32", 2, fileCount);
-            Add("x86_64", 2, fileCount);
-            Add("deDE", 3, fileCount);
-            Add("enUS", 3, fileCount);
-            Add("esES", 3, fileCount);
-            Add("esMX", 3, fileCount);
-            Add("frFR", 3, fileCount);
-            Add("itIT", 3, fileCount);
-            Add("koKR", 3, fileCount);
-            Add("ptBR", 3, fileCount);
-            Add("ruRU", 3, fileCount);
-            Add("zhCN", 3, fileCount);
-            Add("zhTW", 3, fileCount);
+            var typeIds = TagTypeHelper.GetTypeIds(build);
 
-            if(build > 18761)
+            // Platform
+            if (typeIds.TryGetValue("Platform", out var id))
             {
-                Add("CN", 4, fileCount);
-                Add("EU", 4, fileCount);
-                Add("KR", 4, fileCount);
-                Add("TW", 4, fileCount);
-                Add("US", 4, fileCount);
+                Add("OSX", id, fileCount);
+                Add("Web", id, fileCount);
+                Add("Windows", id, fileCount);
             }
 
-            if(build > 20426)
+            // Architecture
+            if (typeIds.TryGetValue("Architecture", out id))
             {
-                Add("speech", 5, fileCount);
-                Add("text", 5, fileCount);
-                Add("Alternate", 0x4000, fileCount);
-            }          
+                Add("x86_32", id, fileCount);
+                Add("x86_64", id, fileCount);
+            }
+
+            // Locale
+            if (typeIds.TryGetValue("Locale", out id))
+            {
+                Add("deDE", id, fileCount);
+                Add("enUS", id, fileCount);
+                Add("esES", id, fileCount);
+                Add("esMX", id, fileCount);
+                Add("frFR", id, fileCount);
+                Add("itIT", id, fileCount);
+                Add("koKR", id, fileCount);
+                Add("ptBR", id, fileCount);
+                Add("ruRU", id, fileCount);
+                Add("zhCN", id, fileCount);
+                Add("zhTW", id, fileCount);
+            }
+
+            //Region
+            if (typeIds.TryGetValue("Region", out id))
+            {
+                Add("CN", id, fileCount);
+                Add("EU", id, fileCount);
+                Add("KR", id, fileCount);
+                Add("TW", id, fileCount);
+                Add("US", id, fileCount);
+            }
+
+            // Category
+            if (typeIds.TryGetValue("Category", out id))
+            {
+                Add("speech", id, fileCount);
+                Add("text", id, fileCount);
+            }
+
+            // Alternate
+            if (typeIds.TryGetValue("Alternate", out id))
+            {
+                Add("Alternate", id, fileCount);
+            }
         }
 
         #endregion

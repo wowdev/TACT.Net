@@ -3,14 +3,27 @@ using System.Collections.Generic;
 
 namespace TACT.Net.Tags
 {
+    using Lookup = Dictionary<uint, Dictionary<string, ushort>>;
+    using LookupEntry = Dictionary<string, ushort>;
+
     internal static class TagTypeHelper
     {
+        private const uint MaxBuild = 99999;
+
         public static string TypeName(ushort type, uint build)
         {
-            for (int i = 0; i < BuildLookup.Length; i++)
+            build = Math.Min(build, MaxBuild);
+
+            foreach (var entry in Lookup.Value)
             {
-                if (build <= BuildLookup[i])
-                    return TypeNames.ContainsKey(type) ? TypeNames[type][i] : "";
+                if (build <= entry.Key)
+                {
+                    foreach (var item in entry.Value)
+                        if (item.Value == type)
+                            return item.Key;
+
+                    return "";
+                }
             }
 
             return "";
@@ -18,34 +31,68 @@ namespace TACT.Net.Tags
 
         public static ushort TypeId(string name, uint build)
         {
-            for (int i = 0; i < BuildLookup.Length; i++)
-            {
-                if (build <= BuildLookup[i])
-                {
-                    foreach (var lookup in TypeNames)
-                        if (lookup.Value[i].Equals(name, StringComparison.OrdinalIgnoreCase))
-                            return lookup.Key;
+            build = Math.Min(build, MaxBuild);
 
-                    return ushort.MaxValue;
+            foreach (var entry in Lookup.Value)
+            {
+                if (build <= entry.Key)
+                {
+                    entry.Value.TryGetValue(name, out var id);
+                    return id;
                 }
             }
 
             return ushort.MaxValue;
         }
 
+        public static Dictionary<string, ushort> GetTypeIds(uint build)
+        {
+            build = Math.Min(build, MaxBuild);
+
+            foreach (var entry in Lookup.Value)
+                if (build <= entry.Key)
+                    return entry.Value;
+
+            return null;
+        }
+
         #region Lookup
 
-        private static readonly int[] BuildLookup = new[] { 18761, 20426, 99999 };
-
-        private static readonly Dictionary<ushort, string[]> TypeNames = new Dictionary<ushort, string[]>
+        private static readonly Lazy<Lookup> Lookup = new Lazy<Lookup>(() =>
         {
-            { 1,      new[] { "Architecture", "Architecture", "Platform" }      },
-            { 2,      new[] { "Locale"      , "Category"    , "Architecture" }  },
-            { 3,      new[] { "Platform"    , "Locale"      , "Locale" }        },
-            { 4,      new[] { ""            , "Platform"    , "Region" }        },
-            { 5,      new[] { ""            , "Region"      , "Category" }      },
-            { 0x4000, new[] { ""            , ""            , "Alternate" }     },
-        };
+            return new Lookup
+            {
+                {
+                    18761, new LookupEntry(StringComparer.OrdinalIgnoreCase)
+                    {
+                        { "Architecture", 1 },
+                        { "Locale", 2 },
+                        { "Platform", 3 },
+                    }
+                },
+                {
+                    20426, new LookupEntry(StringComparer.OrdinalIgnoreCase)
+                    {
+                        { "Architecture", 1 },
+                        { "Category", 2 },
+                        { "Locale", 3 },
+                        { "Platform", 4 },
+                        { "Region", 5 },
+                    }
+                },
+                {
+                    MaxBuild, new LookupEntry(StringComparer.OrdinalIgnoreCase)
+                    {
+                        { "Platform", 1 },
+                        { "Architecture", 2 },
+                        { "Locale", 3 },
+                        { "Region", 4 },
+                        { "Category", 5 },
+                        { "Alternate", 0x4000 },
+                    }
+                }
+            };
+        });
 
         #endregion
     }
