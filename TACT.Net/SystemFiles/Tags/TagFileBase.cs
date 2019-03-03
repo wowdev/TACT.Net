@@ -129,7 +129,12 @@ namespace TACT.Net.Tags
             }
         }
 
-        protected void SetDefaultTags(int fileCount)
+        /// <summary>
+        /// Loads the default tags for the specific build
+        /// </summary>
+        /// <param name="build"></param>
+        /// <param name="fileCount"></param>
+        protected void SetDefaultTags(uint build, int fileCount)
         {
             _TagEntries.Clear();
 
@@ -138,7 +143,6 @@ namespace TACT.Net.Tags
             Add("Windows", 1, fileCount);
             Add("x86_32", 2, fileCount);
             Add("x86_64", 2, fileCount);
-            Add("Alternate", 0x4000, fileCount);
             Add("deDE", 3, fileCount);
             Add("enUS", 3, fileCount);
             Add("esES", 3, fileCount);
@@ -150,13 +154,22 @@ namespace TACT.Net.Tags
             Add("ruRU", 3, fileCount);
             Add("zhCN", 3, fileCount);
             Add("zhTW", 3, fileCount);
-            Add("CN", 4, fileCount);
-            Add("EU", 4, fileCount);
-            Add("KR", 4, fileCount);
-            Add("TW", 4, fileCount);
-            Add("US", 4, fileCount);
-            Add("speech", 5, fileCount);
-            Add("text", 5, fileCount);
+
+            if(build > 18761)
+            {
+                Add("CN", 4, fileCount);
+                Add("EU", 4, fileCount);
+                Add("KR", 4, fileCount);
+                Add("TW", 4, fileCount);
+                Add("US", 4, fileCount);
+            }
+
+            if(build > 20426)
+            {
+                Add("speech", 5, fileCount);
+                Add("text", 5, fileCount);
+                Add("Alternate", 0x4000, fileCount);
+            }          
         }
 
         #endregion

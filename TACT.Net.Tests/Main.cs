@@ -202,20 +202,21 @@ namespace TACT.Net.Tests
         //[Ignore]
         public void CreateNewTactRepo()
         {
-            string buildName = "WOW-15595patch4.3.4_Alpha";
-            string buildId = "15595";
-            string versionName = "4.3.4";
-
-            string tempPath = Path.Combine("test", "temp");
-            Directory.CreateDirectory(tempPath);
-
             if (Directory.Exists(@"C:\wamp64\www\tpr"))
                 Directory.Delete(@"C:\wamp64\www\tpr", true);
             if (Directory.Exists(@"C:\wamp64\www\wow"))
                 Directory.Delete(@"C:\wamp64\www\wow", true);
 
+
+            string buildName = "WOW-15595patch4.3.4_Retail";
+            string buildId = "15595";
+            string versionName = "4.3.4.15595";
+
+            string tempPath = Path.Combine("test", "temp");
+            Directory.CreateDirectory(tempPath);
+
             // open a new tact instance
-            TACT tact = new TACT(@"C:\wamp64\www");
+            TACT tact = new TACT();
             tact.Create("wow", Locale.US);
 
             // update the configs
@@ -223,6 +224,8 @@ namespace TACT.Net.Tests
             tact.ConfigContainer.VersionsFile.SetValue("BuildId", buildId);
             tact.ConfigContainer.VersionsFile.SetValue("VersionsName", versionName);
             tact.ConfigContainer.BuildConfig.SetValue("Build-Name", buildName, 0);
+            tact.ConfigContainer.BuildConfig.SetValue("Build-UID", "wow", 0);
+            tact.ConfigContainer.BuildConfig.SetValue("Build-Product", "WoW", 0);
             tact.ConfigContainer.CDNsFile.SetValue("Hosts", "localhost");
             tact.ConfigContainer.CDNsFile.SetValue("Servers", "http://127.0.0.1");
 
@@ -231,9 +234,9 @@ namespace TACT.Net.Tests
             tact.RootFile.FileLookup = new MockFileLookup();
 
             // set the default tag entries
-            tact.InstallFile?.SetDefaultTags();
-            tact.DownloadFile?.SetDefaultTags();
-            tact.DownloadSizeFile?.SetDefaultTags();
+            tact.InstallFile?.SetDefaultTags(15595);
+            tact.DownloadFile?.SetDefaultTags(15595);
+            tact.DownloadSizeFile?.SetDefaultTags(15595);
 
             var record = BlockTable.BlockTableEncoder.EncodeAndExport("Resources/seagiant2_27826.m2", tempPath, "creature/seagiant2/seagiant2.m2");
             tact.RootFile.AddOrUpdate(record, tact);

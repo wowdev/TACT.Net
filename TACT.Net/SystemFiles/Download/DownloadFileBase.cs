@@ -96,9 +96,9 @@ namespace TACT.Net.Download
         /// <summary>
         /// Resets the Tags to the BfA default values and clears all file associations
         /// </summary>
-        public void SetDefaultTags()
+        public void SetDefaultTags(uint build = 99999)
         {
-            SetDefaultTags(_FileEntries.Count);
+            SetDefaultTags(build, _FileEntries.Count);
         }
 
         #endregion
