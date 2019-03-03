@@ -2,13 +2,12 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
 using TACT.Net.Common;
 
 namespace TACT.Net.Configs
 {
     using StringPair = Dictionary<string, string>;
-    
+
     /// <summary>
     /// A data table config with a Locale primary key
     /// </summary>

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 
@@ -72,7 +71,7 @@ namespace TACT.Net
 
                 if (EncodingFile.TryGetContentEntry(ConfigContainer.RootMD5, out var rootCEntry))
                     RootFile = new Root.RootFile(BaseDirectory, rootCEntry.EKey);
-            }                
+            }
         }
 
         public void Save(string directory)
@@ -88,9 +87,9 @@ namespace TACT.Net
 
         public void Clean()
         {
-             var usedHashes = new HashSet<Cryptography.MD5Hash>();
+            var usedHashes = new HashSet<Cryptography.MD5Hash>();
 
-            if(ConfigContainer != null)
+            if (ConfigContainer != null)
             {
                 usedHashes.Add(ConfigContainer.BuildConfigMD5);
                 usedHashes.Add(ConfigContainer.CDNConfigMD5);
@@ -101,16 +100,16 @@ namespace TACT.Net
                 usedHashes.Add(ConfigContainer.DownloadMD5);
                 usedHashes.Add(ConfigContainer.DownloadSizeMD5);
                 usedHashes.Add(ConfigContainer.PatchMD5);
-            }            
+            }
 
-            if(RootFile != null)
+            if (RootFile != null)
             {
                 var blocks = RootFile.GetBlocks(Root.LocaleFlags.All_WoW, Root.ContentFlags.None);
                 foreach (var block in blocks)
                     usedHashes.UnionWith(block.Records.Select(x => x.Value.CKey));
             }
 
-            if(InstallFile != null)
+            if (InstallFile != null)
             {
                 usedHashes.UnionWith(InstallFile.Files.Select(x => x.CKey));
             }

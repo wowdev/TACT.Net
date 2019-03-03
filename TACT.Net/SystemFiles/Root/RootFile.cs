@@ -457,7 +457,7 @@ namespace TACT.Net.Root
             // ensure the flag combination doesn't already exist
             if (_blocks.Find(x => x.ContentFlags == contentFlags && x.LocaleFlags == localeFlags) != null)
                 return false;
-            
+
             // add the new block
             _blocks.Add(new RootBlock()
             {
@@ -497,7 +497,7 @@ namespace TACT.Net.Root
         {
             return _blocks.RemoveAll(x => x.ContentFlags == contentFlags && x.LocaleFlags == localeFlags) > 0;
         }
-        
+
         #endregion
 
         #region Helpers

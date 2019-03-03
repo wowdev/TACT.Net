@@ -259,7 +259,7 @@ namespace TACT.Net.Configs
                 return;
 
             string[] items = new[] { "patch-file-index", "file-index", "patch-archives", "archives" };
-            foreach(var item in items)
+            foreach (var item in items)
             {
                 if (_data.ContainsKey(item) && _data[item].Count > 0)
                     _data[item].Sort(new MD5HashComparer());
