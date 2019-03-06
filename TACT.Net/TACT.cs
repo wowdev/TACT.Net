@@ -53,6 +53,14 @@ namespace TACT.Net
             EncodingFile = new Encoding.EncodingFile();
             InstallFile = new Install.InstallFile();
             DownloadFile = new Download.DownloadFile();
+
+            if (build > 27547)
+                DownloadSizeFile = new Download.DownloadSizeFile();
+
+            // set the default tag entries
+            InstallFile.SetDefaultTags(build);
+            DownloadFile.SetDefaultTags(build);
+            DownloadSizeFile?.SetDefaultTags(build);
         }
 
         /// <summary>

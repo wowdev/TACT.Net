@@ -233,11 +233,6 @@ namespace TACT.Net.Tests
             tact.RootFile.LocaleFlags = Root.LocaleFlags.enUS;
             tact.RootFile.FileLookup = new MockFileLookup();
 
-            // set the default tag entries
-            tact.InstallFile?.SetDefaultTags(15595);
-            tact.DownloadFile?.SetDefaultTags(15595);
-            tact.DownloadSizeFile?.SetDefaultTags(15595);
-
             var record = BlockTable.BlockTableEncoder.EncodeAndExport("Resources/seagiant2_27826.m2", tempPath, "creature/seagiant2/seagiant2.m2");
             tact.RootFile.AddOrUpdate(record, tact);
 
