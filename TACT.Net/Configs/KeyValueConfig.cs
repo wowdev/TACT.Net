@@ -40,10 +40,10 @@ namespace TACT.Net.Configs
         /// Creates a new config of <paramref name="type"/>
         /// </summary>
         /// <param name="type"></param>
-        public KeyValueConfig(ConfigType type) : this()
+        public KeyValueConfig(ConfigType type, uint build = 99999)
         {
             Type = type;
-            _data = ConfigDataFactory.GenerateKeyValueData(type);
+            _data = ConfigDataFactory.GenerateData(type, build);
         }
 
         /// <summary>

@@ -76,7 +76,8 @@ namespace TACT.Net.Configs
         /// <summary>
         /// Creates a new set of configs
         /// </summary>
-        public void Create()
+        /// <param name="build">Optionally loads build specific config values</param>
+        public void Create(uint build = 0)
         {
             CDNsFile = new VariableConfig(ConfigType.CDNs);
             VersionsFile = new VariableConfig(ConfigType.Versions);

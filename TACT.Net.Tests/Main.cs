@@ -217,7 +217,7 @@ namespace TACT.Net.Tests
 
             // open a new tact instance
             TACT tact = new TACT();
-            tact.Create("wow", Locale.US);
+            tact.Create("wow", Locale.US, uint.Parse(buildId));
 
             // update the configs
             // build info and server locations

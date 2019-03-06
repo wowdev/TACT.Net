@@ -4,49 +4,53 @@ using System.Linq;
 
 namespace TACT.Net.Configs
 {
+    using Lookup = Dictionary<ConfigType, Dictionary<string, uint>>;
+    using LookupEntry = Dictionary<string, uint>;
+
     internal static class ConfigDataFactory
     {
         #region Data Generators
 
-        public static Dictionary<string, List<string>> GenerateKeyValueData(ConfigType type)
+        public static Dictionary<string, List<string>> GenerateData(ConfigType type, uint build)
         {
             var data = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
 
             switch (type)
             {
                 case ConfigType.BuildConfig:
-                    AddValue(data, "root", "");
-                    AddValue(data, "install", "", "");
-                    AddValue(data, "install-size", "", "");
-                    AddValue(data, "download", "", "");
-                    AddValue(data, "download-size", "", "");
-                    AddValue(data, "size", "", "");
-                    AddValue(data, "size-size", "", "");
-                    AddValue(data, "encoding", "", "");
-                    AddValue(data, "encoding-size", "", "");
                     AddValue(data, "build-name", "");
-                    AddValue(data, "build-uid", "wow");
+                    AddValue(data, "build-uid", "");
                     AddValue(data, "build-product", "WoW");
                     AddValue(data, "build-playbuild-installer", "ngdptool_casc2");
+                    AddValue(data, "root", "");
+                    AddValue(data, "install", "", "");
+                    AddValue(data, "download", "", "");
+                    AddValue(data, "encoding", "", "");
                     break;
                 case ConfigType.CDNConfig:
                     AddValue(data, "archives");
                     AddValue(data, "archives-index-size");
                     AddValue(data, "patch-archives");
                     AddValue(data, "patch-archives-index-size");
-                    AddValue(data, "file-index");
-                    AddValue(data, "file-index-size");
-                    AddValue(data, "patch-file-index");
-                    AddValue(data, "patch-file-index-size");
                     break;
                 default:
                     throw new ArgumentException("Invalid KeyValueConfig type");
             }
 
+            // build specific fields
+            if (Lookup.Value.TryGetValue(type, out var fields))
+            {
+                string[] defaultValue = type == ConfigType.BuildConfig ? new[] { "", "" } : new string[0];
+
+                foreach (var field in fields)
+                    if (build > field.Value)
+                        AddValue(data, field.Key, defaultValue);
+            }
+
             return data;
         }
 
-        public static (string[] Fields, string[] Values) GenerateVarData(ConfigType type)
+        public static (string[] Fields, string[] Values) GenerateData(ConfigType type)
         {
             var data = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
@@ -88,6 +92,36 @@ namespace TACT.Net.Configs
         {
             collection[key] = value;
         }
+
+        #endregion
+
+        #region Lookup
+
+        private static readonly Lazy<Lookup> Lookup = new Lazy<Lookup>(() =>
+        {
+            return new Lookup
+            {
+                {
+                    ConfigType.BuildConfig, new LookupEntry()
+                    {
+                        { "encoding-size", 18888 },
+                        { "install-size", 22231 },
+                        { "download-size", 22231 },
+                        { "size", 22231 },
+                        { "size-size", 27547 },
+                    }
+                },
+                {
+                    ConfigType.CDNConfig, new LookupEntry()
+                    {
+                        { "file-index", 27165 },
+                        { "file-index-size", 27165 },
+                        { "patch-file-index", 27165 },
+                        { "patch-file-index-size", 27165 },
+                    }
+                }
+            };
+        });
 
         #endregion
     }

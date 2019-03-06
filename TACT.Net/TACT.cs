@@ -8,6 +8,7 @@ namespace TACT.Net
     public sealed class TACT
     {
         public readonly string BaseDirectory;
+        public uint Build { get; private set; }
 
         #region System Files
 
@@ -39,8 +40,11 @@ namespace TACT.Net
         /// </summary>
         /// <param name="product"></param>
         /// <param name="locale"></param>
-        public void Create(string product, Locale locale)
+        /// <param name="build"></param>
+        public void Create(string product, Locale locale, uint build)
         {
+            Build = build;
+
             ConfigContainer = new Configs.ConfigContainer(product, locale);
             ConfigContainer.Create();
 
@@ -61,6 +65,9 @@ namespace TACT.Net
         {
             ConfigContainer = new Configs.ConfigContainer(product, locale);
             ConfigContainer.OpenLocal(directory);
+
+            if (uint.TryParse(ConfigContainer?.VersionsFile?.GetValue("BuildId", locale), out uint build))
+                Build = build;
 
             IndexContainer = new Indices.IndexContainer();
             IndexContainer.Open(directory);

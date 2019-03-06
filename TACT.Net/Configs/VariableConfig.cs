@@ -42,7 +42,7 @@ namespace TACT.Net.Configs
         {
             Type = type;
 
-            var (Fields, Values) = ConfigDataFactory.GenerateVarData(type);
+            var (Fields, Values) = ConfigDataFactory.GenerateData(type);
 
             // set the field names with structual descriptions
             _fields = Fields;
