@@ -91,10 +91,8 @@ namespace TACT.Net.Configs
         /// <param name="directory">Directory containing the config files</param>
         public void OpenLocal(string directory)
         {
-            string productDirectory = System.IO.Path.Combine(directory, Product);
-
-            CDNsFile = new VariableConfig(productDirectory, ConfigType.CDNs);
-            VersionsFile = new VariableConfig(productDirectory, ConfigType.Versions);
+            CDNsFile = new VariableConfig(directory, ConfigType.CDNs);
+            VersionsFile = new VariableConfig(directory, ConfigType.Versions);
 
             LoadConfigs(directory);
         }

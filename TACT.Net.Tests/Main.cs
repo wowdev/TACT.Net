@@ -90,7 +90,7 @@ namespace TACT.Net.Tests
             // create an instance
             TACT tact = new TACT(@"D:\Backup\")
             {
-                ConfigContainer = new ConfigContainer("wowt", Locale.US)
+                ConfigContainer = new ConfigContainer("wow", Locale.US)
             };
 
             // open the configs
