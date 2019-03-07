@@ -18,6 +18,7 @@ namespace TACT.Net.Indices
         public MD5Hash Checksum { get; private set; }
         public readonly IndexType Type;
 
+        internal bool RequiresSave { get; private set; }
         internal bool IsGroupIndex => (Type & IndexType.Group) == IndexType.Group;
         internal bool IsPatchIndex => (Type & IndexType.Patch) == IndexType.Patch;
 
@@ -113,6 +114,8 @@ namespace TACT.Net.Indices
         /// <param name="configContainer"></param>
         public void Write(string directory, Configs.ConfigContainer configContainer = null)
         {
+            RequiresSave = false;
+
             // TODO patch index writing
             if (IsPatchIndex || IsGroupIndex || Type == IndexType.Unknown)
                 throw new NotImplementedException();
@@ -269,6 +272,8 @@ namespace TACT.Net.Indices
 
             _indexEntries[entry.Key] = entry;
             _newEntries[entry.Key] = record;
+
+            RequiresSave = true;
         }
 
         /// <summary>
@@ -306,7 +311,10 @@ namespace TACT.Net.Indices
         public void Remove(MD5Hash hash)
         {
             if (_indexEntries.Remove(hash))
+            {
                 _newEntries.Remove(hash);
+                RequiresSave = true;
+            }                
         }
 
         /// <summary>

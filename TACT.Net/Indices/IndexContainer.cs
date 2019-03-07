@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -66,7 +67,9 @@ namespace TACT.Net.Indices
             // save altered Data archive indices
             foreach (var index in DataIndices)
             {
-                if (!index.IsGroupIndex)
+                bool requiresSave = index.RequiresSave || !directory.Equals(_sourceDirectory, StringComparison.OrdinalIgnoreCase);
+
+                if (!index.IsGroupIndex && requiresSave)
                 {
                     string prevBlob = Helpers.GetCDNPath(index.Checksum.ToString(), "data", _sourceDirectory);
                     index.Write(directory, configContainer);
