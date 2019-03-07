@@ -54,8 +54,15 @@ namespace TACT.Net
             InstallFile = new Install.InstallFile();
             DownloadFile = new Download.DownloadFile();
 
+            // TODO check this
+            // file versioning
+            if (build > 24473)
+                DownloadFile.DownloadHeader.Version = 2;
             if (build > 27547)
+            {
+                DownloadFile.DownloadHeader.Version = 3;
                 DownloadSizeFile = new Download.DownloadSizeFile();
+            }
 
             // set the default tag entries
             InstallFile.SetDefaultTags(build);
