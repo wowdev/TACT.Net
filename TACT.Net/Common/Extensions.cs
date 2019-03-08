@@ -117,37 +117,24 @@ namespace TACT.Net.Common
 
         #region ZBS Stream Extensions
 
-        public static long ReadInt64BS(this Stream reader)
+        public static unsafe long ReadInt64BS(this Stream reader)
         {
             byte[] buffer = new byte[8];
             reader.Read(buffer);
 
-            long y = buffer[7] & 0x7F;
-            y <<= 8; y += buffer[6];
-            y <<= 8; y += buffer[5];
-            y <<= 8; y += buffer[4];
-            y <<= 8; y += buffer[3];
-            y <<= 8; y += buffer[2];
-            y <<= 8; y += buffer[1];
-            y <<= 8; y += buffer[0];
-            return (buffer[7] & 0x80) != 0 ? -y : y;
+            fixed(byte* b = &buffer[0])
+            {
+                ulong raw = *(ulong*)b;
+                long value = (long)(raw & 0x7FFFFFFFFFFFFFFF);
+                return (raw & 0x8000000000000000) == 0x8000000000000000 ? -value : value;
+            }
         }
 
-        public static void WriteInt64BS(this Stream writer, long value)
+        public static unsafe void WriteInt64BS(this Stream writer, long value)
         {
-            bool neg = value != (value = Math.Abs(value));
-
             byte[] buffer = new byte[8];
-            buffer[0] = (byte)value;
-            buffer[1] = (byte)(value >>= 8);
-            buffer[2] = (byte)(value >>= 8);
-            buffer[3] = (byte)(value >>= 8);
-            buffer[4] = (byte)(value >>= 8);
-            buffer[5] = (byte)(value >>= 8);
-            buffer[6] = (byte)(value >>= 8);
-            buffer[7] = (byte)(value >> 8);
-            if (neg)
-                buffer[7] |= 0x80;
+            fixed(byte* b = buffer)
+                *(ulong*)b = (ulong)Math.Abs(value) | (value < 0 ? 0x8000000000000000 : 0);
 
             writer.Write(buffer);
         }
