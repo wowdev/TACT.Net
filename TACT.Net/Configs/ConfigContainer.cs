@@ -43,9 +43,9 @@ namespace TACT.Net.Configs
         public MD5Hash RootMD5 => TryGetKey(BuildConfig, "root");
         public MD5Hash EncodingMD5 => TryGetKey(BuildConfig, "encoding");
         public MD5Hash EncodingEKey => TryGetKey(BuildConfig, "encoding", 1);
-        public MD5Hash InstallMD5 => TryGetKey(BuildConfig, "install", 1);
-        public MD5Hash DownloadMD5 => TryGetKey(BuildConfig, "download", 1);
-        public MD5Hash DownloadSizeMD5 => TryGetKey(BuildConfig, "size", 1);
+        public MD5Hash InstallMD5 => TryGetKey(BuildConfig, "install");
+        public MD5Hash DownloadMD5 => TryGetKey(BuildConfig, "download");
+        public MD5Hash DownloadSizeMD5 => TryGetKey(BuildConfig, "size");
         public MD5Hash PatchMD5 => TryGetKey(BuildConfig, "patch");
 
         #endregion
@@ -159,6 +159,34 @@ namespace TACT.Net.Configs
         #endregion
 
         #region Helpers
+
+        /// <summary>
+        /// Returns the lookup hash for the supplied SystemFile type
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public MD5Hash GetSystemFileHash<T>() where T : ISystemFile
+        {
+            var type = typeof(T);
+
+            switch (true)
+            {
+                case true when type == typeof(Root.RootFile):
+                    return TryGetKey(BuildConfig, "root");
+                case true when type == typeof(Encoding.EncodingFile):
+                    return TryGetKey(BuildConfig, "encoding", 1);
+                case true when type == typeof(Install.InstallFile):
+                    return TryGetKey(BuildConfig, "install");
+                case true when type == typeof(Download.DownloadFile):
+                    return TryGetKey(BuildConfig, "download");
+                case true when type == typeof(Download.DownloadSizeFile):
+                    return TryGetKey(BuildConfig, "size");
+                case true when type == typeof(Patch.PatchFile):
+                    return TryGetKey(BuildConfig, "patch");
+            }
+
+            return default;
+        }
 
         private MD5Hash TryGetKey(IConfig config, string identifier, int index = 0)
         {

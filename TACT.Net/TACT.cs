@@ -56,12 +56,15 @@ namespace TACT.Net
 
             // TODO check this
             // file versioning
-            if (build > 24473)
-                DownloadFile.DownloadHeader.Version = 2;
-            if (build > 27547)
+            switch(true)
             {
-                DownloadFile.DownloadHeader.Version = 3;
-                DownloadSizeFile = new Download.DownloadSizeFile();
+                case true when build > 27547:
+                    DownloadFile.DownloadHeader.Version = 3;
+                    DownloadSizeFile = new Download.DownloadSizeFile();
+                    break;
+                case true when build > 24473:
+                    DownloadFile.DownloadHeader.Version = 2;
+                    break;
             }
 
             // set the default tag entries
