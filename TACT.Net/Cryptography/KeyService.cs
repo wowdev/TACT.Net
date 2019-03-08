@@ -3,6 +3,10 @@ using TACT.Net.Common;
 
 namespace TACT.Net.Cryptography
 {
+    /// <summary>
+    /// A collection of file encryption keys
+    /// <para>See https://wowdev.wiki/TACT#World_of_Warcraft_2</para>
+    /// </summary>
     public sealed class KeyService
     {
         #region Methods

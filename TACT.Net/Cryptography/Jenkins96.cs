@@ -5,7 +5,7 @@ namespace TACT.Net.Cryptography
 {
     /// <summary>
     /// https://en.wikipedia.org/wiki/Jenkins_hash_function
-    /// Orgiginal implmenetation by TOMRUS: https://github.com/WoW-Tools/CASCExplorer/blob/master/CascLib/Jenkins96.cs
+    /// Original implementation by TOMRUS: https://github.com/WoW-Tools/CASCExplorer/blob/master/CascLib/Jenkins96.cs
     /// </summary>
     public sealed class Lookup3 : HashAlgorithm
     {

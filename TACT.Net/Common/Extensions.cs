@@ -122,7 +122,7 @@ namespace TACT.Net.Common
             byte[] buffer = new byte[8];
             reader.Read(buffer);
 
-            fixed(byte* b = &buffer[0])
+            fixed (byte* b = &buffer[0])
             {
                 ulong raw = *(ulong*)b;
                 long value = (long)(raw & 0x7FFFFFFFFFFFFFFF);
@@ -133,7 +133,7 @@ namespace TACT.Net.Common
         public static unsafe void WriteInt64BS(this Stream writer, long value)
         {
             byte[] buffer = new byte[8];
-            fixed(byte* b = buffer)
+            fixed (byte* b = buffer)
                 *(ulong*)b = (ulong)Math.Abs(value) | (value < 0 ? 0x8000000000000000 : 0);
 
             writer.Write(buffer);

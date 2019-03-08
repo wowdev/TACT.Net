@@ -1,6 +1,4 @@
-﻿using System;
-using System.IO;
-using System.Linq;
+﻿using System.IO;
 
 namespace TACT.Net.Common
 {
@@ -24,7 +22,7 @@ namespace TACT.Net.Common
         }
 
         /// <summary>
-        /// Determines the file exists before attempting to delete
+        /// Determines a file exists before attempting to delete
         /// </summary>
         /// <param name="filename"></param>
         public static void Delete(string filename)
@@ -41,7 +39,7 @@ namespace TACT.Net.Common
         /// <returns></returns>
         public static bool PathContainsDirectory(string filepath, string directory)
         {
-            return filepath.Split(Path.DirectorySeparatorChar).Contains(directory, StringComparer.OrdinalIgnoreCase);
+            return filepath.Split(Path.DirectorySeparatorChar).IndexOf(directory) != -1;
         }
     }
 }

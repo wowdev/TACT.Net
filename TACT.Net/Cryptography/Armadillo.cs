@@ -6,6 +6,10 @@ using TACT.Net.Common;
 
 namespace TACT.Net.Cryptography
 {
+    /// <summary>
+    /// Armadillo is Blizzard's repository encryption implementation
+    /// <para>See https://wowdev.wiki/TACT#Armadillo</para>
+    /// </summary>
     public sealed class Armadillo
     {
         public byte[] Key { get; private set; }
@@ -96,6 +100,11 @@ namespace TACT.Net.Cryptography
 
         #region Helpers
 
+        /// <summary>
+        /// Validates a name is a valid MD5 hash string
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
         private bool IsValidName(string name)
         {
             if (name == null || name.Length != 32)

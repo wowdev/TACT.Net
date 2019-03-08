@@ -5,6 +5,9 @@ using System.IO;
 
 namespace TACT.Net.Common
 {
+    /// <summary>
+    /// Boolean collection for Tag file bits which are stored in a BE byte array
+    /// </summary>
     internal class BoolArray : ICollection<bool>
     {
         private byte[] _bytes;
@@ -62,6 +65,12 @@ namespace TACT.Net.Common
         }
 
         public byte[] ToByteArray() => _bytes;
+
+        public int Capacity
+        {
+            get => _bytes.Length * 8;
+            set => Array.Resize(ref _bytes, (value + 7) / 8);
+        }
 
         #endregion
 

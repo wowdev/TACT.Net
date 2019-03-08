@@ -5,6 +5,9 @@ using TACT.Net.Encoding;
 
 namespace TACT.Net.Cryptography
 {
+    /// <summary>
+    /// A generic MD5 Hash Comparer and Equality Comparer
+    /// </summary>
     public sealed class MD5HashComparer : IComparer<byte[]>, IComparer<MD5Hash>, IComparer<string>, IComparer<EncodingEntryBase>, IEqualityComparer<MD5Hash>
     {
         public int Compare(MD5Hash x, MD5Hash y) => Compare(x.Value, y.Value);

@@ -1,5 +1,8 @@
 ﻿namespace TACT.Net.Common
 {
+    /// <summary>
+    /// Big Endian helper class
+    /// </summary>
     internal static class Endian
     {
         public static ushort SwapUInt16(ushort v) => (ushort)(((v & 0xFF) << 8) | ((v >> 8) & 0xFF));
@@ -16,7 +19,7 @@
         {
             ulong i1 = (uint)((b[0] << 24) | (b[1] << 16) | (b[2] << 8) | b[3]);
             uint i2 = (uint)((b[4] << 24) | (b[5] << 16) | (b[6] << 8) | b[7]);
-            return i2 | (i1 << 32);
+            return (i1 << 32) | i2;
         }
     }
 }
