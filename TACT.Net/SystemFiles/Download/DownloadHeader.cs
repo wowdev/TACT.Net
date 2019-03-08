@@ -10,8 +10,9 @@ namespace TACT.Net.Download
         public byte EKeySize { get; private set; } = 16;
         /// <summary>
         /// Determines the existance of the checksum in DownloadFileEntry
+        /// <para>HACK do we know what this is?</para>
         /// </summary>
-        public bool IncludeChecksum = true;
+        internal bool IncludeChecksum = false;
         public uint EntryCount;
         public ushort TagCount;
         /// <summary>
