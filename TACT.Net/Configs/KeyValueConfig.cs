@@ -57,13 +57,20 @@ namespace TACT.Net.Configs
             Type = type;
             Checksum = new MD5Hash(hash);
 
-            using (var sr = new StreamReader(Helpers.GetCDNPath(hash, "config", directory)))
+            string path = Helpers.GetCDNPath(hash, "config", directory);
+            if (!File.Exists(path))
+                throw new FileNotFoundException($"Unable to load {type} config", path);
+
+            using (var sr = new StreamReader(path))
                 Read(sr);
         }
 
         public KeyValueConfig(Stream stream, ConfigType type) : this()
         {
             Type = type;
+
+            if (!stream.CanRead || stream.Length <= 1)
+                throw new NotSupportedException($"Unable to read {type} stream");
 
             using (var sr = new StreamReader(stream))
                 Read(sr);

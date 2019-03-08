@@ -47,6 +47,9 @@ namespace TACT.Net.Indices
         /// <param name="path"></param>
         public IndexFile(string path) : this(IndexType.Unknown)
         {
+            if (!File.Exists(path))
+                throw new FileNotFoundException("Unable to open IndexFile", path);
+
             using (var fs = File.OpenRead(path))
                 Read(fs);
 
@@ -69,6 +72,9 @@ namespace TACT.Net.Indices
 
         private void Read(Stream stream)
         {
+            if (!stream.CanRead || stream.Length <= 0)
+                throw new NotSupportedException($"Unable to read IndexFile stream");
+
             using (var md5 = MD5.Create())
             using (var br = new BinaryReader(stream))
             {
@@ -314,7 +320,7 @@ namespace TACT.Net.Indices
             {
                 _newEntries.Remove(hash);
                 RequiresSave = true;
-            }                
+            }
         }
 
         /// <summary>

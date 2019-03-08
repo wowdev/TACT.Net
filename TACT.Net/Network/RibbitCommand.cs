@@ -1,5 +1,8 @@
 ﻿namespace TACT.Net.Network
 {
+    /// <summary>
+    /// A list of the common known Ribbit commands
+    /// </summary>
     public enum RibbitCommand
     {
         /// <summary>

@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Linq;
 using TACT.Net.BlockTable;
 using TACT.Net.Common;
@@ -39,6 +40,9 @@ namespace TACT.Net.Download
         /// <param name="path">BLTE encoded file path</param>
         public DownloadSizeFile(string path) : this()
         {
+            if (!File.Exists(path))
+                throw new FileNotFoundException("Unable to open DownloadSizeFile", path);
+
             using (var fs = File.OpenRead(path))
             using (var bt = new BlockTableStreamReader(fs))
                 Read(bt);
@@ -65,6 +69,11 @@ namespace TACT.Net.Download
 
         protected override void Read(Stream stream)
         {
+            if (stream == null)
+                throw new ArgumentNullException(nameof(stream));
+            if (!stream.CanRead || stream.Length <= 1)
+                throw new NotSupportedException($"Unable to read DownloadSizeFile stream");
+
             using (var br = new BinaryReader(stream))
             {
                 DownloadSizeHeader.Read(br);

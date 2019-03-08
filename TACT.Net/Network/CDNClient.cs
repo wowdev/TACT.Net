@@ -12,23 +12,32 @@ namespace TACT.Net.Network
         public readonly List<string> Hosts;
         public readonly Armadillo Armadillo;
         /// <summary>
-        /// Designates if CDN responses require decryption
+        /// Applies Armadillo decryption to CDN responses
         /// </summary>
-        public bool Decrypt { get; set; }
+        public bool ApplyDecryption { get; set; }
 
         #region Constructors
 
-        private CDNClient(bool decrypt)
+        /// <summary>
+        /// Creates a new CDN Client without any hosts
+        /// </summary>
+        /// <param name="applyDecryption"></param>
+        private CDNClient(bool applyDecryption)
         {
             Hosts = new List<string>();
             Armadillo = new Armadillo();
-            Decrypt = decrypt;
+            ApplyDecryption = applyDecryption;
         }
 
-        public CDNClient(Configs.ConfigContainer configContainer, bool decrypt = false) : this(decrypt)
+        /// <summary>
+        /// Creates a new CDN Client and loads the hosts from the CDNs file
+        /// </summary>
+        /// <param name="configContainer"></param>
+        /// <param name="applyDecryption"></param>
+        public CDNClient(Configs.ConfigContainer configContainer, bool applyDecryption = false) : this(applyDecryption)
         {
             if (configContainer.CDNsFile == null)
-                throw new ArgumentException("Unable to load CDNsFile");
+                throw new ArgumentException("Unable to load CDNs file");
 
             string[] hosts = configContainer.CDNsFile.GetValue("Hosts", configContainer.Locale)?.Split(' ');
             foreach (var host in hosts)
@@ -38,7 +47,12 @@ namespace TACT.Net.Network
                 throw new FormatException("No hosts found");
         }
 
-        public CDNClient(IEnumerable<string> hosts, bool decrypt = false) : this(decrypt)
+        /// <summary>
+        /// Creates a new CDN Client and uses the provided hosts
+        /// </summary>
+        /// <param name="hosts"></param>
+        /// <param name="applyDecryption"></param>
+        public CDNClient(IEnumerable<string> hosts, bool applyDecryption = false) : this(applyDecryption)
         {
             foreach (var host in hosts)
                 Hosts.Add(host.Split('?')[0]);
@@ -71,7 +85,7 @@ namespace TACT.Net.Network
                     using (var resp = (HttpWebResponse)await req.GetResponseAsync().ConfigureAwait(false))
                     {
                         var respStream = resp.GetResponseStream();
-                        return Decrypt ? Armadillo.Decrypt(cdnpath, respStream) : respStream;
+                        return ApplyDecryption ? Armadillo.Decrypt(cdnpath, respStream) : respStream;
                     }
                 }
                 catch (WebException) { }
@@ -102,7 +116,7 @@ namespace TACT.Net.Network
                     using (var stream = resp.GetResponseStream())
                     using (var fs = File.Create(filepath))
                     {
-                        var respStream = Decrypt ? Armadillo.Decrypt(cdnpath, stream) : stream;
+                        var respStream = ApplyDecryption ? Armadillo.Decrypt(cdnpath, stream) : stream;
                         await respStream.CopyToAsync(fs).ConfigureAwait(false);
 
                         return true;

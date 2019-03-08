@@ -50,6 +50,9 @@ namespace TACT.Net.Indices
             _sourceDirectory = directory;
             _useParallelism = useParallelism;
 
+            if (!Directory.Exists(directory))
+                throw new ArgumentException("Directory not found", paramName: nameof(directory));
+
             var indices = Directory.EnumerateFiles(directory, "*.index", SearchOption.AllDirectories);
 
             ParallelOptions options = new ParallelOptions() { MaxDegreeOfParallelism = useParallelism ? -1 : 1 };

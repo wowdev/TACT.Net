@@ -56,7 +56,7 @@ namespace TACT.Net
 
             // TODO check this
             // file versioning
-            switch(true)
+            switch (true)
             {
                 case true when build > 27547:
                     DownloadFile.DownloadHeader.Version = 3;

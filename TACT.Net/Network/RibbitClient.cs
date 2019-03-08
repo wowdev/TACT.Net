@@ -20,8 +20,16 @@ namespace TACT.Net.Network
 
         #region Constructors
 
+        /// <summary>
+        /// Creates a new Ribbit Client for the specified locale
+        /// </summary>
+        /// <param name="locale"></param>
+        /// <param name="port"></param>
         public RibbitClient(Locale locale, ushort port = 1119)
         {
+            if (locale == Locale.XX)
+                throw new ArgumentException("Invalid locale", paramName: nameof(locale));
+
             _endpoint = locale + Host;
             _port = port;
         }

@@ -43,6 +43,9 @@ namespace TACT.Net.Install
         /// <param name="path">BLTE encoded file path</param>
         public InstallFile(string path) : this()
         {
+            if (!File.Exists(path))
+                throw new FileNotFoundException("Unable to open InstallFile", path);
+
             using (var fs = File.OpenRead(path))
             using (var bt = new BlockTableStreamReader(fs))
                 Read(bt);
@@ -70,6 +73,11 @@ namespace TACT.Net.Install
 
         private void Read(Stream stream)
         {
+            if (stream == null)
+                throw new ArgumentNullException(nameof(stream));
+            if (!stream.CanRead || stream.Length <= 1)
+                throw new NotSupportedException($"Unable to read InstallFile stream");
+
             using (var br = new BinaryReader(stream))
             {
                 InstallHeader.Read(br);

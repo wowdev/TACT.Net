@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
@@ -60,6 +61,9 @@ namespace TACT.Net.Encoding
         /// <param name="path">BLTE encoded file path</param>
         public EncodingFile(string path) : this()
         {
+            if (!File.Exists(path))
+                throw new FileNotFoundException("Unable to open EncodingFile", path);
+
             using (var fs = File.OpenRead(path))
             using (var bt = new BlockTableStreamReader(fs))
                 Read(bt);
@@ -70,8 +74,7 @@ namespace TACT.Net.Encoding
         /// </summary>
         /// <param name="directory">Base directory</param>
         /// <param name="hash">Encoding EKey</param>
-        public EncodingFile(string directory, MD5Hash hash) : this(Helpers.GetCDNPath(hash.ToString(), "data", directory))
-        { }
+        public EncodingFile(string directory, MD5Hash hash) : this(Helpers.GetCDNPath(hash.ToString(), "data", directory)) { }
 
 
         /// <summary>
@@ -89,6 +92,11 @@ namespace TACT.Net.Encoding
 
         private void Read(Stream stream)
         {
+            if (stream == null)
+                throw new ArgumentNullException(nameof(stream));
+            if (!stream.CanRead || stream.Length <= 1)
+                throw new NotSupportedException($"Unable to read EncodingFile stream");
+
             using (var br = new BinaryReader(stream))
             {
                 EncodingHeader.Read(br);

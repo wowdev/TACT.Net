@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using TACT.Net.Common;
 using TACT.Net.Common.Patching;
@@ -34,6 +35,9 @@ namespace TACT.Net.Patch
         /// <param name="path"></param>
         public PatchFile(string path) : this()
         {
+            if (!File.Exists(path))
+                throw new FileNotFoundException("Unable to open PatchFile", path);
+
             using (var fs = File.OpenRead(path))
                 Read(fs);
         }
@@ -60,6 +64,11 @@ namespace TACT.Net.Patch
 
         private void Read(Stream stream)
         {
+            if (stream == null)
+                throw new ArgumentNullException(nameof(stream));
+            if (!stream.CanRead || stream.Length <= 1)
+                throw new NotSupportedException($"Unable to read PatchFile stream");
+
             using (var br = new BinaryReader(stream))
             {
                 PatchHeader.Read(br);

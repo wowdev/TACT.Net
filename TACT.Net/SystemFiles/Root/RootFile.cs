@@ -67,6 +67,9 @@ namespace TACT.Net.Root
         {
             _blocks.Clear();
 
+            if (!File.Exists(path))
+                throw new FileNotFoundException("Unable to open RootFile", path);
+
             using (var fs = File.OpenRead(path))
             using (var bt = new BlockTableStreamReader(fs))
                 Read(bt);
@@ -96,6 +99,11 @@ namespace TACT.Net.Root
 
         private void Read(Stream stream)
         {
+            if (stream == null)
+                throw new ArgumentNullException(nameof(stream));
+            if (!stream.CanRead || stream.Length <= 1)
+                throw new NotSupportedException($"Unable to read RootFile stream");
+
             _blocks.Capacity = 0x400; // arbitrary number based on 8.1.5
 
             using (var br = new BinaryReader(stream))

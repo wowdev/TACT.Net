@@ -38,7 +38,7 @@ namespace TACT.Net.Configs
             }
 
             // build specific fields
-            AddLookupValues(collection, type, build);            
+            AddLookupValues(collection, type, build);
 
             return collection;
         }
@@ -84,7 +84,7 @@ namespace TACT.Net.Configs
             if (isList)
                 dictionay[key] = new List<string>(values);
             else
-                dictionay[key] = values.Length == 0 ? "" : values[1];            
+                dictionay[key] = values.Length == 0 ? "" : values[1];
         }
 
         private static void AddLookupValues(Dictionary<string, List<string>> collection, ConfigType type, uint build)
