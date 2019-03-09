@@ -121,7 +121,7 @@ namespace TACT.Net.Common.Patching
                 long diffSize = patch.ReadInt64BS();
                 long outputSize = patch.ReadInt64BS();
 
-                if (controlSize < 0 || diffSize < 0 || outputSize < 0)
+                if (controlSize < 0 || diffSize < 0 || outputSize <= 0)
                     throw new InvalidOperationException("Corrupt patch");
 
                 // create a stream for each block

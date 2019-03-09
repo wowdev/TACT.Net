@@ -212,7 +212,7 @@ namespace TACT.Net.Common.ZLib
         }
 
         /// <summary>
-        /// Compresses and overrides the BaseStream
+        /// Compresses and resuses the BaseStream
         /// </summary>
         /// <param name="offset"></param>
         public void WriteBasestream(long offset = 0)
@@ -302,17 +302,9 @@ namespace TACT.Net.Common.ZLib
             get
             {
                 if (_mode == ZLibMode.Compress)
-                {
-                    if (TotalIn != 0)
-                        return 100 - TotalOut * 100.0 / TotalIn;
-                    return 0;
-                }
+                    return TotalIn == 0 ? 0 : 100 - TotalOut * 100.0 / TotalIn;
                 else
-                {
-                    if (TotalOut != 0)
-                        return 100 - TotalIn * 100.0 / TotalOut;
-                    return 0;
-                }
+                    return TotalOut == 0 ? 0 : 100 - TotalIn * 100.0 / TotalOut;
             }
         }
 

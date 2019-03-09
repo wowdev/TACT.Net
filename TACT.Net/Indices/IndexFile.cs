@@ -108,9 +108,6 @@ namespace TACT.Net.Indices
                 // store the current blob offset
                 _currentOffset = (ulong)_indexEntries.Values.Sum(x => (long)x.CompressedSize);
             }
-
-            stream?.Close();
-            stream?.Dispose();
         }
 
         /// <summary>
@@ -183,16 +180,19 @@ namespace TACT.Net.Indices
                 IndexFooter.Write(bw);
 
                 // compute filename - from ContentsHash to EOF
-                Checksum = ms.HashSlice(md5, footerStartPos + IndexFooter.ChecksumSize, IndexFooter.Size - IndexFooter.ChecksumSize);
+                var checksum = ms.HashSlice(md5, footerStartPos + IndexFooter.ChecksumSize, IndexFooter.Size - IndexFooter.ChecksumSize);
 
-                string saveLocation = Helpers.GetCDNPath(Checksum.ToString() + ".index", "data", directory, true);
+                string saveLocation = Helpers.GetCDNPath(checksum.ToString() + ".index", "data", directory, true);
                 if (!File.Exists(saveLocation))
                 {
                     // save to disk
                     File.WriteAllBytes(saveLocation, ms.ToArray());
 
                     // update the CDN Config
-                    UpdateConfig(configContainer, Checksum);
+                    UpdateConfig(configContainer, checksum);
+
+                    // update file checksum
+                    Checksum = checksum;
                 }
             }
         }

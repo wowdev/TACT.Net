@@ -70,6 +70,10 @@ namespace TACT.Net.FileLookup
                 LoadUnusedIDs();
         }
 
+        /// <summary>
+        /// Asynchronously saves the FileIdMap as a CSV
+        /// </summary>
+        /// <returns></returns>
         public async Task Sync()
         {
             await _sync.WaitAsync().ConfigureAwait(false);
@@ -85,6 +89,9 @@ namespace TACT.Net.FileLookup
             }
         }
 
+        /// <summary>
+        /// Synschronously saves the FileIdMap as a CSV
+        /// </summary>
         public void Close()
         {
             Sync().RunSynchronously();
@@ -94,6 +101,11 @@ namespace TACT.Net.FileLookup
 
         #region Methods
 
+        /// <summary>
+        /// Attempts to return a FileId. If the filename is unused a new one is generated
+        /// </summary>
+        /// <param name="filename"></param>
+        /// <returns></returns>
         public uint GetOrCreateFileId(string filename)
         {
             // attempt to get the fileid

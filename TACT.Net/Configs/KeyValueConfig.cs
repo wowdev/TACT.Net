@@ -65,6 +65,11 @@ namespace TACT.Net.Configs
                 Read(sr);
         }
 
+        /// <summary>
+        /// Loads an existing config of <paramref name="type"/>
+        /// </summary>
+        /// <param name="stream"></param>
+        /// <param name="type"></param>
         public KeyValueConfig(Stream stream, ConfigType type) : this()
         {
             Type = type;
@@ -260,6 +265,9 @@ namespace TACT.Net.Configs
 
         #region Helpers
 
+        /// <summary>
+        /// Sorts the CDN Config archive names
+        /// </summary>
         private void SortEntries()
         {
             if (Type != ConfigType.CDNConfig)
@@ -267,10 +275,8 @@ namespace TACT.Net.Configs
 
             string[] items = new[] { "patch-file-index", "file-index", "patch-archives", "archives" };
             foreach (var item in items)
-            {
                 if (_data.ContainsKey(item) && _data[item].Count > 0)
                     _data[item].Sort(new MD5HashComparer());
-            }
         }
 
         #endregion

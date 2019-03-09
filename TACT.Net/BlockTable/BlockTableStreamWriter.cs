@@ -7,7 +7,10 @@ using TACT.Net.Cryptography;
 
 namespace TACT.Net.BlockTable
 {
-    public class BlockTableStreamWriter : Stream
+    /// <summary>
+    /// A stream writer for Block Table Encoded files
+    /// </summary>
+    public sealed class BlockTableStreamWriter : Stream
     {
         internal IEnumerable<BlockTableSubStream> SubStreams => _blocks.Values;
 
@@ -17,6 +20,8 @@ namespace TACT.Net.BlockTable
         private int _curIndex = -1;
 
         public bool Finalised { get; private set; }
+        public CASRecord Result { get; private set; }
+
         public override bool CanRead => true;
         public override bool CanSeek => true;
         public override bool CanWrite => !Finalised;
@@ -57,7 +62,7 @@ namespace TACT.Net.BlockTable
         public CASRecord Finalise()
         {
             if (Finalised)
-                return null;
+                return Result;
 
             // lock the final block
             _blocks[_blocks.Count - 1].Lock();
@@ -132,7 +137,8 @@ namespace TACT.Net.BlockTable
                 Finalised = true;
             }
 
-            return new CASRecord()
+            // store for repeat finalisation
+            return Result = new CASRecord()
             {
                 CKey = CKey,
                 EBlock = new EBlock()

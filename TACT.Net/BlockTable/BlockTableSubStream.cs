@@ -121,7 +121,7 @@ namespace TACT.Net.BlockTable
         {
             // set lengths
             DecompressedSize = (uint)Length;
-            CompressedSize = DecompressedSize + 1;
+            CompressedSize = DecompressedSize + 1; // factor encoding byte
 
             _locked = true;
 

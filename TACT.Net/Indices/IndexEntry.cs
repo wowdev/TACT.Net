@@ -5,7 +5,6 @@ using TACT.Net.Cryptography;
 
 namespace TACT.Net.Indices
 {
-    [Serializable]
     public sealed class IndexEntry
     {
         /// <summary>

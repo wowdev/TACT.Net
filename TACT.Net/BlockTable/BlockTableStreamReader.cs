@@ -7,7 +7,10 @@ using TACT.Net.Cryptography;
 
 namespace TACT.Net.BlockTable
 {
-    public class BlockTableStreamReader : Stream
+    /// <summary>
+    /// A stream reader for Block Table Encoded files 
+    /// </summary>
+    public sealed class BlockTableStreamReader : Stream
     {
         // Original Implementation by TOM_RUS in CASCExplorer
         // Original Source: https://github.com/WoW-Tools/CASCExplorer/blob/master/CascLib/BLTEStream.cs
@@ -42,7 +45,7 @@ namespace TACT.Net.BlockTable
 
         public BlockTableStreamReader(string filename)
         {
-            stream = File.OpenRead(filename);
+            stream = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.Read);
             reader = new BinaryReader(stream);
             Parse();
         }

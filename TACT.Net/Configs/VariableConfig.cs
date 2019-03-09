@@ -57,7 +57,7 @@ namespace TACT.Net.Configs
         }
 
         /// <summary>
-        /// Loads an existing config file
+        /// Loads an existing config file of <paramref name="type"/>
         /// </summary>
         /// <param name="directory">Root Directory</param>
         /// <param name="type"></param>
@@ -74,7 +74,7 @@ namespace TACT.Net.Configs
         }
 
         /// <summary>
-        /// Loads an existing config from a stream
+        /// Loads an existing config of <paramref name="type"/>
         /// </summary>
         /// <param name="stream"></param>
         /// <param name="type"></param>
@@ -161,8 +161,18 @@ namespace TACT.Net.Configs
             PopulateCollection(fields, values, locale);
         }
 
+        /// <summary>
+        /// Removes a specific locale from the collection
+        /// </summary>
+        /// <param name="locale"></param>
+        /// <returns></returns>
         public bool RemoveLocale(Locale locale) => _data.Remove(locale);
 
+        /// <summary>
+        /// Determines if a specific locale exists
+        /// </summary>
+        /// <param name="locale"></param>
+        /// <returns></returns>
         public bool HasLocale(Locale locale) => _data.ContainsKey(locale);
 
         #endregion
@@ -232,6 +242,12 @@ namespace TACT.Net.Configs
 
         #region Helpers
 
+        /// <summary>
+        /// Adds a new locale group to the collection
+        /// </summary>
+        /// <param name="fields"></param>
+        /// <param name="values"></param>
+        /// <param name="locale"></param>
         private void PopulateCollection(string[] fields, string[] values, Locale locale)
         {
             // unused combination
@@ -246,6 +262,11 @@ namespace TACT.Net.Configs
             _data.Add(locale, collection);
         }
 
+        /// <summary>
+        /// Removes the format information from the fields
+        /// </summary>
+        /// <param name="fields"></param>
+        /// <returns></returns>
         private string[] DestructFieldNames(string[] fields)
         {
             return fields.Select(x => x.Split('!')[0]).ToArray();

@@ -281,7 +281,7 @@ namespace TACT.Net.BlockTable
         #region Helpers
 
         /// <summary>
-        /// Returns the EncodingMap based on Blizzard-esque rules
+        /// Returns a simple EncodingMap based on Blizzard-esque rules
         /// </summary>
         /// <param name="filename"></param>
         /// <param name="filesize">Small files are ignored from compression</param>
@@ -295,7 +295,10 @@ namespace TACT.Net.BlockTable
             if (filesize >= 0 && filesize < 20)
                 return new EMap(EType.None, 0);
 
-            // Blizzard-esque rules
+            // Blizzard uses multiple blocks to compress different parts of a file AND tailors this on a per-file basis to get peek output
+            //   e.g. DB2 string block will be best while the rest will be mpq (if data is repetative) or none (if not)
+            // The below is simplified to a single block of the most common compression type per filetype to avoid file parsing
+            // The BlockTableStreamWriter should be used if the best speed/compression ratio is required
             switch (Path.GetExtension(filename).ToUpperInvariant())
             {
                 // don't compress - natively compressed formats

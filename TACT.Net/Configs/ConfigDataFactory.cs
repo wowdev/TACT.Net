@@ -7,10 +7,19 @@ namespace TACT.Net.Configs
     using Lookup = Dictionary<ConfigType, Dictionary<string, uint>>;
     using LookupEntry = Dictionary<string, uint>;
 
+    /// <summary>
+    /// A config data generator
+    /// </summary>
     internal static class ConfigDataFactory
     {
         #region Data Generators
 
+        /// <summary>
+        /// Populates a KeyValueConfig of <paramref name="type"/> with <paramref name="build"/> specific defaults
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="build"></param>
+        /// <returns></returns>
         public static Dictionary<string, List<string>> GenerateData(ConfigType type, uint build)
         {
             var collection = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
@@ -43,6 +52,11 @@ namespace TACT.Net.Configs
             return collection;
         }
 
+        /// <summary>
+        /// Populates a VariableConfig of <paramref name="type"/>
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
         public static (string[] Fields, string[] Values) GenerateData(ConfigType type)
         {
             var collection = new Dictionary<string, string>();
@@ -76,6 +90,12 @@ namespace TACT.Net.Configs
 
         #region Helpers
 
+        /// <summary>
+        /// Generic-ish dictionary populator
+        /// </summary>
+        /// <param name="dictionay"></param>
+        /// <param name="key"></param>
+        /// <param name="values"></param>
         private static void AddValue(System.Collections.IDictionary dictionay, string key, params string[] values)
         {
             var valueType = dictionay.GetType().GetGenericArguments()[1];
@@ -87,6 +107,12 @@ namespace TACT.Net.Configs
                 dictionay[key] = values.Length == 0 ? "" : values[1];
         }
 
+        /// <summary>
+        /// Adds build specific fields to the collection
+        /// </summary>
+        /// <param name="collection"></param>
+        /// <param name="type"></param>
+        /// <param name="build"></param>
         private static void AddLookupValues(Dictionary<string, List<string>> collection, ConfigType type, uint build)
         {
             if (Lookup.Value.TryGetValue(type, out var fields))

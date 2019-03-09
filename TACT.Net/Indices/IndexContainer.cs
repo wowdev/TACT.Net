@@ -184,6 +184,14 @@ namespace TACT.Net.Indices
 
         #region Helpers
 
+        /// <summary>
+        /// Generic method to find a hash inside a collection of IndexFiles
+        /// </summary>
+        /// <param name="indices"></param>
+        /// <param name="path"></param>
+        /// <param name="hash"></param>
+        /// <param name="indexEntry">The IndexFile containing the hash</param>
+        /// <returns>Returns the path to the blob file</returns>
         private string GetIndexEntryAndPath(IEnumerable<IndexFile> indices, string path, MD5Hash hash, out IndexEntry indexEntry)
         {
             indexEntry = null;
