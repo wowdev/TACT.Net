@@ -164,8 +164,8 @@ namespace TACT.Net.Indices
                 // Page hashes - final page is ignored
                 long pageStartPos = bw.BaseStream.Position;
                 PageChecksums.RemoveAt(PageChecksums.Count - 1);
-                foreach (var checksum in PageChecksums)
-                    bw.Write(checksum.Value);
+                foreach (var pagechecksum in PageChecksums)
+                    bw.Write(pagechecksum.Value);
 
                 // LastPage hash - last PageSize of Entries
                 long footerStartPos = bw.BaseStream.Position;
