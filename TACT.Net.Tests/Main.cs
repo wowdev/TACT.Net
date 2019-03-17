@@ -207,7 +207,6 @@ namespace TACT.Net.Tests
             if (Directory.Exists(@"C:\wamp64\www\wow"))
                 Directory.Delete(@"C:\wamp64\www\wow", true);
 
-
             string buildName = "WOW-15595patch4.3.4_Retail";
             string buildId = "15595";
             string versionName = "4.3.4.15595";

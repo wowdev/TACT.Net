@@ -7,6 +7,7 @@ namespace TACT.Net.Cryptography
     public struct MD5Hash : IEquatable<MD5Hash>
     {
         public readonly byte[] Value;
+        public readonly bool IsEmpty;
 
         // cache these values as this struct is readonly
         private int? hashcode;
@@ -16,9 +17,10 @@ namespace TACT.Net.Cryptography
 
         public MD5Hash(string hash)
         {
-            Value = hash.ToByteArray();
+            Value = hash?.ToByteArray();
             hashcode = null;
             stringvalue = null;
+            IsEmpty = Value == null || Value.Length == 0 || Array.TrueForAll(Value, x => x == 0);
         }
 
         public MD5Hash(byte[] hash)
@@ -26,11 +28,10 @@ namespace TACT.Net.Cryptography
             Value = hash;
             hashcode = null;
             stringvalue = null;
+            IsEmpty = Value == null || Value.Length == 0 || Array.TrueForAll(Value, x => x == 0);
         }
 
         #endregion
-
-        public bool IsEmpty => Value == null || Value.Length == 0 || Array.TrueForAll(Value, x => x == 0);
 
         #region Operators
 
@@ -61,14 +62,7 @@ namespace TACT.Net.Cryptography
 
         public static bool TryParse(string hash, out MD5Hash md5Hash)
         {
-            if (string.IsNullOrWhiteSpace(hash) || hash.Length > 32)
-            {
-                md5Hash = default;
-                return false;
-            }
-
-            md5Hash = new MD5Hash(hash);
-            return true;
+            return TryParse(hash?.ToByteArray(), out md5Hash);
         }
 
         public static bool TryParse(byte[] hash, out MD5Hash md5Hash)
