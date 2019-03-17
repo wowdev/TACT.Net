@@ -119,7 +119,7 @@ namespace TACT.Net.BlockTable
                 var record = bt.Finalise();
 
                 string saveLocation = Helpers.GetCDNPath(record.EKey.ToString(), "data", directory, true);
-                using (var fs = File.Create(saveLocation))
+                using (var fs = Helpers.Create(saveLocation))
                 {
                     bt.WriteTo(fs);
                     record.BLTEPath = saveLocation;
@@ -150,7 +150,7 @@ namespace TACT.Net.BlockTable
 
                 // save the encoded file
                 string saveLocation = Helpers.GetCDNPath(record.EKey.ToString(), "data", directory, true);
-                using (var fs = File.Create(saveLocation))
+                using (var fs = Helpers.Create(saveLocation))
                 {
                     bt.WriteTo(fs);
                     record.BLTEPath = saveLocation;
@@ -178,7 +178,7 @@ namespace TACT.Net.BlockTable
                 var record = bt.Finalise();
 
                 string saveLocation = Helpers.GetCDNPath(record.EKey.ToString(), "data", directory, true);
-                using (var fs = File.Create(saveLocation))
+                using (var fs = Helpers.Create(saveLocation))
                 {
                     bt.WriteTo(fs);
                     record.BLTEPath = saveLocation;
@@ -236,7 +236,7 @@ namespace TACT.Net.BlockTable
         public static void DecodeAndExport(byte[] data, string filepath)
         {
             using (var bt = new BlockTableStreamReader(data))
-            using (var fs = File.Create(filepath))
+            using (var fs = Helpers.Create(filepath))
             {
                 bt.Position = 0;
                 bt.CopyTo(fs);
@@ -252,7 +252,7 @@ namespace TACT.Net.BlockTable
         public static void DecodeAndExport(string inputPath, string outputPath)
         {
             using (var bt = new BlockTableStreamReader(inputPath))
-            using (var fs = File.Create(outputPath))
+            using (var fs = Helpers.Create(outputPath))
             {
                 bt.Position = 0;
                 bt.CopyTo(fs);
@@ -268,7 +268,7 @@ namespace TACT.Net.BlockTable
         public static void DecodeAndExport(Stream stream, string filepath)
         {
             using (var bt = new BlockTableStreamReader(stream))
-            using (var fs = File.Create(filepath))
+            using (var fs = Helpers.Create(filepath))
             {
                 bt.Position = 0;
                 bt.CopyTo(fs);

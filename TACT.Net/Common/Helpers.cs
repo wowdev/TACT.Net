@@ -22,6 +22,16 @@ namespace TACT.Net.Common
         }
 
         /// <summary>
+        /// Creates a new file with sharing enabled
+        /// </summary>
+        /// <param name="filename"></param>
+        /// <returns></returns>
+        public static FileStream Create(string filename)
+        {
+            return new FileStream(filename, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
+        }
+
+        /// <summary>
         /// Determines a file exists before attempting to delete
         /// </summary>
         /// <param name="filename"></param>
