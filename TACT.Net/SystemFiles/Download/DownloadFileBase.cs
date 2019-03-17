@@ -34,7 +34,7 @@ namespace TACT.Net.Download
         public void AddOrUpdate(T fileEntry, params string[] tags)
         {
             int index;
-            if(!_FileEntries.ContainsKey(fileEntry.EKey))
+            if (!_FileEntries.ContainsKey(fileEntry.EKey))
             {
                 index = _FileEntries.Count;
                 _FileEntries.Add(fileEntry.EKey, fileEntry);
@@ -43,7 +43,7 @@ namespace TACT.Net.Download
             {
                 index = _FileEntries.IndexOfKey(x => x == fileEntry.EKey);
                 _FileEntries[fileEntry.EKey] = fileEntry;
-            }            
+            }
 
             // update the tag masks
             SetTags(index, true, tags);

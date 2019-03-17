@@ -188,7 +188,7 @@ namespace TACT.Net.Install
         public void AddOrUpdate(InstallFileEntry fileEntry, params string[] tags)
         {
             int index;
-            if(!_FileEntries.ContainsKey(fileEntry.FilePath))
+            if (!_FileEntries.ContainsKey(fileEntry.FilePath))
             {
                 index = _FileEntries.Count;
                 _FileEntries.Add(fileEntry.FilePath, fileEntry);
