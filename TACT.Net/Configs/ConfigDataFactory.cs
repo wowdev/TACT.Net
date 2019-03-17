@@ -104,7 +104,7 @@ namespace TACT.Net.Configs
             if (isList)
                 dictionay[key] = new List<string>(values);
             else
-                dictionay[key] = values.Length == 0 ? "" : values[1];
+                dictionay[key] = values.Length == 0 ? "" : values[0];
         }
 
         /// <summary>
