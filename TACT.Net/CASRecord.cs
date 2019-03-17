@@ -34,17 +34,14 @@ namespace TACT.Net
 
         #region Helpers
 
-        public bool WriteTo(Stream stream, bool dispose = true)
+        public bool WriteTo(Stream stream)
         {
             if (!File.Exists(BLTEPath))
                 return false;
 
             using (var fs = File.OpenRead(BLTEPath))
                 fs.CopyTo(stream);
-
-            if (dispose)
-                Helpers.Delete(BLTEPath);
-
+            
             return true;
         }
 
