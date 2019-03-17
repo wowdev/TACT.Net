@@ -108,6 +108,8 @@ namespace TACT.Net
             InstallFile?.Write(directory, this);
             EncodingFile?.Write(directory, ConfigContainer);
             ConfigContainer?.Save(directory);
+
+            RootFile?.FileLookup?.Close();
         }
 
         public void Clean()

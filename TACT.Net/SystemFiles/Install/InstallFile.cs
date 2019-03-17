@@ -187,10 +187,19 @@ namespace TACT.Net.Install
 
         public void AddOrUpdate(InstallFileEntry fileEntry, params string[] tags)
         {
-            _FileEntries[fileEntry.FilePath] = fileEntry;
+            int index;
+            if(!_FileEntries.ContainsKey(fileEntry.FilePath))
+            {
+                index = _FileEntries.Count;
+                _FileEntries.Add(fileEntry.FilePath, fileEntry);
+            }
+            else
+            {
+                index = _FileEntries.IndexOfKey(x => x.IndexOf(fileEntry.FilePath, StringComparison.OrdinalIgnoreCase) >= 0);
+                _FileEntries[fileEntry.FilePath] = fileEntry;
+            }
 
             // update the tag masks
-            int index = _FileEntries.IndexOfKey(x => x.IndexOf(fileEntry.FilePath, StringComparison.OrdinalIgnoreCase) >= 0);
             SetTags(index, true, tags);
         }
 
