@@ -286,13 +286,13 @@ namespace TACT.Net.BlockTable
         /// <param name="filename"></param>
         /// <param name="filesize">Small files are ignored from compression</param>
         /// <returns></returns>
-        public static EMap GetEMapFromExtension(string filename, long filesize = -1)
+        public static EMap GetEMapFromExtension(string filename, long? filesize = null)
         {
             if (string.IsNullOrWhiteSpace(filename) || filename.IndexOf('.') == -1 || filename.EndsWith('.'))
                 throw new ArgumentException("Invalid Filename");
 
             // not worth compressing files < 20 bytes
-            if (filesize >= 0 && filesize < 20)
+            if (filesize.HasValue && filesize >= 0 && filesize < 20)
                 return new EMap(EType.None, 0);
 
             // Blizzard uses multiple blocks to compress different parts of a file AND tailors this on a per-file basis to get peek output
