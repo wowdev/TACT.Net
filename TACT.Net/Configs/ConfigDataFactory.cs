@@ -99,7 +99,7 @@ namespace TACT.Net.Configs
         private static void AddValue(System.Collections.IDictionary dictionay, string key, params string[] values)
         {
             var valueType = dictionay.GetType().GetGenericArguments()[1];
-            bool isList = valueType.GetGenericTypeDefinition() == typeof(List<>);
+            bool isList = valueType.IsGenericType && valueType.GetGenericTypeDefinition() == typeof(List<>);
 
             if (isList)
                 dictionay[key] = new List<string>(values);
