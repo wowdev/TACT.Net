@@ -18,27 +18,18 @@ namespace TACT.Net.Common
         {
             Count = (int)count;
             _bytes = array;
-
-            if (count == 0)
-                _bytes = new byte[1];
         }
 
         public BoolArray(BinaryReader br, uint count)
         {
             Count = (int)count;
             _bytes = br.ReadBytes((Count + 7) / 8);
-
-            if (count == 0)
-                _bytes = new byte[1];
         }
 
         public BoolArray(uint count)
         {
             Count = (int)count;
             _bytes = new byte[(Count + 7) / 8];
-
-            if (count == 0)
-                _bytes = new byte[1];
         }
 
         #endregion
@@ -51,7 +42,7 @@ namespace TACT.Net.Common
             set
             {
                 // expand the collection automatically
-                int diff = ((index + 7) / 8) - _bytes.Length;
+                int diff = ((index + 8) / 8) - _bytes.Length;
                 if (diff > 0)
                     Array.Resize(ref _bytes, _bytes.Length + diff);
 
