@@ -7,7 +7,6 @@ using TACT.Net.Common;
 using TACT.Net.Cryptography;
 using TACT.Net.Encoding;
 using TACT.Net.FileLookup;
-using TACT.Net.SystemFiles;
 
 namespace TACT.Net.Root
 {

@@ -1,7 +1,6 @@
 ﻿using System;
 using TACT.Net.Cryptography;
 using TACT.Net.Network;
-using TACT.Net.SystemFiles;
 
 namespace TACT.Net.Configs
 {

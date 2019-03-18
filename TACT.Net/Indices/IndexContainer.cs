@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using TACT.Net.BlockTable;
 using TACT.Net.Common;
 using TACT.Net.Cryptography;
-using TACT.Net.SystemFiles;
 
 namespace TACT.Net.Indices
 {

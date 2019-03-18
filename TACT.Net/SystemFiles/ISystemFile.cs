@@ -1,6 +1,6 @@
 ﻿using TACT.Net.Cryptography;
 
-namespace TACT.Net.SystemFiles
+namespace TACT.Net
 {
     public interface ISystemFile
     {

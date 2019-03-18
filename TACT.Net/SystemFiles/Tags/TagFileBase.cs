@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using TACT.Net.Common;
 using TACT.Net.Cryptography;
-using TACT.Net.SystemFiles;
 
 namespace TACT.Net.Tags
 {

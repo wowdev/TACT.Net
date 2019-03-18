@@ -4,7 +4,6 @@ using System.IO;
 using TACT.Net.Common;
 using TACT.Net.Common.Patching;
 using TACT.Net.Cryptography;
-using TACT.Net.SystemFiles;
 
 namespace TACT.Net.Patch
 {
