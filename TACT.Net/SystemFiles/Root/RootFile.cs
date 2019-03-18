@@ -155,7 +155,7 @@ namespace TACT.Net.Root
         /// </summary>
         /// <param name="directory"></param>
         /// <returns></returns>
-        public CASRecord Write(string directory, TACTRepo tactInstance = null)
+        public CASRecord Write(string directory, TACTRepo tactRepo = null)
         {
             FixDeltas();
 
@@ -186,12 +186,12 @@ namespace TACT.Net.Root
                 }
 
                 // add to the encoding file and update the build config
-                if (tactInstance != null)
+                if (tactRepo != null)
                 {
-                    tactInstance.EncodingFile?.AddOrUpdate(record);
-                    tactInstance.DownloadFile?.AddOrUpdate(record, 0);
-                    tactInstance.DownloadSizeFile?.AddOrUpdate(record);
-                    tactInstance.ConfigContainer?.BuildConfig?.SetValue("root", record.CKey, 0);
+                    tactRepo.EncodingFile?.AddOrUpdate(record);
+                    tactRepo.DownloadFile?.AddOrUpdate(record, 0);
+                    tactRepo.DownloadSizeFile?.AddOrUpdate(record);
+                    tactRepo.ConfigContainer?.BuildConfig?.SetValue("root", record.CKey, 0);
                 }
 
                 Checksum = record.CKey;
@@ -207,8 +207,8 @@ namespace TACT.Net.Root
         /// Adds or Updates a RootRecord and amends all associated system files. If no block is found the Common block is used.
         /// </summary>
         /// <param name="record"></param>
-        /// <param name="tactInstance">If provided, will add the entry to all relevant system files</param>
-        public void AddOrUpdate(CASRecord record, TACTRepo tactInstance = null)
+        /// <param name="tactRepo">If provided, will add the entry to all relevant system files</param>
+        public void AddOrUpdate(CASRecord record, TACTRepo tactRepo = null)
         {
             if (FileLookup == null)
                 throw new NullReferenceException($"{nameof(FileLookup)} has not be instantiated");
@@ -223,12 +223,12 @@ namespace TACT.Net.Root
             AddOrUpdate(rootRecord);
 
             // add the record to all referenced files
-            if (tactInstance != null)
+            if (tactRepo != null)
             {
-                tactInstance.EncodingFile?.AddOrUpdate(record);
-                tactInstance.IndexContainer?.Enqueue(record);
-                tactInstance.DownloadFile?.AddOrUpdate(record, 2);
-                tactInstance.DownloadSizeFile?.AddOrUpdate(record);
+                tactRepo.EncodingFile?.AddOrUpdate(record);
+                tactRepo.IndexContainer?.Enqueue(record);
+                tactRepo.DownloadFile?.AddOrUpdate(record, 2);
+                tactRepo.DownloadSizeFile?.AddOrUpdate(record);
             }
         }
         /// <summary>
@@ -397,58 +397,58 @@ namespace TACT.Net.Root
         /// Opens a stream to the data of the supplied FileId. Returns null if not found
         /// </summary>
         /// <param name="fileid"></param>
-        /// <param name="tactInstance"></param>
+        /// <param name="tactRepo"></param>
         /// <returns></returns>
-        public Stream OpenFile(uint fileid, TACTRepo tactInstance)
+        public Stream OpenFile(uint fileid, TACTRepo tactRepo)
         {
-            return OpenFile(Get(fileid).FirstOrDefault(), tactInstance);
+            return OpenFile(Get(fileid).FirstOrDefault(), tactRepo);
         }
         /// <summary>
         /// Opens a stream to the data of the supplied namehash. Returns null if not found
         /// </summary>
         /// <param name="fileid"></param>
-        /// <param name="tactInstance"></param>
+        /// <param name="tactRepo"></param>
         /// <returns></returns>
-        public Stream OpenFile(ulong namehash, TACTRepo tactInstance)
+        public Stream OpenFile(ulong namehash, TACTRepo tactRepo)
         {
-            return OpenFile(Get(namehash).FirstOrDefault(), tactInstance);
+            return OpenFile(Get(namehash).FirstOrDefault(), tactRepo);
         }
         /// <summary>
         /// Opens a stream to the data of the supplied filepath. Returns null if not found
         /// </summary>
         /// <param name="filepath"></param>
-        /// <param name="tactInstance"></param>
+        /// <param name="tactRepo"></param>
         /// <returns></returns>
-        public Stream OpenFile(string filepath, TACTRepo tactInstance)
+        public Stream OpenFile(string filepath, TACTRepo tactRepo)
         {
-            return OpenFile(Get(filepath).FirstOrDefault(), tactInstance);
+            return OpenFile(Get(filepath).FirstOrDefault(), tactRepo);
         }
         /// <summary>
         /// Opens a stream to the data of the supplied RootRecord. Returns null if not found
         /// </summary>
         /// <param name="rootRecord"></param>
         /// <returns></returns>
-        public Stream OpenFile(RootRecord rootRecord, TACTRepo tactInstance)
+        public Stream OpenFile(RootRecord rootRecord, TACTRepo tactRepo)
         {
             if (rootRecord == null)
                 return null;
 
-            return OpenFile(rootRecord.CKey, tactInstance);
+            return OpenFile(rootRecord.CKey, tactRepo);
         }
         /// <summary>
         /// Opens a stream to the data of the supplied CKey. Returns null if not found
         /// </summary>
         /// <param name="ckey"></param>
         /// <returns></returns>
-        public Stream OpenFile(MD5Hash ckey, TACTRepo tactInstance)
+        public Stream OpenFile(MD5Hash ckey, TACTRepo tactRepo)
         {
-            if (tactInstance == null)
+            if (tactRepo == null)
                 return null;
 
-            if (tactInstance.EncodingFile != null && tactInstance.IndexContainer != null)
+            if (tactRepo.EncodingFile != null && tactRepo.IndexContainer != null)
             {
-                if (tactInstance.EncodingFile.TryGetContentEntry(ckey, out EncodingContentEntry encodingCKey))
-                    return tactInstance.IndexContainer.OpenFile(encodingCKey.EKey);
+                if (tactRepo.EncodingFile.TryGetContentEntry(ckey, out EncodingContentEntry encodingCKey))
+                    return tactRepo.IndexContainer.OpenFile(encodingCKey.EKey);
             }
 
             return null;

@@ -103,7 +103,7 @@ namespace TACT.Net.Install
         /// <param name="directory">Root Directory</param>
         /// <param name="configContainer"></param>
         /// <returns></returns>
-        public CASRecord Write(string directory, TACTRepo tactInstance = null)
+        public CASRecord Write(string directory, TACTRepo tactRepo = null)
         {
             CASRecord record;
 
@@ -134,19 +134,19 @@ namespace TACT.Net.Install
             }
 
             // insert the record into the encoding and the download files
-            if (tactInstance != null)
+            if (tactRepo != null)
             {
-                tactInstance.EncodingFile?.AddOrUpdate(record);
-                tactInstance.DownloadFile?.AddOrUpdate(record, -1);
-                tactInstance.DownloadSizeFile?.AddOrUpdate(record);
+                tactRepo.EncodingFile?.AddOrUpdate(record);
+                tactRepo.DownloadFile?.AddOrUpdate(record, -1);
+                tactRepo.DownloadSizeFile?.AddOrUpdate(record);
 
                 // update the build config with the new values
-                if (tactInstance.ConfigContainer?.BuildConfig != null)
+                if (tactRepo.ConfigContainer?.BuildConfig != null)
                 {
-                    tactInstance.ConfigContainer.BuildConfig.SetValue("install-size", record.EBlock.DecompressedSize, 0);
-                    tactInstance.ConfigContainer.BuildConfig.SetValue("install-size", record.EBlock.CompressedSize, 1);
-                    tactInstance.ConfigContainer.BuildConfig.SetValue("install", record.CKey, 0);
-                    tactInstance.ConfigContainer.BuildConfig.SetValue("install", record.EKey, 1);
+                    tactRepo.ConfigContainer.BuildConfig.SetValue("install-size", record.EBlock.DecompressedSize, 0);
+                    tactRepo.ConfigContainer.BuildConfig.SetValue("install-size", record.EBlock.CompressedSize, 1);
+                    tactRepo.ConfigContainer.BuildConfig.SetValue("install", record.CKey, 0);
+                    tactRepo.ConfigContainer.BuildConfig.SetValue("install", record.EKey, 1);
                 }
             }
 
@@ -162,9 +162,9 @@ namespace TACT.Net.Install
         /// Adds a CASRecord to the InstallFile, this will overwrite existing entries
         /// </summary>
         /// <param name="record"></param>
-        /// <param name="tactInstance">If provided, will add the entry to all relevant system files</param>
+        /// <param name="tactRepo">If provided, will add the entry to all relevant system files</param>
         /// <param name="tags"></param>
-        public void AddOrUpdate(CASRecord record, TACTRepo tactInstance = null, params string[] tags)
+        public void AddOrUpdate(CASRecord record, TACTRepo tactRepo = null, params string[] tags)
         {
             var entry = new InstallFileEntry()
             {
@@ -176,12 +176,12 @@ namespace TACT.Net.Install
             AddOrUpdate(entry, tags);
 
             // add the record to all referenced files
-            if (tactInstance != null)
+            if (tactRepo != null)
             {
-                tactInstance.EncodingFile?.AddOrUpdate(record);
-                tactInstance.IndexContainer?.Enqueue(record);
-                tactInstance.DownloadFile?.AddOrUpdate(record, 2);
-                tactInstance.DownloadSizeFile?.AddOrUpdate(record);
+                tactRepo.EncodingFile?.AddOrUpdate(record);
+                tactRepo.IndexContainer?.Enqueue(record);
+                tactRepo.DownloadFile?.AddOrUpdate(record, 2);
+                tactRepo.DownloadSizeFile?.AddOrUpdate(record);
             }
         }
 

@@ -25,7 +25,7 @@ namespace TACT.Net.Download
 
         protected abstract void Read(Stream stream);
 
-        public abstract CASRecord Write(string directory, TACTRepo tactInstance = null);
+        public abstract CASRecord Write(string directory, TACTRepo tactRepo = null);
 
         #endregion
 
