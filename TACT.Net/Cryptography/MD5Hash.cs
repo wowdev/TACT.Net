@@ -49,6 +49,14 @@ namespace TACT.Net.Cryptography
 
         public bool Equals(MD5Hash other)
         {
+            // shortcuts
+            if (IsEmpty || other.IsEmpty)
+                return IsEmpty == other.IsEmpty;
+            if (Value.Length != other.Value.Length)
+                return false;
+            if (Value[0] != other.Value[0])
+                return false;
+
             return ((IStructuralEquatable)Value).Equals(other.Value, StructuralComparisons.StructuralEqualityComparer);
         }
 
