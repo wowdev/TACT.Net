@@ -77,11 +77,11 @@ namespace TACT.Net.Tags
 
         protected void RemoveFile(int index)
         {
-            if (index > -1)
-            {
-                foreach (var tagEntry in _TagEntries.Values)
-                    tagEntry.FileMask.Remove(index);
-            }
+            if (index <= -1)
+                return;
+
+            foreach (var tagEntry in _TagEntries.Values)
+                tagEntry.FileMask.Remove(index);
         }
 
         /// <summary>
@@ -101,12 +101,12 @@ namespace TACT.Net.Tags
 
         protected IEnumerable<string> GetTags(int index)
         {
-            if (index > -1)
-            {
-                foreach (var tagEntry in _TagEntries.Values)
-                    if (tagEntry.FileMask[index])
-                        yield return tagEntry.Name;
-            }
+            if (index <= -1)
+                yield break;
+
+            foreach (var tagEntry in _TagEntries.Values)
+                if (tagEntry.FileMask[index])
+                    yield return tagEntry.Name;
         }
 
         /// <summary>
@@ -117,15 +117,15 @@ namespace TACT.Net.Tags
         /// <param name="tags"></param>
         protected void SetTags(int index, bool value, params string[] tags)
         {
-            if (index > -1)
-            {
-                if (tags == null || tags.Length == 0)
-                    tags = _TagEntries.Keys.ToArray();
+            if (index <= -1)
+                return;
 
-                foreach (var tag in tags)
-                    if (_TagEntries.TryGetValue(tag, out var tagEntry))
-                        tagEntry.FileMask[index] = value;
-            }
+            if (tags == null || tags.Length == 0)
+                tags = _TagEntries.Keys.ToArray();
+
+            foreach (var tag in tags)
+                if (_TagEntries.TryGetValue(tag, out var tagEntry))
+                    tagEntry.FileMask[index] = value;
         }
 
         /// <summary>
@@ -198,7 +198,7 @@ namespace TACT.Net.Tags
         /// Sets the File Mask capacity for all Tags
         /// </summary>
         /// <param name="capacity"></param>
-        public void SetCapacity(int capacity)
+        public void SetTagsCapacity(int capacity)
         {
             foreach (var tag in _TagEntries.Values)
                 tag.FileMask.Capacity = capacity;

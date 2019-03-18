@@ -160,7 +160,7 @@ namespace TACT.Net.Download
         /// </summary>
         /// <param name="record"></param>
         /// <param name="tags"></param>
-        public void AddOrUpdate(CASRecord record, params string[] tags)
+        public void AddOrUpdate(CASRecord record)
         {
             var entry = new DownloadSizeFileEntry()
             {
@@ -168,7 +168,7 @@ namespace TACT.Net.Download
                 CompressedSize = record.EBlock.CompressedSize,
             };
 
-            AddOrUpdate(entry, tags);
+            AddOrUpdate(entry, record.Tags);
         }
 
         #endregion

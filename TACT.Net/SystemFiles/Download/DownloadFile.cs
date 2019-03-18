@@ -167,7 +167,7 @@ namespace TACT.Net.Download
         /// <param name="record"></param>
         /// <param name="priority">0 = highest, 2 = lowest, -1 for Install</param>
         /// <param name="tags"></param>
-        public void AddOrUpdate(CASRecord record, sbyte priority, params string[] tags)
+        public void AddOrUpdate(CASRecord record, sbyte priority)
         {
             // prevent overflow for old versions
             if (DownloadHeader.BasePriority + priority < 0)
@@ -182,7 +182,7 @@ namespace TACT.Net.Download
                 Checksum = 0 // TODO do we know what this is?
             };
 
-            AddOrUpdate(entry, tags);
+            AddOrUpdate(entry, record.Tags);
         }
 
         #endregion

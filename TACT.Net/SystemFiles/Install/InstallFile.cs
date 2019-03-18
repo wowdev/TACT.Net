@@ -164,7 +164,7 @@ namespace TACT.Net.Install
         /// <param name="record"></param>
         /// <param name="tactRepo">If provided, will add the entry to all relevant system files</param>
         /// <param name="tags"></param>
-        public void AddOrUpdate(CASRecord record, TACTRepo tactRepo = null, params string[] tags)
+        public void AddOrUpdate(CASRecord record, TACTRepo tactRepo = null)
         {
             var entry = new InstallFileEntry()
             {
@@ -173,7 +173,7 @@ namespace TACT.Net.Install
                 DecompressedSize = record.EBlock.DecompressedSize,
             };
 
-            AddOrUpdate(entry, tags);
+            AddOrUpdate(entry, record.Tags);
 
             // add the record to all referenced files
             if (tactRepo != null)

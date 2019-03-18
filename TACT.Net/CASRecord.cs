@@ -31,6 +31,10 @@ namespace TACT.Net
         /// Returns the block ESpec
         /// </summary>
         public string ESpec { get; internal set; }
+        /// <summary>
+        /// Tags used to document the file in the Download, Download Size and Install files
+        /// </summary>
+        public string[] Tags;
 
         #region Helpers
 
