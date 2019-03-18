@@ -54,7 +54,11 @@ namespace TACT.Net.Common
             }
         }
 
-        public void Add(bool v) => this[++Count] = v;
+        public void Add(bool v)
+        {
+            this[Count] = v;
+            Count++;
+        }
 
         public void Remove(int index) => BlitAndRotate(index);
 
@@ -64,7 +68,11 @@ namespace TACT.Net.Common
             Count = 0;
         }
 
-        public byte[] ToByteArray() => _bytes;
+        public byte[] ToByteArray()
+        {
+            // clamp to the actual Count not the capacity
+            return _bytes.AsSpan().Slice(0, (Count + 7) / 8).ToArray();
+        }
 
         public int Capacity
         {
