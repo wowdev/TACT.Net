@@ -195,6 +195,16 @@ namespace TACT.Net.Tags
             }
         }
 
+        /// <summary>
+        /// Sets the File Mask capacity for all Tags
+        /// </summary>
+        /// <param name="capacity"></param>
+        public void SetCapacity(int capacity)
+        {
+            foreach (var tag in _TagEntries.Values)
+                tag.FileMask.Capacity = capacity;
+        }
+
         #endregion
 
         #region Helpers
