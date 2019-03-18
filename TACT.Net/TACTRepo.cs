@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 [assembly: InternalsVisibleTo("TACT.Net.Tests")]
 namespace TACT.Net
 {
-    public sealed class TACT
+    public sealed class TACTRepo
     {
         public readonly string BaseDirectory;
         public uint Build { get; private set; }
@@ -25,7 +25,7 @@ namespace TACT.Net
 
         #region Constructors
 
-        public TACT(string baseDirectory = "")
+        public TACTRepo(string baseDirectory = "")
         {
             BaseDirectory = baseDirectory;
         }

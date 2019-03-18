@@ -70,7 +70,7 @@ namespace TACT.Net.Tests
         [TestMethod]
         public void TestConfigs()
         {
-            TACT tact = new TACT()
+            TACTRepo tactRepo = new TACTRepo()
             {
                 ConfigContainer = new ConfigContainer("wowt", Locale.US)
             };
@@ -78,37 +78,37 @@ namespace TACT.Net.Tests
             //configContainer.OpenRemote(@"D:\Backup\");
             //Assert.IsNotNull(configContainer.VersionsFile);
 
-            tact.ConfigContainer.OpenLocal(@"D:\Backup\");
-            Assert.IsNotNull(tact.ConfigContainer.VersionsFile);
-            Assert.IsNotNull(tact.ConfigContainer.BuildConfig);
-            Assert.IsFalse(tact.ConfigContainer.RootMD5.IsEmpty);
+            tactRepo.ConfigContainer.OpenLocal(@"D:\Backup\");
+            Assert.IsNotNull(tactRepo.ConfigContainer.VersionsFile);
+            Assert.IsNotNull(tactRepo.ConfigContainer.BuildConfig);
+            Assert.IsFalse(tactRepo.ConfigContainer.RootMD5.IsEmpty);
         }
 
         [TestMethod]
         public void TestOpenFile()
         {
             // create an instance
-            TACT tact = new TACT(@"D:\Backup\")
+            TACTRepo tactRepo = new TACTRepo(@"D:\Backup\")
             {
                 ConfigContainer = new ConfigContainer("wow", Locale.US)
             };
 
             // open the configs
-            tact.ConfigContainer.OpenLocal(tact.BaseDirectory);
+            tactRepo.ConfigContainer.OpenLocal(tactRepo.BaseDirectory);
 
             // load the archives
-            tact.IndexContainer = new Indices.IndexContainer();
-            tact.IndexContainer.Open(tact.BaseDirectory);
-            Assert.IsTrue(tact.IndexContainer.DataIndices.Any());
+            tactRepo.IndexContainer = new Indices.IndexContainer();
+            tactRepo.IndexContainer.Open(tactRepo.BaseDirectory);
+            Assert.IsTrue(tactRepo.IndexContainer.DataIndices.Any());
 
             // open the encoding
-            tact.EncodingFile = new Encoding.EncodingFile(tact.BaseDirectory, tact.ConfigContainer.EncodingEKey);
+            tactRepo.EncodingFile = new Encoding.EncodingFile(tactRepo.BaseDirectory, tactRepo.ConfigContainer.EncodingEKey);
 
             // get the root ckey
-            Assert.IsTrue(tact.EncodingFile.TryGetContentEntry(tact.ConfigContainer.RootMD5, out var rootCEntry));
+            Assert.IsTrue(tactRepo.EncodingFile.TryGetContentEntry(tactRepo.ConfigContainer.RootMD5, out var rootCEntry));
 
             // open the root
-            tact.RootFile = new Root.RootFile(tact.BaseDirectory, rootCEntry.EKey);
+            tactRepo.RootFile = new Root.RootFile(tactRepo.BaseDirectory, rootCEntry.EKey);
 
             // read a normal file then an encrypted file
             string[] filenames = new[] { "world/arttest/boxtest/xyz.m2", "creature/encrypted05/encrypted05.m2" };
@@ -119,7 +119,7 @@ namespace TACT.Net.Tests
                 // gets the file's ekey from the encoding
                 // loads the IndexEntry from the IndexContainer
                 // returns a BLTE stream to the file segment in the data blob
-                using (var fs = tact.RootFile.OpenFile(filename, tact))
+                using (var fs = tactRepo.RootFile.OpenFile(filename, tactRepo))
                 {
                     Assert.IsNotNull(fs);
 
@@ -166,23 +166,23 @@ namespace TACT.Net.Tests
         public void TestZBSPatchingReal()
         {
             // create an instance
-            TACT tact = new TACT(@"D:\Backup\")
+            TACTRepo tactRepo = new TACTRepo(@"D:\Backup\")
             {
                 ConfigContainer = new ConfigContainer("wowt", Locale.US)
             };
 
             // open the configs
-            tact.ConfigContainer.OpenLocal(tact.BaseDirectory);
+            tactRepo.ConfigContainer.OpenLocal(tactRepo.BaseDirectory);
 
             // load the archives
-            tact.IndexContainer = new Indices.IndexContainer();
-            tact.IndexContainer.Open(tact.BaseDirectory);
+            tactRepo.IndexContainer = new Indices.IndexContainer();
+            tactRepo.IndexContainer.Open(tactRepo.BaseDirectory);
 
             // open the patch file
-            tact.PatchFile = new Patch.PatchFile(tact.BaseDirectory, tact.ConfigContainer.PatchMD5);
+            tactRepo.PatchFile = new Patch.PatchFile(tactRepo.BaseDirectory, tactRepo.ConfigContainer.PatchMD5);
 
             // get the seagiant2.m2 patch
-            Assert.IsTrue(tact.PatchFile.TryGet(new Cryptography.MD5Hash("8fbb9c89e91e0b30ab5eeec1cee0666d"), out var patchEntry));
+            Assert.IsTrue(tactRepo.PatchFile.TryGet(new Cryptography.MD5Hash("8fbb9c89e91e0b30ab5eeec1cee0666d"), out var patchEntry));
 
             // read the patch entry from the archives
             // load the original file from disk - build 27826
@@ -191,7 +191,7 @@ namespace TACT.Net.Tests
             using (var original = File.OpenRead("Resources/seagiant2_27826.m2"))
             using (var output = new MemoryStream())
             {
-                Assert.IsTrue(tact.PatchFile.ApplyPatch(patchEntry, tact.IndexContainer, original, output));
+                Assert.IsTrue(tactRepo.PatchFile.ApplyPatch(patchEntry, tactRepo.IndexContainer, original, output));
 
                 var b = File.ReadAllBytes("Resources/seagiant2_28807.m2");
                 Assert.IsTrue(b.SequenceEqual(output.ToArray()));
@@ -215,30 +215,30 @@ namespace TACT.Net.Tests
             Directory.CreateDirectory(tempPath);
 
             // open a new tact instance
-            TACT tact = new TACT();
-            tact.Create("wow", Locale.US, uint.Parse(buildId));
+            TACTRepo tactRepo = new TACTRepo();
+            tactRepo.Create("wow", Locale.US, uint.Parse(buildId));
 
             // update the configs
             // build info and server locations
-            tact.ConfigContainer.VersionsFile.SetValue("BuildId", buildId);
-            tact.ConfigContainer.VersionsFile.SetValue("VersionsName", versionName);
-            tact.ConfigContainer.BuildConfig.SetValue("Build-Name", buildName, 0);
-            tact.ConfigContainer.BuildConfig.SetValue("Build-UID", "wow", 0);
-            tact.ConfigContainer.BuildConfig.SetValue("Build-Product", "WoW", 0);
-            tact.ConfigContainer.CDNsFile.SetValue("Hosts", "localhost");
-            tact.ConfigContainer.CDNsFile.SetValue("Servers", "http://127.0.0.1");
+            tactRepo.ConfigContainer.VersionsFile.SetValue("BuildId", buildId);
+            tactRepo.ConfigContainer.VersionsFile.SetValue("VersionsName", versionName);
+            tactRepo.ConfigContainer.BuildConfig.SetValue("Build-Name", buildName, 0);
+            tactRepo.ConfigContainer.BuildConfig.SetValue("Build-UID", "wow", 0);
+            tactRepo.ConfigContainer.BuildConfig.SetValue("Build-Product", "WoW", 0);
+            tactRepo.ConfigContainer.CDNsFile.SetValue("Hosts", "localhost");
+            tactRepo.ConfigContainer.CDNsFile.SetValue("Servers", "http://127.0.0.1");
 
             // set root variables
-            tact.RootFile.LocaleFlags = Root.LocaleFlags.enUS;
-            tact.RootFile.FileLookup = new MockFileLookup();
+            tactRepo.RootFile.LocaleFlags = Root.LocaleFlags.enUS;
+            tactRepo.RootFile.FileLookup = new MockFileLookup();
 
             var record = BlockTable.BlockTableEncoder.EncodeAndExport("Resources/seagiant2_27826.m2", tempPath, "creature/seagiant2/seagiant2.m2");
-            tact.RootFile.AddOrUpdate(record, tact);
+            tactRepo.RootFile.AddOrUpdate(record, tactRepo);
 
             record.FileName = "WoW.exe";
-            tact.InstallFile.AddOrUpdate(record, tact);
+            tactRepo.InstallFile.AddOrUpdate(record, tactRepo);
 
-            tact.Save(tact.BaseDirectory);
+            tactRepo.Save(tactRepo.BaseDirectory);
         }
 
 

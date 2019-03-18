@@ -103,7 +103,7 @@ namespace TACT.Net.Install
         /// <param name="directory">Root Directory</param>
         /// <param name="configContainer"></param>
         /// <returns></returns>
-        public CASRecord Write(string directory, TACT tactInstance = null)
+        public CASRecord Write(string directory, TACTRepo tactInstance = null)
         {
             CASRecord record;
 
@@ -164,7 +164,7 @@ namespace TACT.Net.Install
         /// <param name="record"></param>
         /// <param name="tactInstance">If provided, will add the entry to all relevant system files</param>
         /// <param name="tags"></param>
-        public void AddOrUpdate(CASRecord record, TACT tactInstance = null, params string[] tags)
+        public void AddOrUpdate(CASRecord record, TACTRepo tactInstance = null, params string[] tags)
         {
             var entry = new InstallFileEntry()
             {

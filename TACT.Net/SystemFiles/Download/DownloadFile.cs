@@ -106,7 +106,7 @@ namespace TACT.Net.Download
         /// <param name="directory">Root Directory</param>
         /// <param name="configContainer"></param>
         /// <returns></returns>
-        public override CASRecord Write(string directory, TACT tactInstance = null)
+        public override CASRecord Write(string directory, TACTRepo tactInstance = null)
         {
             CASRecord record;
             using (var bt = new BlockTableStreamWriter(_EncodingMap[0]))

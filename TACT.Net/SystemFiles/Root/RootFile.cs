@@ -155,7 +155,7 @@ namespace TACT.Net.Root
         /// </summary>
         /// <param name="directory"></param>
         /// <returns></returns>
-        public CASRecord Write(string directory, TACT tactInstance = null)
+        public CASRecord Write(string directory, TACTRepo tactInstance = null)
         {
             FixDeltas();
 
@@ -208,7 +208,7 @@ namespace TACT.Net.Root
         /// </summary>
         /// <param name="record"></param>
         /// <param name="tactInstance">If provided, will add the entry to all relevant system files</param>
-        public void AddOrUpdate(CASRecord record, TACT tactInstance = null)
+        public void AddOrUpdate(CASRecord record, TACTRepo tactInstance = null)
         {
             if (FileLookup == null)
                 throw new NullReferenceException($"{nameof(FileLookup)} has not be instantiated");
@@ -399,7 +399,7 @@ namespace TACT.Net.Root
         /// <param name="fileid"></param>
         /// <param name="tactInstance"></param>
         /// <returns></returns>
-        public Stream OpenFile(uint fileid, TACT tactInstance)
+        public Stream OpenFile(uint fileid, TACTRepo tactInstance)
         {
             return OpenFile(Get(fileid).FirstOrDefault(), tactInstance);
         }
@@ -409,7 +409,7 @@ namespace TACT.Net.Root
         /// <param name="fileid"></param>
         /// <param name="tactInstance"></param>
         /// <returns></returns>
-        public Stream OpenFile(ulong namehash, TACT tactInstance)
+        public Stream OpenFile(ulong namehash, TACTRepo tactInstance)
         {
             return OpenFile(Get(namehash).FirstOrDefault(), tactInstance);
         }
@@ -419,7 +419,7 @@ namespace TACT.Net.Root
         /// <param name="filepath"></param>
         /// <param name="tactInstance"></param>
         /// <returns></returns>
-        public Stream OpenFile(string filepath, TACT tactInstance)
+        public Stream OpenFile(string filepath, TACTRepo tactInstance)
         {
             return OpenFile(Get(filepath).FirstOrDefault(), tactInstance);
         }
@@ -428,7 +428,7 @@ namespace TACT.Net.Root
         /// </summary>
         /// <param name="rootRecord"></param>
         /// <returns></returns>
-        public Stream OpenFile(RootRecord rootRecord, TACT tactInstance)
+        public Stream OpenFile(RootRecord rootRecord, TACTRepo tactInstance)
         {
             if (rootRecord == null)
                 return null;
@@ -440,7 +440,7 @@ namespace TACT.Net.Root
         /// </summary>
         /// <param name="ckey"></param>
         /// <returns></returns>
-        public Stream OpenFile(MD5Hash ckey, TACT tactInstance)
+        public Stream OpenFile(MD5Hash ckey, TACTRepo tactInstance)
         {
             if (tactInstance == null)
                 return null;
