@@ -264,7 +264,7 @@ namespace TACT.Net.Install
         }
 
         /// <summary>
-        /// Resets the Tags to the BfA default values and clears all file associations
+        /// Resets the Tags to the build specific default values and clears all file associations
         /// </summary>
         public void SetDefaultTags(uint build = 99999)
         {
