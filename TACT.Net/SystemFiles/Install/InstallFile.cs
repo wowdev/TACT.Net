@@ -114,7 +114,7 @@ namespace TACT.Net.Install
                 InstallHeader.EntryCount = (uint)_FileEntries.Count;
                 InstallHeader.TagCount = (ushort)_TagEntries.Count;
                 InstallHeader.Write(bw);
-                WriteTags(bw);
+                WriteTags(bw, _FileEntries.Count);
 
                 // File Entry block
                 bt.AddBlock(_EncodingMap[1]);

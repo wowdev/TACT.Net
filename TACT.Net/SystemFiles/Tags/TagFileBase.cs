@@ -39,10 +39,14 @@ namespace TACT.Net.Tags
             _TagEntries.TrimExcess();
         }
 
-        protected void WriteTags(BinaryWriter bw)
+        protected void WriteTags(BinaryWriter bw, int entryCount)
         {
             foreach (var tagEntry in SortTags(_TagEntries.Values))
+            {
+                // force the tag entries to be the same size
+                tagEntry.FileMask.Expand(entryCount);
                 tagEntry.Write(bw);
+            }                
         }
 
         #endregion
@@ -122,12 +126,6 @@ namespace TACT.Net.Tags
 
             if (tags == null || tags.Length == 0)
                 tags = _TagEntries.Keys.ToArray();
-
-            // mask size needs to be consitent across all tags
-            // default to the opposite of the intended value
-            if(index > _TagEntries.Values.First().FileMask.Count)
-                foreach (var tag in _TagEntries)
-                    tag.Value.FileMask[index] = !value;
 
             foreach (var tag in tags)
                 if (_TagEntries.TryGetValue(tag, out var tagEntry))

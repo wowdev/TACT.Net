@@ -124,7 +124,7 @@ namespace TACT.Net.Download
 
                 // Tag Entries
                 bt.AddBlock(_EncodingMap[2]);
-                WriteTags(bw);
+                WriteTags(bw, _FileEntries.Count);
 
                 // finalise
                 record = bt.Finalise();

@@ -46,6 +46,9 @@ namespace TACT.Net.Common
                 if (diff > 0)
                     Array.Resize(ref _bytes, _bytes.Length + diff);
 
+                // update count
+                Count = Math.Max(Count, index + 1);
+
                 // (un)set the bit
                 if (value)
                     _bytes[index / 8] |= (byte)GetMask(index);
@@ -77,7 +80,17 @@ namespace TACT.Net.Common
         public int Capacity
         {
             get => _bytes.Length * 8;
-            set => Array.Resize(ref _bytes, (value + 7) / 8);
+            set
+            {
+                if (_bytes.Length < (value + 7) / 8)
+                    Array.Resize(ref _bytes, (value + 7) / 8);
+            }
+        }
+
+        public void Expand(int count)
+        {
+            Capacity = count;
+            Count = count;
         }
 
         #endregion

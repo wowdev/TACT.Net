@@ -115,7 +115,7 @@ namespace TACT.Net.Download
 
                 // Tag Entries
                 bt.AddBlock(_EncodingMap[1]);
-                WriteTags(bw);
+                WriteTags(bw, _FileEntries.Count);
 
                 // File Entries
                 WriteFileEntries(bt);
