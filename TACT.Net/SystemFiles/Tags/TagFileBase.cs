@@ -117,11 +117,17 @@ namespace TACT.Net.Tags
         /// <param name="tags"></param>
         protected void SetTags(int index, bool value, params string[] tags)
         {
-            if (index <= -1)
+            if (index <= -1 || _TagEntries.Count == 0)
                 return;
 
             if (tags == null || tags.Length == 0)
                 tags = _TagEntries.Keys.ToArray();
+
+            // mask size needs to be consitent across all tags
+            // default to the opposite of the intended value
+            if(index > _TagEntries.Values.First().FileMask.Count)
+                foreach (var tag in _TagEntries)
+                    tag.Value.FileMask[index] = !value;
 
             foreach (var tag in tags)
                 if (_TagEntries.TryGetValue(tag, out var tagEntry))
