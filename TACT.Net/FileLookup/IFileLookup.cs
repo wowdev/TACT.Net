@@ -4,16 +4,14 @@ namespace TACT.Net.FileLookup
 {
     public interface IFileLookup
     {
+        bool IsLoaded { get; }
+
         /// <summary>
         /// Opens the FileLookup and loads its contents
         /// </summary>
-        void Open(bool fillIdGaps);
+        void Open();
         /// <summary>
         /// Saves the FileLookup to it's backing storage
-        /// </summary>
-        Task Sync();
-        /// <summary>
-        /// Syncs and Closes the FileLookup
         /// </summary>
         void Close();
 

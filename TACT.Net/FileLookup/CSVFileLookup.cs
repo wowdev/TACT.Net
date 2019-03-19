@@ -13,6 +13,8 @@ namespace TACT.Net.FileLookup
     /// </summary>
     public class CSVFileLookup : IFileLookup, IDisposable
     {
+        public bool IsLoaded { get; private set; }
+
         private Queue<uint> _unusedIds;
         private SemaphoreSlim _sync;
         private uint _curMaxId;
@@ -45,7 +47,7 @@ namespace TACT.Net.FileLookup
         /// Loads the CSV lookup and optionally prioritises unused ids
         /// </summary>
         /// <param name="fillIdGaps"></param>
-        public void Open(bool fillIdGaps)
+        public void Open()
         {
             using (var sr = File.OpenText(_filename))
             {
@@ -66,9 +68,14 @@ namespace TACT.Net.FileLookup
             // store the current max id/wanted max id
             _curMaxId = Math.Max(_fileLookup.Values.Max(), _minFileId);
 
-            if (fillIdGaps)
-                LoadUnusedIDs();
+            IsLoaded = true;
         }
+
+        /// <summary>
+        /// Finds all unassigned Ids and adds them to the Id pool. 
+        /// If used, Ids below MinimumFileId will be discarded
+        /// </summary>
+        public void PopulateUnassignedIds() => LoadUnusedIDs();
 
         /// <summary>
         /// Asynchronously saves the FileIdMap as a CSV

@@ -7,6 +7,8 @@ namespace TACT.Net.Tests
 {
     class MockFileLookup : IFileLookup
     {
+        public bool IsLoaded => true;
+
         private readonly Dictionary<string, uint> FileLookup;
         private uint CurrentId = 0;
 
@@ -23,7 +25,7 @@ namespace TACT.Net.Tests
             return id;
         }
 
-        public void Open(bool fillIdGaps) { }
+        public void Open() { }
 
         public Task Sync() => throw new NotImplementedException();
 

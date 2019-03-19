@@ -17,9 +17,19 @@ namespace TACT.Net.Root
     public class RootFile : ISystemFile
     {
         /// <summary>
-        /// File lookup for filedataids-to-filenames
+        /// File lookup for mapping FileDataIds to Filenames
+        /// <para>Note: Open will be called if IsLoaded is false when assigned</para>
         /// </summary>
-        public IFileLookup FileLookup { get; set; }
+        public IFileLookup FileLookup
+        {
+            get => _fileLookup;
+            set
+            {
+                _fileLookup = value;
+                if (!_fileLookup.IsLoaded)
+                    _fileLookup.Open();
+            }
+        }
         /// <summary>
         /// LocaleFlags to target a specific locale
         /// </summary>
@@ -35,6 +45,7 @@ namespace TACT.Net.Root
         private readonly List<RootBlock> _blocks;
         private readonly Lookup3 _lookup3;
         private readonly Dictionary<uint, ulong> _idLookup;
+        private IFileLookup _fileLookup;
 
         #region Constructors
 
