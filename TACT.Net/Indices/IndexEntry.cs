@@ -25,15 +25,20 @@ namespace TACT.Net.Indices
 
         #region IO
 
-        public void Read(BinaryReader br, IndexFooter footer)
+        public bool Read(BinaryReader br, IndexFooter footer)
         {
             Key = new MD5Hash(br.ReadBytes(footer.KeySize));
+            if (Key.IsEmpty)
+                return false;
+
             CompressedSize = br.ReadUIntBE(footer.CompressedSizeBytes);
 
             if (footer.OffsetBytes == 6)
                 IndexOrdinal = br.ReadUInt16BE();
             if (footer.OffsetBytes >= 4)
                 Offset = br.ReadUInt32BE();
+
+            return true;
         }
 
         public void Write(BinaryWriter bw, IndexFooter footer)

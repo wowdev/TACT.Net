@@ -13,8 +13,6 @@ namespace TACT.Net.Patch
         public MD5Hash Checksum { get; private set; }
         public IEnumerable<PatchEntry> PatchEntries => _PatchEntries.Values;
 
-        private byte[] Unknown;
-
         private readonly SortedList<MD5Hash, PatchEntry> _PatchEntries;
 
         #region Constructors
@@ -68,28 +66,32 @@ namespace TACT.Net.Patch
             if (!stream.CanRead || stream.Length <= 1)
                 throw new NotSupportedException($"Unable to read PatchFile stream");
 
-            using (var br = new BinaryReader(stream))
+            using (var reader = new BinaryReader(stream))
             {
-                PatchHeader.Read(br);
+                PatchHeader.Read(reader);
 
                 // read the patch entries
                 int pageSize = 1 << PatchHeader.PageSize;
-                foreach (var offset in GetOffsets(br))
+                foreach (var offset in GetOffsets(reader))
                 {
-                    br.BaseStream.Position = offset;
-                    long endPos = offset + pageSize;
+                    reader.BaseStream.Position = offset;
 
-                    var block = new PatchEntry();
-                    while (br.BaseStream.Position < endPos && block.Read(br, PatchHeader))
+                    // buffer the page then read the entries to minimise file reads
+                    using (var ms = new MemoryStream(reader.ReadBytes(pageSize)))
+                    using (var br = new BinaryReader(ms))
                     {
-                        _PatchEntries[block.CKey] = block;
-                        block = new PatchEntry();
+                        var block = new PatchEntry();
+                        while (block.Read(br, PatchHeader))
+                        {
+                            _PatchEntries[block.CKey] = block;
+                            block = new PatchEntry();
+                        }
                     }
                 }
 
                 #region Unknown Data
 
-                Unknown = br.ReadBytes((int)(br.BaseStream.Length - br.BaseStream.Position));
+                // Unknown = br.ReadBytes((int)(br.BaseStream.Length - br.BaseStream.Position));
 
                 /*
                 // the following is unknown entries that comprise of:

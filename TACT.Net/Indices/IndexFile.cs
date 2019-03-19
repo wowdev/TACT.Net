@@ -76,31 +76,31 @@ namespace TACT.Net.Indices
                 throw new NotSupportedException($"Unable to read IndexFile stream");
 
             using (var md5 = MD5.Create())
-            using (var br = new BinaryReader(stream))
+            using (var reader = new BinaryReader(stream))
             {
-                IndexFooter.Read(br);
+                IndexFooter.Read(reader);
 
                 // calculate file dimensions
-                int pageSize = IndexFooter.PageSizeKB << 10;
-                int entriesPerPage = pageSize / (0x14 + IndexFooter.OffsetBytes);
-                int pageCount = (int)(IndexFooter.EntryCount + entriesPerPage - 1) / entriesPerPage;
+                var (PageSize, _, PageCount) = GetFileDimensions();
 
                 // read the entries
                 _indexEntries.Capacity = (int)IndexFooter.EntryCount;
                 stream.Position = 0;
-                for (int i = 0; i < pageCount; i++)
+
+                for (int i = 0; i < PageCount; i++)
                 {
-                    for (int b = 0; b < entriesPerPage; b++)
+                    // buffer the page then read the entries to minimise file reads
+                    using (var ms = new MemoryStream(reader.ReadBytes(PageSize)))
+                    using (var br = new BinaryReader(ms))
                     {
                         var entry = new IndexEntry();
-                        entry.Read(br, IndexFooter);
-                        if (!entry.Key.IsEmpty)
+                        while (entry.Read(br, IndexFooter))
+                        {
                             _indexEntries[entry.Key] = entry;
+                            entry = new IndexEntry();
+                        }
                     }
-
-                    stream.Seek(pageSize - (stream.Position % pageSize), SeekOrigin.Current);
                 }
-                _indexEntries.TrimExcess();
 
                 // calculate the current filename
                 Checksum = stream.HashSlice(md5, stream.Length - IndexFooter.Size + IndexFooter.ChecksumSize, IndexFooter.Size - IndexFooter.ChecksumSize);
@@ -126,34 +126,35 @@ namespace TACT.Net.Indices
             List<MD5Hash> EKeyLookupHashes = new List<MD5Hash>();
             List<MD5Hash> PageChecksums = new List<MD5Hash>();
 
+            // update Footer
+            IndexFooter.EntryCount = (uint)_indexEntries.Count;
+
+            // get file dimensions
+            var (PageSize, EntriesPerPage, PageCount) = GetFileDimensions();
+
             using (var md5 = MD5.Create())
-            using (var ms = new MemoryStream())
+            using (var ms = new MemoryStream(PageCount * (PageSize + 1)))
             using (var bw = new BinaryWriter(ms))
             {
-                // update Footer
-                IndexFooter.EntryCount = (uint)_indexEntries.Count;
-
-                // get file dimensions
-                int pageSize = IndexFooter.PageSizeKB << 10;
-                int entriesPerPage = pageSize / (0x14 + IndexFooter.OffsetBytes);
-                int pageCount = (int)(IndexFooter.EntryCount + entriesPerPage - 1) / entriesPerPage;
-
                 // set capcity
-                EKeyLookupHashes.Capacity = pageCount;
-                PageChecksums.Capacity = pageCount;
+                EKeyLookupHashes.Capacity = PageCount;
+                PageChecksums.Capacity = PageCount;
 
                 // IndexEntries
                 int index = 0;
-                for (int i = 0; i < pageCount; i++)
+                for (int i = 0; i < PageCount; i++)
                 {
                     // write the entries
-                    for (int b = 0; b < entriesPerPage && index < IndexFooter.EntryCount; b++)
+                    for (int j = 0; j < EntriesPerPage && index < IndexFooter.EntryCount; j++)
                         _indexEntries.Values[index++].Write(bw, IndexFooter);
 
                     // apply padding and store EKey and page checksum
-                    ms.Write(new byte[pageSize - (bw.BaseStream.Position % pageSize)]);
+                    int remainder = (int)bw.BaseStream.Position % PageSize;
+                    if (remainder > 0)
+                        ms.Write(new byte[PageSize - remainder]);
+
                     EKeyLookupHashes.Add(_indexEntries.Values[index - 1].Key);
-                    PageChecksums.Add(ms.HashSlice(md5, bw.BaseStream.Position - pageSize, pageSize, IndexFooter.ChecksumSize));
+                    PageChecksums.Add(ms.HashSlice(md5, bw.BaseStream.Position - PageSize, PageSize, IndexFooter.ChecksumSize));
                 }
 
                 // EKey Lookup
@@ -169,7 +170,7 @@ namespace TACT.Net.Indices
 
                 // LastPage hash - last PageSize of Entries
                 long footerStartPos = bw.BaseStream.Position;
-                IndexFooter.LastPageHash = ms.HashSlice(md5, lookupStartPos - pageSize, pageSize, IndexFooter.ChecksumSize);
+                IndexFooter.LastPageHash = ms.HashSlice(md5, lookupStartPos - PageSize, PageSize, IndexFooter.ChecksumSize);
                 bw.Write(IndexFooter.LastPageHash.Value);
 
                 // TOC hash - from EKey Lookup to LastPage Hash
@@ -367,6 +368,15 @@ namespace TACT.Net.Indices
             }
 
             // TODO sizes - not sure how these are calculated
+        }
+
+        private (int PageSize, int EntriesPerPage, int PageCount) GetFileDimensions()
+        {
+            int pageSize = IndexFooter.PageSizeKB << 10;
+            int entriesPerPage = pageSize / (0x14 + IndexFooter.OffsetBytes);
+            int pageCount = (int)(IndexFooter.EntryCount + entriesPerPage - 1) / entriesPerPage;
+
+            return (pageSize, entriesPerPage, pageCount);
         }
 
         #endregion

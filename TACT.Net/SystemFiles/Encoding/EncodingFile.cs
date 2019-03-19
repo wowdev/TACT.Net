@@ -110,7 +110,6 @@ namespace TACT.Net.Encoding
                 // read CKey entries
                 _CKeyEntries.Capacity = (int)EncodingHeader.CKeyPageCount * 40;
                 ReadPage(br, EncodingHeader.CKeyPageSize << 10, EncodingHeader.CKeyPageCount, _CKeyEntries);
-                _CKeyEntries.TrimExcess();
 
                 // skip EKey page table indices
                 stream.Seek((int)EncodingHeader.EKeyPageCount * (EncodingHeader.EKeyHashSize + 16), SeekOrigin.Current);
@@ -118,7 +117,6 @@ namespace TACT.Net.Encoding
                 // read EKey entries
                 _EKeyEntries.Capacity = (int)EncodingHeader.CKeyPageCount * 25;
                 ReadPage(br, EncodingHeader.EKeyPageSize << 10, EncodingHeader.EKeyPageCount, _EKeyEntries);
-                _EKeyEntries.TrimExcess();
 
                 // remainder is an ESpec block for the file itself
 
@@ -134,8 +132,6 @@ namespace TACT.Net.Encoding
         /// <returns></returns>
         public CASRecord Write(string directory, Configs.ConfigContainer configContainer = null)
         {
-            //RebuildLookups();
-
             EBlock[] eblocks = new EBlock[_EncodingMap.Length];
 
             CASRecord record;
@@ -299,24 +295,25 @@ namespace TACT.Net.Encoding
         /// Reads entries from pages. Pages are determined by checking entry validity
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        /// <param name="br"></param>
+        /// <param name="reader"></param>
         /// <param name="pageSize"></param>
         /// <param name="pageCount"></param>
         /// <param name="container"></param>
-        private void ReadPage<T>(BinaryReader br, int pageSize, uint pageCount, IDictionary<MD5Hash, T> container) where T : EncodingEntryBase, new()
+        private void ReadPage<T>(BinaryReader reader, int pageSize, uint pageCount, IDictionary<MD5Hash, T> container) where T : EncodingEntryBase, new()
         {
-            long startPos = br.BaseStream.Position;
-
             for (uint i = 0; i < pageCount; i++)
             {
-                T entry = new T();
-                while (entry.Read(br, EncodingHeader))
+                // buffer the page then read the entries to minimise file reads
+                using (var ms = new MemoryStream(reader.ReadBytes(pageSize)))
+                using (var br = new BinaryReader(ms))
                 {
-                    container.Add(entry.Key, entry);
-                    entry = new T();
+                    T entry = new T();
+                    while (entry.Read(br, EncodingHeader))
+                    {
+                        container.Add(entry.Key, entry);
+                        entry = new T();
+                    }
                 }
-
-                br.BaseStream.Seek(pageSize - ((br.BaseStream.Position - startPos) % pageSize), SeekOrigin.Current);
             }
         }
 

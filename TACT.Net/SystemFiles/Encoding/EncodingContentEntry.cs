@@ -55,9 +55,9 @@ namespace TACT.Net.Encoding
 
         internal override void Validate()
         {
-            if (EKey.Value == null || EKey.Value.Length == 0)
+            if (EKey.IsEmpty)
                 throw new InvalidDataException("Entry contains no EKey");
-            if (CKey.Value == null || CKey.Value.Length == 0)
+            if (CKey.IsEmpty)
                 throw new InvalidDataException("Entry contains no CKey");
 
             base.Validate();

@@ -35,8 +35,6 @@ namespace TACT.Net.Tags
                 tagEntry.Read(br, entryCount);
                 _TagEntries.Add(tagEntry.Name, tagEntry);
             }
-
-            _TagEntries.TrimExcess();
         }
 
         protected void WriteTags(BinaryWriter bw, int entryCount)

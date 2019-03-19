@@ -69,10 +69,15 @@ namespace TACT.Net.Encoding
         {
             Type type = typeof(T);
 
-            if (type == typeof(EncodingContentEntry))
-                CKeyPageCount = count;
-            else if (type == typeof(EncodingEncodedEntry))
-                EKeyPageCount = count;
+            switch(true)
+            {
+                case true when type == typeof(EncodingContentEntry):
+                    CKeyPageCount = count;
+                    break;
+                case true when type == typeof(EncodingEncodedEntry):
+                    EKeyPageCount = count;
+                    break;
+            }
         }
 
         #endregion

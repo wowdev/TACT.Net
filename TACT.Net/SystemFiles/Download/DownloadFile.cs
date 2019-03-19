@@ -87,7 +87,6 @@ namespace TACT.Net.Download
                     fileEntry.Read(br, DownloadHeader);
                     _FileEntries[fileEntry.EKey] = fileEntry;
                 }
-                _FileEntries.TrimExcess();
 
                 // Tags
                 ReadTags(br, DownloadHeader.TagCount, DownloadHeader.EntryCount);
