@@ -33,6 +33,7 @@
         {
             string value = new string((char)(Type + 0x20), 1);
 
+            // additional information required if using a non-generic ZLib parameter
             if (Type == EType.ZLib && (Level != 9 || MPQ))
                 value += $":{{{Level}{(MPQ ? ",mpq" : "")}}}";
 
