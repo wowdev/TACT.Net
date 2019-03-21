@@ -52,8 +52,8 @@ namespace TACT.Net.Download
         /// Loads an existing DownloadFile
         /// </summary>
         /// <param name="directory">Base directory</param>
-        /// <param name="hash">DownloadFile MD5</param>
-        public DownloadFile(string directory, MD5Hash hash) : this(Helpers.GetCDNPath(hash.ToString(), "data", directory)) { }
+        /// <param name="ekey">DownloadFile MD5</param>
+        public DownloadFile(string directory, MD5Hash ekey) : this(Helpers.GetCDNPath(ekey.ToString(), "data", directory)) { }
 
         /// <summary>
         /// Loads an existing DownloadFile

@@ -118,11 +118,11 @@ namespace TACT.Net.Indices
         /// <summary>
         /// Opens a stream to a data file stored in the archives
         /// </summary>
-        /// <param name="hash"></param>
+        /// <param name="ekey"></param>
         /// <returns></returns>
-        public Stream OpenFile(MD5Hash hash)
+        public Stream OpenFile(MD5Hash ekey)
         {
-            string path = GetIndexEntryAndPath(DataIndices, "data", hash, out var indexEntry);
+            string path = GetIndexEntryAndPath(DataIndices, "data", ekey, out var indexEntry);
             if (path == null)
                 return null;
 
@@ -139,9 +139,9 @@ namespace TACT.Net.Indices
         /// </summary>
         /// <param name="hash"></param>
         /// <returns></returns>
-        public Stream OpenPatch(MD5Hash hash)
+        public Stream OpenPatch(MD5Hash ekey)
         {
-            string path = GetIndexEntryAndPath(PatchIndices, "patch", hash, out var indexEntry);
+            string path = GetIndexEntryAndPath(PatchIndices, "patch", ekey, out var indexEntry);
             if (path == null)
                 return null;
 
@@ -159,14 +159,14 @@ namespace TACT.Net.Indices
         /// <summary>
         /// Returns an IndexEntry from the collection if it exists
         /// </summary>
-        /// <param name="hash"></param>
+        /// <param name="ekey"></param>
         /// <param name="indexEntry"></param>
         /// <returns></returns>
-        public bool TryGet(MD5Hash hash, out IndexEntry indexEntry)
+        public bool TryGet(MD5Hash ekey, out IndexEntry indexEntry)
         {
             indexEntry = null;
             foreach (var index in _indices)
-                if (!index.IsGroupIndex && index.TryGet(hash, out indexEntry))
+                if (!index.IsGroupIndex && index.TryGet(ekey, out indexEntry))
                     return true;
 
             return false;

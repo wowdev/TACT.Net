@@ -89,8 +89,8 @@ namespace TACT.Net.Root
         /// Loads an existing RootFile
         /// </summary>
         /// <param name="directory">Base directory</param>
-        /// <param name="hash">RootFile MD5</param>
-        public RootFile(string directory, MD5Hash hash) : this(Helpers.GetCDNPath(hash.ToString(), "data", directory)) { }
+        /// <param name="ekey">RootFile MD5</param>
+        public RootFile(string directory, MD5Hash ekey) : this(Helpers.GetCDNPath(ekey.ToString(), "data", directory)) { }
 
         /// <summary>
         /// Loads an existing RootFile

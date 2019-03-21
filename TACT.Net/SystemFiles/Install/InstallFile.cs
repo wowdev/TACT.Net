@@ -55,8 +55,8 @@ namespace TACT.Net.Install
         /// Loads an existing InstallFile
         /// </summary>
         /// <param name="directory">Base directory</param>
-        /// <param name="hash">InstallFile MD5</param>
-        public InstallFile(string directory, MD5Hash hash) : this(Helpers.GetCDNPath(hash.ToString(), "data", directory)) { }
+        /// <param name="ekey">InstallFile MD5</param>
+        public InstallFile(string directory, MD5Hash ekey) : this(Helpers.GetCDNPath(ekey.ToString(), "data", directory)) { }
 
         /// <summary>
         /// Loads an existing InstallFile

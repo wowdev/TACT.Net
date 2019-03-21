@@ -296,30 +296,30 @@ namespace TACT.Net.Indices
         /// <summary>
         /// Returns an IndexEntry from the collection if it exists
         /// </summary>
-        /// <param name="hash"></param>
+        /// <param name="ekey"></param>
         /// <param name="indexEntry"></param>
         /// <returns></returns>
-        public bool TryGet(MD5Hash hash, out IndexEntry indexEntry)
+        public bool TryGet(MD5Hash ekey, out IndexEntry indexEntry)
         {
-            return _indexEntries.TryGetValue(hash, out indexEntry);
+            return _indexEntries.TryGetValue(ekey, out indexEntry);
         }
 
         /// <summary>
         /// Determines if the provided hash exists in the collection
         /// </summary>
-        /// <param name="hash"></param>
+        /// <param name="ekey"></param>
         /// <returns></returns>
-        public bool Contains(MD5Hash hash) => _indexEntries.ContainsKey(hash);
+        public bool Contains(MD5Hash ekey) => _indexEntries.ContainsKey(ekey);
 
         /// <summary>
         /// Removes an index entry from the archive
         /// </summary>
-        /// <param name="hash"></param>
-        public void Remove(MD5Hash hash)
+        /// <param name="ekey"></param>
+        public void Remove(MD5Hash ekey)
         {
-            if (_indexEntries.Remove(hash))
+            if (_indexEntries.Remove(ekey))
             {
-                _newEntries.Remove(hash);
+                _newEntries.Remove(ekey);
                 RequiresSave = true;
             }
         }

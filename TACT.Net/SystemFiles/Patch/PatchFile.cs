@@ -43,8 +43,8 @@ namespace TACT.Net.Patch
         /// Loads an existing PatchFile
         /// </summary>
         /// <param name="directory">Base directory</param>
-        /// <param name="hash">PatchFile MD5</param>
-        public PatchFile(string directory, MD5Hash hash) : this(Helpers.GetCDNPath(hash.ToString(), "patch", directory)) { }
+        /// <param name="ekey">PatchFile MD5</param>
+        public PatchFile(string directory, MD5Hash ekey) : this(Helpers.GetCDNPath(ekey.ToString(), "patch", directory)) { }
 
         /// <summary>
         /// Loads an existing PatchFile

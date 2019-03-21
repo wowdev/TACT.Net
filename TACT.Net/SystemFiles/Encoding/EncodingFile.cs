@@ -72,8 +72,8 @@ namespace TACT.Net.Encoding
         /// Loads an existing EncodingFile
         /// </summary>
         /// <param name="directory">Base directory</param>
-        /// <param name="hash">Encoding EKey</param>
-        public EncodingFile(string directory, MD5Hash hash) : this(Helpers.GetCDNPath(hash.ToString(), "data", directory)) { }
+        /// <param name="ekey">Encoding EKey</param>
+        public EncodingFile(string directory, MD5Hash ekey) : this(Helpers.GetCDNPath(ekey.ToString(), "data", directory)) { }
 
 
         /// <summary>
@@ -252,28 +252,28 @@ namespace TACT.Net.Encoding
         /// <summary>
         /// Gets a CKeyEntry by it's Content Key
         /// </summary>
-        /// <param name="hash"></param>
+        /// <param name="ckey"></param>
         /// <param name="entry"></param>
         /// <returns></returns>
-        public bool TryGetContentEntry(MD5Hash hash, out EncodingContentEntry entry) => _CKeyEntries.TryGetValue(hash, out entry);
+        public bool TryGetContentEntry(MD5Hash ckey, out EncodingContentEntry entry) => _CKeyEntries.TryGetValue(ckey, out entry);
         /// <summary>
         /// Returns all CKeyEntries containing a specific Encoding Key
         /// </summary>
-        /// <param name="hash"></param>
+        /// <param name="ekey"></param>
         /// <returns></returns>
-        public IEnumerable<EncodingContentEntry> GetContentEntryByEKey(MD5Hash hash)
+        public IEnumerable<EncodingContentEntry> GetContentEntryByEKey(MD5Hash ekey)
         {
             foreach (var ckeyEntry in _CKeyEntries.Values)
-                if (ckeyEntry.EKey == hash)
+                if (ckeyEntry.EKey == ekey)
                     yield return ckeyEntry;
         }
         /// <summary>
         /// Gets a EKeyEntry by it's Encoding Key
         /// </summary>
-        /// <param name="hash"></param>
+        /// <param name="ekey"></param>
         /// <param name="entry"></param>
         /// <returns></returns>
-        public bool TryGetEncodedEntry(MD5Hash hash, out EncodingEncodedEntry entry) => _EKeyEntries.TryGetValue(hash, out entry);
+        public bool TryGetEncodedEntry(MD5Hash ekey, out EncodingEncodedEntry entry) => _EKeyEntries.TryGetValue(ekey, out entry);
         /// <summary>
         /// Determines where the specified CKeyEntry exists
         /// </summary>
