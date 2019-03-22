@@ -66,16 +66,28 @@ namespace TACT.Net.Indices
         /// <param name="configContainer"></param>
         public void Save(string directory, Configs.ConfigContainer configContainer = null)
         {
+            bool sameDirectory = directory.Equals(_sourceDirectory, StringComparison.OrdinalIgnoreCase);
+
             // save altered Data archive indices
             foreach (var index in DataIndices)
             {
-                bool requiresSave = index.RequiresSave || !directory.Equals(_sourceDirectory, StringComparison.OrdinalIgnoreCase);
+                if (index.IsGroupIndex)
+                    continue;
 
-                if (!index.IsGroupIndex && requiresSave)
+                if (index.RequiresSave)
                 {
+                    // save the index file and blob
                     string prevBlob = Helpers.GetCDNPath(index.Checksum.ToString(), "data", _sourceDirectory);
                     index.Write(directory, configContainer);
                     index.WriteBlob(directory, prevBlob);
+                }
+                else if(!sameDirectory)
+                {
+                    // copy the index file and blob
+                    string oldblob = Helpers.GetCDNPath(index.Checksum.ToString(), "data", _sourceDirectory);
+                    string newblob = Helpers.GetCDNPath(index.Checksum.ToString(), "data", directory, true);
+                    File.Copy(oldblob, newblob);
+                    File.Copy(oldblob + ".index", newblob + ".index");
                 }
             }
 
@@ -89,8 +101,9 @@ namespace TACT.Net.Indices
                 index.WriteBlob(directory);
             }
 
+            // TODO 1. verify if this is required 2. fix
             // compute the Data Index Group hash
-            GenerateIndexGroup(directory, configContainer);
+            //GenerateIndexGroup(directory, configContainer);
 
             // reload indices
             _indices.Clear();
@@ -228,13 +241,29 @@ namespace TACT.Net.Indices
             var archives = configContainer.CDNConfig.GetValues("archives");
             archives.Sort(new MD5HashComparer());
 
-            // create a new IndexFile, add all entries and store the checksum in the CDN config
-            var indexFile = new IndexFile(IndexType.Data | IndexType.Group);
+            // populate the archive indicies and 
+            var temp = new List<IndexEntry>(DataIndices.Sum(x => x.Entries.Count()));            
             foreach(var index in DataIndices)
             {
+                if (index.IsLooseIndex)
+                    continue;
+
                 ushort archiveIndex = (ushort)archives.IndexOf(index.Checksum.ToString());
-                indexFile.CopyIndicies(index, archiveIndex);
+                foreach(var e in index.Entries)
+                {
+                    e.IndexOrdinal = archiveIndex;
+                    temp.Add(e);
+                }
             }
+
+            // sort
+            var comparer = new MD5HashComparer();
+            temp.Sort((x, y) => comparer.Compare(x.Key,y.Key));
+
+            // create a new IndexFile, add all entries and store the checksum in the CDN config
+            var indexFile = new IndexFile(IndexType.Data | IndexType.Group);
+            indexFile.LoadIndicies(temp);
+
             indexFile.Write(directory, configContainer);
         }
 

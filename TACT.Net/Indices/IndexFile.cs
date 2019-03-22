@@ -45,6 +45,11 @@ namespace TACT.Net.Indices
             Type = type;
             Checksum = new MD5Hash(new byte[0]);
             IndexFooter = new IndexFooter();
+
+            if (IsLooseIndex)
+                IndexFooter.OffsetBytes = 0;
+            else if (IsGroupIndex)
+                IndexFooter.OffsetBytes = 6;
         }
 
         /// <summary>
@@ -351,13 +356,10 @@ namespace TACT.Net.Indices
         /// </summary>
         /// <param name="indexFile"></param>
         /// <param name="archiveIndex"></param>
-        internal void CopyIndicies(IndexFile indexFile, ushort archiveIndex = 0)
+        internal void LoadIndicies(List<IndexEntry> entries)
         {
-            foreach (var entry in indexFile.Entries)
-            {
-                entry.IndexOrdinal = archiveIndex;
-                _indexEntries[entry.Key] = entry;
-            }
+            foreach (var entry in entries)
+                _indexEntries.Add(entry.Key, entry);
         }
 
         #endregion
