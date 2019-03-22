@@ -98,11 +98,11 @@ namespace TACT.Net.Configs
         /// </summary>
         /// <param name="field"></param>
         /// <param name="value"></param>
-        public void SetValue(string field, string value)
+        public void SetValue(string field, object value)
         {
             foreach (var collection in _data.Values)
                 if (collection.ContainsKey(field))
-                    collection[field] = value;
+                    collection[field] = value.ToString();
         }
 
         /// <summary>
@@ -111,10 +111,10 @@ namespace TACT.Net.Configs
         /// <param name="field"></param>
         /// <param name="value"></param>
         /// <param name="locale"></param>
-        public void SetValue(string field, string value, Locale locale)
+        public void SetValue(string field, object value, Locale locale)
         {
             if (_data.TryGetValue(locale, out var collection) && collection.ContainsKey(field))
-                collection[field] = value;
+                collection[field] = value.ToString();
         }
 
         /// <summary>
@@ -149,16 +149,17 @@ namespace TACT.Net.Configs
         /// </summary>
         /// <param name="locale"></param>
         /// <param name="values"></param>
-        public void AddLocale(Locale locale, string[] values)
+        public bool AddLocale(Locale locale, object[] values)
         {
             if (_data.ContainsKey(locale))
-                return;
+                return false;
 
-            string[] fields = _data.First().Value.Values.ToArray();
+            var fields = DestructFieldNames(_fields);
             if (fields.Length != values.Length)
                 throw new ArgumentException($"Invalid values count. Expecting {fields.Length} got {values.Length}");
 
-            PopulateCollection(fields, values, locale);
+            PopulateCollection(fields, Array.ConvertAll(values, x => x.ToString()), locale);
+            return true;
         }
 
         /// <summary>

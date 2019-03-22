@@ -102,7 +102,7 @@ namespace TACT.Net.Configs
         /// <param name="key"></param>
         /// <param name="index"></param>
         /// <returns></returns>
-        public string GetValue(string key, int index)
+        public string GetValue(string key, int index = 0)
         {
             return GetValues(key)?[index];
         }
@@ -124,7 +124,7 @@ namespace TACT.Net.Configs
         /// <param name="key"></param>
         /// <param name="value"></param>
         /// <param name="index"></param>
-        public void SetValue(string key, object value, int index)
+        public void SetValue(string key, object value, int index = 0)
         {
             if (_data.ContainsKey(key))
                 _data[key][index] = value.ToString();
