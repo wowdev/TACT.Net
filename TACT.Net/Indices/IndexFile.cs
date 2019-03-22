@@ -18,9 +18,15 @@ namespace TACT.Net.Indices
         public MD5Hash Checksum { get; private set; }
         public readonly IndexType Type;
 
+        #region Helper Variables
+
         internal bool RequiresSave { get; private set; }
+        internal bool IsDataIndex => (Type & IndexType.Data) == IndexType.Data;
+        internal bool IsLooseIndex => (Type & IndexType.Loose) == IndexType.Loose;
         internal bool IsGroupIndex => (Type & IndexType.Group) == IndexType.Group;
         internal bool IsPatchIndex => (Type & IndexType.Patch) == IndexType.Patch;
+
+        #endregion
 
         private readonly SortedList<MD5Hash, IndexEntry> _indexEntries;
         private readonly Dictionary<MD5Hash, CASRecord> _newEntries;
@@ -120,7 +126,10 @@ namespace TACT.Net.Indices
             RequiresSave = false;
 
             // TODO patch index writing
-            if (IsPatchIndex || IsGroupIndex || Type == IndexType.Unknown)
+            if (IsPatchIndex || Type == IndexType.Unknown)
+                throw new NotImplementedException();
+            // Group Indicies only supported for Data and Patch indicies
+            if (IsGroupIndex && IsLooseIndex)
                 throw new NotImplementedException();
 
             List<MD5Hash> EKeyLookupHashes = new List<MD5Hash>();
@@ -182,15 +191,18 @@ namespace TACT.Net.Indices
 
                 // compute filename - from ContentsHash to EOF
                 var checksum = ms.HashSlice(md5, footerStartPos + IndexFooter.ChecksumSize, IndexFooter.Size - IndexFooter.ChecksumSize);
+                // update the CDN Config
+                UpdateConfig(configContainer, checksum);
+
+                // Group Indicies are generated client-side
+                if (IsGroupIndex)
+                    return;
 
                 string saveLocation = Helpers.GetCDNPath(checksum.ToString() + ".index", "data", directory, true);
                 if (!File.Exists(saveLocation))
                 {
                     // save to disk
                     File.WriteAllBytes(saveLocation, ms.ToArray());
-
-                    // update the CDN Config
-                    UpdateConfig(configContainer, checksum);
 
                     // update file checksum
                     Checksum = checksum;
@@ -333,6 +345,21 @@ namespace TACT.Net.Indices
             foreach (var hash in hashes)
                 Remove(hash);
         }
+
+        /// <summary>
+        /// Copies all entries from an existing IndexFile
+        /// </summary>
+        /// <param name="indexFile"></param>
+        /// <param name="archiveIndex"></param>
+        internal void CopyIndicies(IndexFile indexFile, ushort archiveIndex = 0)
+        {
+            foreach (var entry in indexFile.Entries)
+            {
+                entry.IndexOrdinal = archiveIndex;
+                _indexEntries[entry.Key] = entry;
+            }
+        }
+
         #endregion
 
         #region Helpers
@@ -354,17 +381,28 @@ namespace TACT.Net.Indices
             if (configContainer?.CDNConfig == null)
                 return;
 
+            // determine the field name
             string identifier;
-            if ((Type & IndexType.Loose) == IndexType.Loose)
+            if (IsGroupIndex)
+                identifier = IsPatchIndex ? "patch-archive-group" : "archive-group";
+            else if (IsLooseIndex)
                 identifier = IsPatchIndex ? "patch-file-index" : "file-index";
             else
                 identifier = IsPatchIndex ? "patch-archives" : "archives";
 
+            // update the collection
             var collection = configContainer.CDNConfig.GetValues(identifier);
             if (collection != null)
             {
-                collection.Remove(Checksum.ToString());
-                collection.Add(hash.ToString());
+                if (IsGroupIndex)
+                {
+                    collection[0] = hash.ToString(); // group indicies are single entries
+                }
+                else
+                {
+                    collection.Remove(Checksum.ToString()); // all others are collections
+                    collection.Add(hash.ToString());
+                }
             }
 
             // TODO sizes - not sure how these are calculated

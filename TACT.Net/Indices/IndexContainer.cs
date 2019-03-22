@@ -11,9 +11,9 @@ namespace TACT.Net.Indices
 {
     public class IndexContainer : ISystemFile
     {
-        public IEnumerable<IndexFile> DataIndices => _indices.Where(x => (x.Type & IndexType.Data) == IndexType.Data);
-        public IEnumerable<IndexFile> LooseIndices => _indices.Where(x => (x.Type & IndexType.Loose) == IndexType.Loose);
-        public IEnumerable<IndexFile> PatchIndices => _indices.Where(x => (x.Type & IndexType.Patch) == IndexType.Patch);
+        public IEnumerable<IndexFile> DataIndices => _indices.Where(x => x.IsDataIndex);
+        public IEnumerable<IndexFile> LooseIndices => _indices.Where(x => x.IsLooseIndex);
+        public IEnumerable<IndexFile> PatchIndices => _indices.Where(x => x.IsPatchIndex);
 
         public MD5Hash Checksum { get; }
 
@@ -88,6 +88,9 @@ namespace TACT.Net.Indices
                 index.Write(directory, configContainer);
                 index.WriteBlob(directory);
             }
+
+            // compute the Data Index Group hash
+            GenerateIndexGroup(directory, configContainer);
 
             // reload indices
             _indices.Clear();
@@ -209,6 +212,30 @@ namespace TACT.Net.Indices
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// Creates a fake Data Index Group and stores the computed checksum
+        /// </summary>
+        /// <param name="directory"></param>
+        /// <param name="configContainer"></param>
+        private void GenerateIndexGroup(string directory, Configs.ConfigContainer configContainer)
+        {
+            if (configContainer == null)
+                return;
+
+            // get the list of data archives
+            var archives = configContainer.CDNConfig.GetValues("archives");
+            archives.Sort(new MD5HashComparer());
+
+            // create a new IndexFile, add all entries and store the checksum in the CDN config
+            var indexFile = new IndexFile(IndexType.Data | IndexType.Group);
+            foreach(var index in DataIndices)
+            {
+                ushort archiveIndex = (ushort)archives.IndexOf(index.Checksum.ToString());
+                indexFile.CopyIndicies(index, archiveIndex);
+            }
+            indexFile.Write(directory, configContainer);
         }
 
         #endregion
