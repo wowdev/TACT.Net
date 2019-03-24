@@ -218,11 +218,13 @@ namespace TACT.Net.Encoding
             };
             _EKeyEntries[record.EKey] = eKeyEntry;
         }
+
         public void AddOrUpdate(EncodingContentEntry entry)
         {
             entry.Validate();
             _CKeyEntries[entry.CKey] = entry;
         }
+
         public void AddOrUpdate(EncodingEncodedEntry entry)
         {
             entry.Validate();
@@ -240,10 +242,12 @@ namespace TACT.Net.Encoding
             if (_EKeyEntries.TryGetValue(record.CKey, out var eKeyEntry))
                 Remove(eKeyEntry);
         }
+
         public void Remove(EncodingContentEntry entry)
         {
             _CKeyEntries.Remove(entry.CKey);
         }
+
         public void Remove(EncodingEncodedEntry entry)
         {
             _EKeyEntries.Remove(entry.EKey);
@@ -255,13 +259,13 @@ namespace TACT.Net.Encoding
         /// <param name="ckey"></param>
         /// <param name="entry"></param>
         /// <returns></returns>
-        public bool TryGetContentEntry(MD5Hash ckey, out EncodingContentEntry entry) => _CKeyEntries.TryGetValue(ckey, out entry);
+        public bool TryGetCKeyEntry(MD5Hash ckey, out EncodingContentEntry entry) => _CKeyEntries.TryGetValue(ckey, out entry);
         /// <summary>
         /// Returns all CKeyEntries containing a specific Encoding Key
         /// </summary>
         /// <param name="ekey"></param>
         /// <returns></returns>
-        public IEnumerable<EncodingContentEntry> GetContentEntryByEKey(MD5Hash ekey)
+        public IEnumerable<EncodingContentEntry> GetCKeyEntryByEKey(MD5Hash ekey)
         {
             foreach (var ckeyEntry in _CKeyEntries.Values)
                 if (ckeyEntry.EKey == ekey)
@@ -273,7 +277,7 @@ namespace TACT.Net.Encoding
         /// <param name="ekey"></param>
         /// <param name="entry"></param>
         /// <returns></returns>
-        public bool TryGetEncodedEntry(MD5Hash ekey, out EncodingEncodedEntry entry) => _EKeyEntries.TryGetValue(ekey, out entry);
+        public bool TryGetEKeyEntry(MD5Hash ekey, out EncodingEncodedEntry entry) => _EKeyEntries.TryGetValue(ekey, out entry);
         /// <summary>
         /// Determines where the specified CKeyEntry exists
         /// </summary>

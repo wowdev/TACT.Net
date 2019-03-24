@@ -5,27 +5,27 @@ namespace TACT.Net.Download
 {
     public class DownloadHeader
     {
-        public byte[] Magic = new byte[] { 68, 76 };
-        public byte Version = 1;
+        public byte[] Magic { get; private set; } = new byte[] { 68, 76 };
+        public byte Version { get; set; } = 1;
         public byte EKeySize { get; private set; } = 16;
         /// <summary>
         /// Determines the existance of the checksum in DownloadFileEntry
         /// <para>HACK do we know what this is?</para>
         /// </summary>
         internal bool IncludeChecksum = false;
-        public uint EntryCount;
-        public ushort TagCount;
+        public uint EntryCount { get; internal set; }
+        public ushort TagCount { get; internal set; }
         /// <summary>
         /// Size of DownloadFileEntry flags
         /// <para>Plugin = 1, Plugin Data = 2</para>
         /// </summary>
-        public byte FlagSize;
+        public byte FlagSize { get; set; }
         /// <summary>
         /// Base Priority for entries
         /// <para>0 = highest, 2 = lowest; Subtracted from entry priority</para>
         /// </summary>
-        public sbyte BasePriority;
-        public uint Unk_0D;
+        public sbyte BasePriority { get; set; }
+        public uint Unk_0D { get; private set; }
 
         #region IO
 

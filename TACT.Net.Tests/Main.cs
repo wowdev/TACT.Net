@@ -104,7 +104,7 @@ namespace TACT.Net.Tests
             tactRepo.EncodingFile = new Encoding.EncodingFile(tactRepo.BaseDirectory, tactRepo.ConfigContainer.EncodingEKey);
 
             // get the root ckey
-            Assert.IsTrue(tactRepo.EncodingFile.TryGetContentEntry(tactRepo.ConfigContainer.RootMD5, out var rootCEntry));
+            Assert.IsTrue(tactRepo.EncodingFile.TryGetCKeyEntry(tactRepo.ConfigContainer.RootMD5, out var rootCEntry));
 
             // open the root
             tactRepo.RootFile = new Root.RootFile(tactRepo.BaseDirectory, rootCEntry.EKey);

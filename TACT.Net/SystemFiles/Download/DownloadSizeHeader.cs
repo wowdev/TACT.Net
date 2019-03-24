@@ -5,15 +5,15 @@ namespace TACT.Net.Download
 {
     public class DownloadSizeHeader
     {
-        public byte[] Magic = new byte[] { 68, 83 };
-        public byte Version = 1;
-        public byte EKeySize = 9;
-        public uint EntryCount;
-        public ushort TagCount;
+        public byte[] Magic { get; private set; } = new byte[] { 68, 83 };
+        public byte Version { get; set; } = 1;
+        public byte EKeySize { get; set; } = 9;
+        public uint EntryCount { get; internal set; }
+        public ushort TagCount { get; internal set; }
         /// <summary>
         /// Total size of all entries
         /// </summary>
-        public ulong TotalSize;
+        public ulong TotalSize { get; internal set; }
 
         #region IO
 

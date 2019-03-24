@@ -5,17 +5,17 @@ namespace TACT.Net.Install
 {
     public class InstallHeader
     {
-        public byte[] Magic = new byte[] { 73, 78 };
-        public byte Version = 1;
+        public byte[] Magic { get; private set; } = new byte[] { 73, 78 };
+        public byte Version { get; set; } = 1;
         public byte CKeySize { get; private set; } = 16;
         /// <summary>
         /// Number of tags
         /// </summary>
-        public ushort TagCount;
+        public ushort TagCount { get; internal set; }
         /// <summary>
         /// Number of InstallFileEntries
         /// </summary>
-        public uint EntryCount;
+        public uint EntryCount { get; internal set; }
 
         #region IO
 

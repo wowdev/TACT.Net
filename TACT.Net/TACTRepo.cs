@@ -92,7 +92,7 @@ namespace TACT.Net
             {
                 EncodingFile = new Encoding.EncodingFile(BaseDirectory, ConfigContainer.EncodingEKey);
 
-                if (EncodingFile.TryGetContentEntry(ConfigContainer.RootMD5, out var rootCEntry))
+                if (EncodingFile.TryGetCKeyEntry(ConfigContainer.RootMD5, out var rootCEntry))
                     RootFile = new Root.RootFile(BaseDirectory, rootCEntry.EKey);
             }
         }

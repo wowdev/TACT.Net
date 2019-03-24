@@ -457,7 +457,7 @@ namespace TACT.Net.Root
 
             if (tactRepo.EncodingFile != null && tactRepo.IndexContainer != null)
             {
-                if (tactRepo.EncodingFile.TryGetContentEntry(ckey, out EncodingContentEntry encodingCKey))
+                if (tactRepo.EncodingFile.TryGetCKeyEntry(ckey, out EncodingContentEntry encodingCKey))
                     return tactRepo.IndexContainer.OpenFile(encodingCKey.EKey);
             }
 

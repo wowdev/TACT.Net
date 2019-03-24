@@ -6,31 +6,31 @@ namespace TACT.Net.Encoding
 {
     public sealed class EncodingHeader
     {
-        public byte[] Magic = new byte[] { 69, 78 };
-        public byte Version = 1;
+        public byte[] Magic { get; private set; } = new byte[] { 69, 78 };
+        public byte Version { get; set; } = 1;
         public byte CKeyHashSize { get; private set; } = 16;
         public byte EKeyHashSize { get; private set; } = 16;
         /// <summary>
         /// KB size of the Content Key pages
         /// </summary>
-        public ushort CKeyPageSize = 4;
+        public ushort CKeyPageSize { get; set; } = 4;
         /// <summary>
         /// KB size of the Encoding Key pages
         /// </summary>
-        public ushort EKeyPageSize = 4;
+        public ushort EKeyPageSize { get; set; } = 4;
         /// <summary>
         /// Number of Content Key pages
         /// </summary>
-        public uint CKeyPageCount;
+        public uint CKeyPageCount { get; private set; }
         /// <summary>
         /// Number of Encoding Key pages
         /// </summary>
-        public uint EKeyPageCount;
-        public byte Unk_11 = 0;
+        public uint EKeyPageCount { get; private set; }
+        public byte Unk_11 { get; private set; } = 0;
         /// <summary>
         /// Total size of the ESpec stringtable
         /// </summary>
-        public uint ESpecTableSize;
+        public uint ESpecTableSize { get; internal set; }
 
         #region IO
         public void Read(BinaryReader br)
