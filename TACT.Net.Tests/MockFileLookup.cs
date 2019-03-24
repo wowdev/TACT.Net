@@ -20,7 +20,10 @@ namespace TACT.Net.Tests
         public uint GetOrCreateFileId(string filename)
         {
             if (!FileLookup.TryGetValue(filename, out uint id))
-                id = ++CurrentId;
+            {
+                FileLookup.Add(filename, ++CurrentId);
+                id = CurrentId;
+            }
 
             return id;
         }
