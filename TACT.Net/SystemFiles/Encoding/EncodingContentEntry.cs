@@ -35,6 +35,7 @@ namespace TACT.Net.Encoding
             CKey = new MD5Hash(br.ReadBytes(header.CKeyHashSize));
 
             EKey = new MD5Hash(br.ReadBytes(header.EKeyHashSize));
+
             if (keyCount > 1)
                 br.BaseStream.Position += (keyCount - 1) * header.EKeyHashSize;
 

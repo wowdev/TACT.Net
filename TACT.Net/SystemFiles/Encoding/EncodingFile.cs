@@ -25,6 +25,7 @@ namespace TACT.Net.Encoding
         public List<string> ESpecStringTable { get; private set; }
         public IEnumerable<EncodingContentEntry> CKeyEntries => _CKeyEntries.Values;
         public IEnumerable<EncodingEncodedEntry> EKeyEntries => _EKeyEntries.Values;
+        public readonly bool Partial;
 
         private readonly EMap[] _EncodingMap;
         private CKeyPageTable _CKeyEntries;
@@ -58,10 +59,13 @@ namespace TACT.Net.Encoding
         /// Loads an existing EncodingFile
         /// </summary>
         /// <param name="path">BLTE encoded file path</param>
-        public EncodingFile(string path) : this()
+        /// <param name="partial">Only reads the mandatory information. Prevents write support</param>
+        public EncodingFile(string path, bool partial = false) : this()
         {
             if (!File.Exists(path))
                 throw new FileNotFoundException("Unable to open EncodingFile", path);
+
+            Partial = partial;
 
             using (var fs = File.OpenRead(path))
             using (var bt = new BlockTableStreamReader(fs))
@@ -73,15 +77,21 @@ namespace TACT.Net.Encoding
         /// </summary>
         /// <param name="directory">Base directory</param>
         /// <param name="ekey">Encoding EKey</param>
-        public EncodingFile(string directory, MD5Hash ekey) : this(Helpers.GetCDNPath(ekey.ToString(), "data", directory)) { }
+        /// <param name="partial">Only reads the mandatory information. Prevents write support</param>
+        public EncodingFile(string directory, MD5Hash ekey, bool partial = false) :
+            this(Helpers.GetCDNPath(ekey.ToString(), "data", directory), partial)
+        { }
 
 
         /// <summary>
         /// Loads an existing EncodingFile
         /// </summary>
         /// <param name="stream"></param>
-        public EncodingFile(BlockTableStreamReader stream) : this()
+        /// <param name="partial">Only reads the mandatory information. Prevents write support</param>
+        public EncodingFile(BlockTableStreamReader stream, bool partial = false) : this()
         {
+            Partial = partial;
+
             Read(stream);
         }
 
@@ -111,14 +121,17 @@ namespace TACT.Net.Encoding
                 _CKeyEntries.Capacity = (int)EncodingHeader.CKeyPageCount * 40;
                 ReadPage(br, EncodingHeader.CKeyPageSize << 10, EncodingHeader.CKeyPageCount, _CKeyEntries);
 
-                // skip EKey page table indices
-                stream.Seek((int)EncodingHeader.EKeyPageCount * (EncodingHeader.EKeyHashSize + 16), SeekOrigin.Current);
+                if (!Partial)
+                {
+                    // skip EKey page table indices
+                    stream.Seek((int)EncodingHeader.EKeyPageCount * (EncodingHeader.EKeyHashSize + 16), SeekOrigin.Current);
 
-                // read EKey entries
-                _EKeyEntries.Capacity = (int)EncodingHeader.CKeyPageCount * 25;
-                ReadPage(br, EncodingHeader.EKeyPageSize << 10, EncodingHeader.EKeyPageCount, _EKeyEntries);
+                    // read EKey entries
+                    _EKeyEntries.Capacity = (int)EncodingHeader.CKeyPageCount * 25;
+                    ReadPage(br, EncodingHeader.EKeyPageSize << 10, EncodingHeader.EKeyPageCount, _EKeyEntries);
 
-                // remainder is an ESpec block for the file itself
+                    // remainder is an ESpec block for the file itself
+                }
 
                 Checksum = stream.MD5Hash();
             }
@@ -132,6 +145,9 @@ namespace TACT.Net.Encoding
         /// <returns></returns>
         public CASRecord Write(string directory, Configs.ConfigContainer configContainer = null)
         {
+            if (Partial)
+                throw new NotSupportedException("Writing is not supported for partial EncodingFiles");
+
             EBlock[] eblocks = new EBlock[_EncodingMap.Length];
 
             CASRecord record;
