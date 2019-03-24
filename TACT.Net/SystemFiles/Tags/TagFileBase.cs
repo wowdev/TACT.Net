@@ -44,7 +44,7 @@ namespace TACT.Net.Tags
                 // force the tag entries to be the same size
                 tagEntry.FileMask.Expand(entryCount);
                 tagEntry.Write(bw);
-            }                
+            }
         }
 
         #endregion

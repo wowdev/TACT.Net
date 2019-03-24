@@ -69,7 +69,7 @@ namespace TACT.Net.Encoding
         {
             Type type = typeof(T);
 
-            switch(true)
+            switch (true)
             {
                 case true when type == typeof(EncodingContentEntry):
                     CKeyPageCount = count;

@@ -1,5 +1,4 @@
-﻿using System;
-using TACT.Net.Cryptography;
+﻿using TACT.Net.Cryptography;
 
 namespace TACT.Net.BlockTable
 {

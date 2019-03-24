@@ -1,6 +1,4 @@
-﻿using System.Threading.Tasks;
-
-namespace TACT.Net.FileLookup
+﻿namespace TACT.Net.FileLookup
 {
     public interface IFileLookup
     {

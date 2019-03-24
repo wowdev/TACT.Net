@@ -1,6 +1,5 @@
 ﻿using System.IO;
 using TACT.Net.BlockTable;
-using TACT.Net.Common;
 using TACT.Net.Cryptography;
 
 namespace TACT.Net
@@ -45,7 +44,7 @@ namespace TACT.Net
 
             using (var fs = File.OpenRead(BLTEPath))
                 fs.CopyTo(stream);
-            
+
             return true;
         }
 

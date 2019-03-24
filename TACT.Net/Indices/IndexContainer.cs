@@ -81,7 +81,7 @@ namespace TACT.Net.Indices
                     index.Write(directory, configContainer);
                     index.WriteBlob(directory, prevBlob);
                 }
-                else if(!sameDirectory)
+                else if (!sameDirectory)
                 {
                     // copy the index file and blob
                     string oldblob = Helpers.GetCDNPath(index.Checksum.ToString(), "data", _sourceDirectory);
@@ -242,14 +242,14 @@ namespace TACT.Net.Indices
             archives.Sort(new MD5HashComparer());
 
             // populate the archive indicies and 
-            var temp = new List<IndexEntry>(DataIndices.Sum(x => x.Entries.Count()));            
-            foreach(var index in DataIndices)
+            var temp = new List<IndexEntry>(DataIndices.Sum(x => x.Entries.Count()));
+            foreach (var index in DataIndices)
             {
                 if (index.IsLooseIndex)
                     continue;
 
                 ushort archiveIndex = (ushort)archives.IndexOf(index.Checksum.ToString());
-                foreach(var e in index.Entries)
+                foreach (var e in index.Entries)
                 {
                     e.IndexOrdinal = archiveIndex;
                     temp.Add(e);
@@ -258,7 +258,7 @@ namespace TACT.Net.Indices
 
             // sort
             var comparer = new MD5HashComparer();
-            temp.Sort((x, y) => comparer.Compare(x.Key,y.Key));
+            temp.Sort((x, y) => comparer.Compare(x.Key, y.Key));
 
             // create a new IndexFile, add all entries and store the checksum in the CDN config
             var indexFile = new IndexFile(IndexType.Data | IndexType.Group);
