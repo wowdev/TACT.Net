@@ -93,9 +93,11 @@ namespace TACT.Net.BlockTable
                     foreach (var block in _blocks.Values)
                     {
                         block.Finalise(); // apply encoding byte and any compression
+                        block.Position = 0;
+
                         bw.WriteUInt32BE(block.CompressedSize);
                         bw.WriteUInt32BE(block.DecompressedSize);
-                        bw.Write(block.MD5Hash().Value);
+                        bw.Write(md5.ComputeHash(block));
                         decompressedSize += block.DecompressedSize;
                     }
                 }

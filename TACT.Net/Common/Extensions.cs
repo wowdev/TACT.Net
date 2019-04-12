@@ -20,12 +20,6 @@ namespace TACT.Net.Common
                 return new MD5Hash(md5.ComputeHash(stream));
         }
 
-        public static MD5Hash MD5Hash(this byte[] bytes)
-        {
-            using (var md5 = MD5.Create())
-                return new MD5Hash(md5.ComputeHash(bytes));
-        }
-
         public static string ToHex(this byte[] array)
         {
             Span<char> c = new char[array.Length * 2];
