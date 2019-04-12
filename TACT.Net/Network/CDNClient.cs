@@ -16,6 +16,8 @@ namespace TACT.Net.Network
         /// </summary>
         public bool ApplyDecryption { get; set; }
 
+        private int _hostIndex = 0;
+
         #region Constructors
 
         /// <summary>
@@ -76,7 +78,7 @@ namespace TACT.Net.Network
             if (await GetContentLength(cdnpath) == -1)
                 return null;
 
-            foreach (var host in Hosts)
+            foreach (var host in GetHosts())
             {
                 HttpWebRequest req = WebRequest.CreateHttp("http://" + host + "/" + cdnpath);
 
@@ -106,7 +108,7 @@ namespace TACT.Net.Network
             if (await GetContentLength(cdnpath) == -1)
                 return false;
 
-            foreach (var host in Hosts)
+            foreach (var host in GetHosts())
             {
                 try
                 {
@@ -135,7 +137,7 @@ namespace TACT.Net.Network
         /// <returns></returns>
         public async Task<long> GetContentLength(string cdnpath)
         {
-            foreach (var host in Hosts)
+            foreach (var host in GetHosts())
             {
                 try
                 {
@@ -158,6 +160,25 @@ namespace TACT.Net.Network
         /// <param name="filePathOrKeyName"></param>
         /// <returns></returns>
         public bool SetDecryptionKey(string filePathOrKeyName) => Armadillo.SetKey(filePathOrKeyName);
+
+        #endregion
+
+        #region Helpers
+
+        /// <summary>
+        /// Iterates the hosts in order only progressing on network exception
+        /// </summary>
+        /// <returns></returns>
+        private IEnumerable<string> GetHosts()
+        {
+            for (int i = 0; i < Hosts.Count; i++)
+            {
+                if (i != 0)
+                    _hostIndex = ++_hostIndex % Hosts.Count;
+
+                yield return Hosts[_hostIndex];
+            }
+        }
 
         #endregion
     }
