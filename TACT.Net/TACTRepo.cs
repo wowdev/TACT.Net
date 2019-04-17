@@ -53,17 +53,7 @@ namespace TACT.Net
             DownloadFile = new Download.DownloadFile();
 
             // TODO check this
-            // file versioning
-            switch (true)
-            {
-                case true when build > 27547:
-                    DownloadFile.DownloadHeader.Version = 3;
-                    DownloadSizeFile = new Download.DownloadSizeFile();
-                    break;
-                case true when build > 24473:
-                    DownloadFile.DownloadHeader.Version = 2;
-                    break;
-            }
+            ApplyVersionSpecificSettings(build);            
 
             // set the default tag entries
             InstallFile.SetDefaultTags(build);
@@ -108,6 +98,25 @@ namespace TACT.Net
             ConfigContainer?.Save(directory);
 
             RootFile?.FileLookup?.Close();
+        }
+
+        #endregion
+
+        #region Helpers
+
+        private void ApplyVersionSpecificSettings(uint build)
+        {
+            if (build > 24473)
+                DownloadFile.DownloadHeader.Version = 2;
+
+            if (build > 27547)
+            {
+                DownloadFile.DownloadHeader.Version = 3;
+                DownloadSizeFile = new Download.DownloadSizeFile();
+            }
+
+            if (build >= 30080)
+                RootFile.RootHeader.Version = 2;
         }
 
         #endregion

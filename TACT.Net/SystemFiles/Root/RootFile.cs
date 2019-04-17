@@ -41,10 +41,13 @@ namespace TACT.Net.Root
 
         public MD5Hash Checksum { get; private set; }
 
+        public RootHeader RootHeader;
+
+
         private readonly EMap[] _EncodingMap = new[] { new EMap(EType.ZLib, 9) };
         private readonly List<RootBlock> _blocks;
         private readonly Lookup3 _lookup3;
-        private readonly Dictionary<uint, ulong> _idLookup;
+        private readonly Dictionary<ulong, uint> _idLookup;
         private IFileLookup _fileLookup;
 
         #region Constructors
@@ -54,7 +57,9 @@ namespace TACT.Net.Root
         /// </summary>
         public RootFile()
         {
-            _idLookup = new Dictionary<uint, ulong>();
+            RootHeader = new RootHeader();
+
+            _idLookup = new Dictionary<ulong, uint>();
             _lookup3 = new Lookup3();
 
             // add the default global block
@@ -64,7 +69,7 @@ namespace TACT.Net.Root
                 {
                     ContentFlags = ContentFlags.None,
                     LocaleFlags = LocaleFlags.All_WoW,
-                    Records = new Dictionary<ulong, RootRecord>()
+                    Records = new Dictionary<uint, RootRecord>()
                 }
             };
         }
@@ -119,6 +124,9 @@ namespace TACT.Net.Root
             using (var br = new BinaryReader(stream))
             {
                 long length = stream.Length;
+
+                RootHeader.Read(br);
+
                 while (stream.Position < length)
                 {
                     int count = br.ReadInt32();
@@ -130,7 +138,7 @@ namespace TACT.Net.Root
 
                     // load the deltas, set the block's record capacity
                     var fileIdDeltas = br.ReadStructArray<uint>(count);
-                    block.Records = new Dictionary<ulong, RootRecord>(fileIdDeltas.Length);
+                    block.Records = new Dictionary<uint, RootRecord>(fileIdDeltas.Length);
 
                     // calculate the records
                     uint currentId = 0;
@@ -138,13 +146,15 @@ namespace TACT.Net.Root
                     foreach (uint delta in fileIdDeltas)
                     {
                         record = new RootRecord { FileIdDelta = delta };
-                        record.Read(br);
+                        record.Read(br, block, RootHeader.Version);
 
                         currentId += delta;
                         record.FileId = currentId++;
 
-                        block.Records[record.NameHash] = record;
-                        _idLookup[record.FileId] = record.NameHash;
+                        block.Records[record.FileId] = record;
+
+                        if (record.NameHash > 0)
+                            _idLookup[record.NameHash] = record.FileId;
                     }
 
                     _blocks.Add(block);
@@ -173,6 +183,8 @@ namespace TACT.Net.Root
             using (var bt = new BlockTableStreamWriter(_EncodingMap[0]))
             using (var bw = new BinaryWriter(bt))
             {
+                RootHeader.Write(bw, _blocks);
+
                 foreach (var block in _blocks)
                 {
                     bw.Write(block.Records.Count);
@@ -180,7 +192,7 @@ namespace TACT.Net.Root
                     bw.Write((uint)block.LocaleFlags);
                     bw.WriteStructArray(block.Records.Values.Select(x => x.FileIdDelta));
                     foreach (var entry in block.Records.Values)
-                        entry.Write(bw);
+                        entry.Write(bw, block, RootHeader.Version);
                 }
 
                 // finalise and change ESpec to non chunked
@@ -251,23 +263,23 @@ namespace TACT.Net.Root
             uint fileId = rootRecord.FileId;
 
             // update the lookup
-            _idLookup[fileId] = nameHash;
+            _idLookup[nameHash] = fileId;
 
             var blocks = GetBlocks(LocaleFlags, ContentFlags);
-            bool isupdate = blocks.Any(x => x.Records.ContainsKey(nameHash));
+            bool isupdate = blocks.Any(x => x.Records.ContainsKey(fileId));
 
             // add or update compliant blocks
             foreach (var block in blocks)
             {
-                if (!isupdate || block.Records.ContainsKey(nameHash))
-                    block.Records[nameHash] = rootRecord;
+                if (!isupdate || block.Records.ContainsKey(fileId))
+                    block.Records[fileId] = rootRecord;
             }
 
             // add the record to a common block
             if (!blocks.Any())
             {
                 var block = GetBlocks(LocaleFlags.All_WoW).First(x => x.ContentFlags == ContentFlags.None);
-                block.Records[nameHash] = rootRecord;
+                block.Records[fileId] = rootRecord;
             }
         }
 
@@ -279,10 +291,9 @@ namespace TACT.Net.Root
         {
             var blocks = GetBlocks(LocaleFlags, ContentFlags);
 
-            if (_idLookup.TryGetValue(fileId, out ulong namehash))
-                foreach (var block in blocks)
-                    if (block.Records.ContainsKey(namehash))
-                        block.Records.Remove(namehash);
+            foreach (var block in blocks)
+                if (block.Records.ContainsKey(fileId))
+                    block.Records.Remove(fileId);
         }
         /// <summary>
         /// Removes files based on their <paramref name="namehash"/>
@@ -291,9 +302,10 @@ namespace TACT.Net.Root
         public void Remove(ulong namehash)
         {
             var blocks = GetBlocks(LocaleFlags, ContentFlags);
-            foreach (var block in blocks)
-                if (block.Records.TryGetValue(namehash, out var record))
-                    block.Records.Remove(namehash);
+
+            if (_idLookup.TryGetValue(namehash, out uint fileid))
+                foreach (var block in blocks)
+                    block.Records.Remove(fileid);
         }
         /// <summary>
         /// Removes files based on their <paramref name="filepath"/>
@@ -314,10 +326,9 @@ namespace TACT.Net.Root
         {
             var blocks = GetBlocks(LocaleFlags, ContentFlags);
 
-            if (_idLookup.TryGetValue(fileId, out ulong namehash))
-                foreach (var block in blocks)
-                    if (block.Records.ContainsKey(namehash))
-                        yield return block.Records[namehash];
+            foreach (var block in blocks)
+                if (block.Records.TryGetValue(fileId, out var record))
+                    yield return record;
         }
         /// <summary>
         /// Returns RootRecords based on their <paramref name="namehash"/>
@@ -327,9 +338,11 @@ namespace TACT.Net.Root
         public IEnumerable<RootRecord> Get(ulong namehash)
         {
             var blocks = GetBlocks(LocaleFlags, ContentFlags);
-            foreach (var block in blocks)
-                if (block.Records.TryGetValue(namehash, out var rootRecord))
-                    yield return rootRecord;
+
+            if (_idLookup.TryGetValue(namehash, out uint fileid))
+                foreach (var block in blocks)
+                    if (block.Records.TryGetValue(fileid, out var rootRecord))
+                        yield return rootRecord;
         }
         /// <summary>
         /// Returns RootRecords based on their <paramref name="filepath"/>
@@ -361,7 +374,20 @@ namespace TACT.Net.Root
         /// <param name="fileid"></param>
         /// <param name="namehash"></param>
         /// <returns></returns>
-        public bool TryGetHashByFileId(uint fileid, out ulong namehash) => _idLookup.TryGetValue(fileid, out namehash);
+        public bool TryGetHashByFileId(uint fileid, out ulong namehash)
+        {
+            foreach (var block in _blocks)
+            {
+                if (block.Records.TryGetValue(fileid, out var record))
+                {
+                    namehash = record.NameHash;
+                    return true;
+                }
+            }
+
+            namehash = 0;
+            return false;                
+        }
 
         /// <summary>
         /// Determines if the supplied FileId exists
@@ -374,14 +400,7 @@ namespace TACT.Net.Root
         /// </summary>
         /// <param name="namehash"></param>
         /// <returns></returns>
-        public bool ContainsNameHash(ulong namehash)
-        {
-            foreach (var block in _blocks)
-                if (block.Records.ContainsKey(namehash))
-                    return true;
-
-            return false;
-        }
+        public bool ContainsNameHash(ulong namehash) => _idLookup.ContainsKey(namehash);
         /// <summary>
         /// Determines if the supplied FileName exists
         /// </summary>
@@ -481,7 +500,7 @@ namespace TACT.Net.Root
             {
                 ContentFlags = contentFlags,
                 LocaleFlags = localeFlags,
-                Records = new Dictionary<ulong, RootRecord>()
+                Records = new Dictionary<uint, RootRecord>()
             });
 
             return true;
@@ -541,7 +560,7 @@ namespace TACT.Net.Root
                 }
 
                 // reallocate the sorted records
-                block.Records = records.ToDictionary(x => x.NameHash, x => x);
+                block.Records = records.ToDictionary(x => x.FileId, x => x);
             }
         }
 

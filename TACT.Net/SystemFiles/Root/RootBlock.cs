@@ -6,6 +6,8 @@ namespace TACT.Net.Root
     {
         public ContentFlags ContentFlags;
         public LocaleFlags LocaleFlags;
-        public Dictionary<ulong, RootRecord> Records;
+        public Dictionary<uint, RootRecord> Records;
+
+        internal bool HasNameHash => (ContentFlags & ContentFlags.NoNameHash) != ContentFlags.NoNameHash;
     }
 }

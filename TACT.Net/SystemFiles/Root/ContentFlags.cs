@@ -12,5 +12,6 @@ namespace TACT.Net.Root
         Unknown_800 = 0x800, // updateplugin.dll + updateplugin.dylib
         Bundle = 0x40000000,
         NoCompression = 0x80000000, // sounds have this flag
+        NoNameHash = 0x10000000
     }
 }
