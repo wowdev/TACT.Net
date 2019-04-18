@@ -7,6 +7,7 @@ using TACT.Net.Common;
 using TACT.Net.Cryptography;
 using TACT.Net.Encoding;
 using TACT.Net.FileLookup;
+using TACT.Net.Root.Blocks;
 
 namespace TACT.Net.Root
 {
@@ -45,7 +46,7 @@ namespace TACT.Net.Root
 
 
         private readonly EMap[] _EncodingMap = new[] { new EMap(EType.ZLib, 9) };
-        private readonly List<RootBlock> _blocks;
+        private readonly List<IRootBlock> _blocks;
         private readonly Lookup3 _lookup3;
         private readonly Dictionary<ulong, uint> _idLookup;
         private IFileLookup _fileLookup;
@@ -63,15 +64,7 @@ namespace TACT.Net.Root
             _lookup3 = new Lookup3();
 
             // add the default global block
-            _blocks = new List<RootBlock>
-            {
-                new RootBlock()
-                {
-                    ContentFlags = ContentFlags.None,
-                    LocaleFlags = LocaleFlags.All_WoW,
-                    Records = new Dictionary<uint, RootRecord>()
-                }
-            };
+            _blocks = new List<IRootBlock>();
         }
 
         /// <summary>
@@ -129,34 +122,8 @@ namespace TACT.Net.Root
 
                 while (stream.Position < length)
                 {
-                    int count = br.ReadInt32();
-                    RootBlock block = new RootBlock()
-                    {
-                        ContentFlags = (ContentFlags)br.ReadUInt32(),
-                        LocaleFlags = (LocaleFlags)br.ReadUInt32()
-                    };
-
-                    // load the deltas, set the block's record capacity
-                    var fileIdDeltas = br.ReadStructArray<uint>(count);
-                    block.Records = new Dictionary<uint, RootRecord>(fileIdDeltas.Length);
-
-                    // calculate the records
-                    uint currentId = 0;
-                    RootRecord record;
-                    foreach (uint delta in fileIdDeltas)
-                    {
-                        record = new RootRecord { FileIdDelta = delta };
-                        record.Read(br, block, RootHeader.Version);
-
-                        currentId += delta;
-                        record.FileId = currentId++;
-
-                        block.Records[record.FileId] = record;
-
-                        if (record.NameHash > 0)
-                            _idLookup[record.NameHash] = record.FileId;
-                    }
-
+                    var block = CreateRootBlock();
+                    block.Read(br);
                     _blocks.Add(block);
                 }
 
@@ -186,14 +153,7 @@ namespace TACT.Net.Root
                 RootHeader.Write(bw, _blocks);
 
                 foreach (var block in _blocks)
-                {
-                    bw.Write(block.Records.Count);
-                    bw.Write((uint)block.ContentFlags);
-                    bw.Write((uint)block.LocaleFlags);
-                    bw.WriteStructArray(block.Records.Values.Select(x => x.FileIdDelta));
-                    foreach (var entry in block.Records.Values)
-                        entry.Write(bw, block, RootHeader.Version);
-                }
+                    block.Write(bw);
 
                 // finalise and change ESpec to non chunked
                 record = bt.Finalise();
@@ -386,7 +346,7 @@ namespace TACT.Net.Root
             }
 
             namehash = 0;
-            return false;                
+            return false;
         }
 
         /// <summary>
@@ -496,12 +456,11 @@ namespace TACT.Net.Root
                 return false;
 
             // add the new block
-            _blocks.Add(new RootBlock()
-            {
-                ContentFlags = contentFlags,
-                LocaleFlags = localeFlags,
-                Records = new Dictionary<uint, RootRecord>()
-            });
+            var block = CreateRootBlock();
+            block.ContentFlags = contentFlags;
+            block.LocaleFlags = localeFlags;
+            block.Records = new Dictionary<uint, RootRecord>();
+            _blocks.Add(block);
 
             return true;
         }
@@ -511,7 +470,7 @@ namespace TACT.Net.Root
         /// <param name="locale"></param>
         /// <param name="content"></param>
         /// <returns></returns>
-        public IEnumerable<RootBlock> GetBlocks(LocaleFlags locale, ContentFlags content = ContentFlags.None)
+        public IEnumerable<IRootBlock> GetBlocks(LocaleFlags locale, ContentFlags content = ContentFlags.None)
         {
             foreach (var block in _blocks)
                 if ((block.LocaleFlags & locale) == locale)
@@ -523,7 +482,7 @@ namespace TACT.Net.Root
         /// </summary>
         /// <param name="rootBlock"></param>
         /// <returns></returns>
-        public bool RemoveBlock(RootBlock rootBlock) => _blocks.Remove(rootBlock);
+        public bool RemoveBlock(IRootBlock rootBlock) => _blocks.Remove(rootBlock);
         /// <summary>
         /// Removes all RootBlocks with the specified Locale and Content flag combination
         /// </summary>
@@ -561,6 +520,21 @@ namespace TACT.Net.Root
 
                 // reallocate the sorted records
                 block.Records = records.ToDictionary(x => x.FileId, x => x);
+            }
+        }
+
+        /// <summary>
+        /// IRootBlock Type factory
+        /// </summary>
+        /// <returns></returns>
+        private IRootBlock CreateRootBlock()
+        {
+            switch (RootHeader.Version)
+            {
+                case 2:
+                    return Activator.CreateInstance<RootBlockV2>();
+                default:
+                    return Activator.CreateInstance<RootBlock>();
             }
         }
 

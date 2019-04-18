@@ -5,6 +5,7 @@ namespace TACT.Net.Root
     [Flags]
     public enum LocaleFlags
     {
+        None = 0x0,
         enUS = 0x2,
         koKR = 0x4,
         frFR = 0x10,

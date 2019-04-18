@@ -40,6 +40,10 @@ namespace TACT.Net.Tests
             Root.RootFile rootFile = new Root.RootFile(PATH, new Cryptography.MD5Hash("fc52ef45efbbc6beca39076f89bad99f"));
             Assert.AreEqual(ckey, rootFile.Write(@"test").CKey.ToString());
 
+            ckey = "c21a5f9d0a7f8ac9d332ddb15c79b97d";
+            Root.RootFile rootFileV2 = new Root.RootFile(Path.Combine(PATH, "3e6e2458346ad9507cc5a98655b192eb"));
+            Assert.AreEqual(ckey, rootFileV2.Write("test").CKey.ToString());
+
             ckey = "eb25fe8bd9e5b9400cc236d196975972";
             Encoding.EncodingFile encodingFile = new Encoding.EncodingFile(PATH, new Cryptography.MD5Hash("fc8bb2fcd439453504e8758ddd7e7535"));
             Assert.AreEqual(ckey, encodingFile.Write("test").CKey.ToString());
@@ -244,7 +248,6 @@ namespace TACT.Net.Tests
         [TestMethod]
         public void TestDebugStuff()
         {
-
 
         }
     }
