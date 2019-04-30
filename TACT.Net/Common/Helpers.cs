@@ -12,13 +12,18 @@ namespace TACT.Net.Common
         /// <param name="directory"></param>
         /// <param name="create"></param>
         /// <returns></returns>
-        public static string GetCDNPath(string filename, string folder = "", string directory = "", bool create = false)
+        public static string GetCDNPath(string filename, string folder = "", string directory = "", bool create = false, bool url = false)
         {
             string dir = Path.Combine(directory, "tpr", "wow", folder, filename.Substring(0, 2), filename.Substring(2, 2));
             if (create)
                 Directory.CreateDirectory(dir);
 
-            return Path.Combine(dir, filename);
+            string path = Path.Combine(dir, filename);
+
+            if (url)
+                path = path.Replace('\\', '/');
+
+            return path;
         }
 
         /// <summary>
