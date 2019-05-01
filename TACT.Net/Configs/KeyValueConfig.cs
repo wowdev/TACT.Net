@@ -74,7 +74,7 @@ namespace TACT.Net.Configs
         {
             Type = type;
 
-            if (!stream.CanRead || stream.Length <= 1)
+            if (!stream.CanRead)
                 throw new NotSupportedException($"Unable to read {type} stream");
 
             using (var sr = new StreamReader(stream))

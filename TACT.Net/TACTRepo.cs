@@ -1,4 +1,8 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System;
+using System.IO;
+using System.Net;
+using System.Runtime.CompilerServices;
+using TACT.Net.Common;
 
 [assembly: InternalsVisibleTo("TACT.Net.Tests")]
 namespace TACT.Net
@@ -84,6 +88,39 @@ namespace TACT.Net
 
                 if (EncodingFile.TryGetCKeyEntry(ConfigContainer.RootMD5, out var rootCEntry))
                     RootFile = new Root.RootFile(BaseDirectory, rootCEntry.EKey);
+            }
+        }
+
+        /// <summary>
+        /// Download and open an remote TACT container
+        /// </summary>
+        /// <param name="url"></param>
+        /// <param name="directory"></param>
+        /// <param name="product"></param>
+        /// <param name="locale"></param>
+        public void DownloadRemote(string url, string directory, string product, Locale locale)
+        {
+            ConfigContainer = new Configs.ConfigContainer(product, locale);
+            ConfigContainer.DownloadRemote(url, directory);
+
+            if (!ConfigContainer.EncodingEKey.IsEmpty)
+            {
+                var webClient = new WebClient();
+
+                // Download encoding file
+                string encodingUrl = String.Format("{0}/{1}", url.TrimEnd('/'), Helpers.GetCDNPath(ConfigContainer.EncodingEKey.ToString(), "data", "", false, true));
+                webClient.DownloadFile(encodingUrl, Helpers.GetCDNPath(ConfigContainer.EncodingEKey.ToString(), "data", directory, true));
+
+                EncodingFile = new Encoding.EncodingFile(BaseDirectory, ConfigContainer.EncodingEKey);
+
+                if (EncodingFile.TryGetCKeyEntry(ConfigContainer.RootMD5, out var rootCEntry))
+                {
+                    // Download root file
+                    string rootUrl = String.Format("{0}/{1}", url.TrimEnd('/'), Helpers.GetCDNPath(rootCEntry.EKey.ToString(), "data", "", false, true));
+                    webClient.DownloadFile(rootUrl, Helpers.GetCDNPath(rootCEntry.EKey.ToString(), "data", directory, true));
+
+                    RootFile = new Root.RootFile(BaseDirectory, rootCEntry.EKey);
+                }
             }
         }
 
