@@ -1,4 +1,7 @@
 ﻿using System;
+using System.IO;
+using System.Net;
+using TACT.Net.Common;
 using TACT.Net.Cryptography;
 using TACT.Net.Network;
 
@@ -90,8 +93,8 @@ namespace TACT.Net.Configs
         /// <param name="directory">Directory containing the config files</param>
         public void OpenLocal(string directory)
         {
-            CDNsFile = new VariableConfig(directory, ConfigType.CDNs);
-            VersionsFile = new VariableConfig(directory, ConfigType.Versions);
+            CDNsFile = new VariableConfig(Path.Combine(directory, Product), ConfigType.CDNs);
+            VersionsFile = new VariableConfig(Path.Combine(directory, Product), ConfigType.Versions);
 
             LoadConfigs(directory);
         }
@@ -114,6 +117,43 @@ namespace TACT.Net.Configs
         }
 
         /// <summary>
+        /// Download and load the config files from remote
+        /// </summary>
+        /// <param name="url"></param>
+        /// <param name="directory"></param>
+        public void DownloadRemote(string url, string directory)
+        {
+            var webClient = new WebClient();
+
+            using (var cdnstream = webClient.OpenRead(String.Format("{0}/{1}/cdns", url.TrimEnd('/'), Product)))
+            using (var verstream = webClient.OpenRead(String.Format("{0}/{1}/versions", url.TrimEnd('/'), Product)))
+            {
+                CDNsFile = new VariableConfig(cdnstream, ConfigType.CDNs);
+                VersionsFile = new VariableConfig(verstream, ConfigType.Versions);
+
+                if (BuildConfigMD5.Value != null)
+                {
+                    string configUrl = String.Format("{0}/{1}", url.TrimEnd('/'), Helpers.GetCDNPath(BuildConfigMD5.ToString(), "config", "", false, true));
+                    BuildConfig = new KeyValueConfig(webClient.OpenRead(configUrl), ConfigType.BuildConfig);
+                }
+
+                if (CDNConfigMD5.Value != null)
+                {
+                    string configUrl = String.Format("{0}/{1}", url.TrimEnd('/'), Helpers.GetCDNPath(CDNConfigMD5.ToString(), "config", "", false, true));
+                    CDNConfig = new KeyValueConfig(webClient.OpenRead(configUrl), ConfigType.CDNConfig);
+                }
+
+                if (PatchConfigMD5.Value != null)
+                {
+                    string configUrl = String.Format("{0}/{1}", url.TrimEnd('/'), Helpers.GetCDNPath(PatchConfigMD5.ToString(), "config", "", false, true));
+                    PatchConfig = new KeyValueConfig(webClient.OpenRead(configUrl), ConfigType.PatchConfig);
+                }
+            }
+
+            Save(directory);
+        }
+
+        /// <summary>
         /// Loads the Build, CDN and Patch configs
         /// </summary>
         /// <param name="directory"></param>
@@ -126,13 +166,13 @@ namespace TACT.Net.Configs
             if (!VersionsFile.HasLocale(Locale))
                 throw new Exception($"Versions missing {Locale} locale");
 
-            if (!BuildConfigMD5.IsEmpty)
+            if (BuildConfigMD5.Value != null)
                 BuildConfig = new KeyValueConfig(BuildConfigMD5.ToString(), directory, ConfigType.BuildConfig);
 
-            if (!CDNConfigMD5.IsEmpty)
+            if (CDNConfigMD5.Value != null)
                 CDNConfig = new KeyValueConfig(CDNConfigMD5.ToString(), directory, ConfigType.CDNConfig);
 
-            if (!PatchConfigMD5.IsEmpty)
+            if (PatchConfigMD5.Value != null)
                 PatchConfig = new KeyValueConfig(PatchConfigMD5.ToString(), directory, ConfigType.PatchConfig);
         }
 
@@ -142,9 +182,16 @@ namespace TACT.Net.Configs
         /// <param name="directory"></param>
         public void Save(string directory)
         {
+            // save and update patch config value
+            if (PatchConfigMD5.Value != null)
+            {
+                PatchConfig?.Write(directory);
+                BuildConfig?.SetValue("patch-config", PatchConfig.Checksum.ToString());
+            }
+
             // save the localised configs
-            BuildConfig.Write(directory);
-            CDNConfig.Write(directory);
+            BuildConfig?.Write(directory);
+            CDNConfig?.Write(directory);
 
             // update the hashes
             VersionsFile.SetValue("buildconfig", BuildConfig.Checksum.ToString());
