@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using TACT.Net.BlockTable;
 using TACT.Net.Common;
 using TACT.Net.Cryptography;
@@ -31,10 +32,13 @@ namespace TACT.Net.Root
                     _fileLookup.Open();
             }
         }
+        public string FilePath { get; private set; }
+
         /// <summary>
         /// LocaleFlags to target a specific locale
         /// </summary>
         public LocaleFlags LocaleFlags { get; set; } = LocaleFlags.enUS;
+
         /// <summary>
         /// ContentFlags to target a specific file set
         /// </summary>
@@ -44,7 +48,6 @@ namespace TACT.Net.Root
 
         public RootHeader RootHeader;
 
-
         private readonly EMap[] _EncodingMap = new[] { new EMap(EType.ZLib, 9) };
         private readonly List<IRootBlock> _blocks;
         private readonly Lookup3 _lookup3;
@@ -52,7 +55,6 @@ namespace TACT.Net.Root
         private IFileLookup _fileLookup;
 
         #region Constructors
-
         /// <summary>
         /// Creates a new RootFile
         /// </summary>
@@ -77,6 +79,8 @@ namespace TACT.Net.Root
 
             if (!File.Exists(path))
                 throw new FileNotFoundException("Unable to open RootFile", path);
+
+            FilePath = path;
 
             using (var fs = File.OpenRead(path))
             using (var bt = new BlockTableStreamReader(fs))
@@ -104,7 +108,6 @@ namespace TACT.Net.Root
         #endregion
 
         #region IO
-
         private void Read(Stream stream)
         {
             if (stream == null)
@@ -163,6 +166,10 @@ namespace TACT.Net.Root
                 string saveLocation = Helpers.GetCDNPath(record.EKey.ToString(), "data", directory, true);
                 using (var fs = File.Create(saveLocation))
                 {
+                    // remove old file
+                    if (FilePath != null && FilePath != saveLocation)
+                        Helpers.Delete(FilePath, true);
+
                     bt.WriteTo(fs);
                     record.BLTEPath = saveLocation;
                 }
@@ -176,6 +183,7 @@ namespace TACT.Net.Root
                     tactRepo.ConfigContainer?.BuildConfig?.SetValue("root", record.CKey, 0);
                 }
 
+                FilePath = record.BLTEPath;
                 Checksum = record.CKey;
                 return record;
             }
@@ -184,6 +192,18 @@ namespace TACT.Net.Root
         #endregion
 
         #region Methods
+        /// <summary>
+        /// Adds or Updates a RootRecord collection and amends all associated system files. If no block is found the Common block is used.
+        /// </summary>
+        /// <param name="record"></param>
+        /// <param name="tactRepo">If provided, will add the entry to all relevant system files</param>
+        public void AddOrUpdate(ICollection<CASRecord> records, TACTRepo tactRepo = null)
+        {
+            foreach (CASRecord record in records)
+            {
+                AddOrUpdate(record, tactRepo);
+            }
+        }
 
         /// <summary>
         /// Adds or Updates a RootRecord and amends all associated system files. If no block is found the Common block is used.
@@ -213,6 +233,7 @@ namespace TACT.Net.Root
                 tactRepo.DownloadSizeFile?.AddOrUpdate(record);
             }
         }
+
         /// <summary>
         /// Adds or Updates a RootRecord. If no block is found the Common block is used
         /// </summary>

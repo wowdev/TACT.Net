@@ -194,11 +194,16 @@ namespace TACT.Net.Indices
                 // write footer
                 IndexFooter.Write(bw);
 
-                // compute filename - from ContentsHash to EOF and update file checksum
-                Checksum = ms.HashSlice(md5, footerStartPos + IndexFooter.ChecksumSize, IndexFooter.Size - IndexFooter.ChecksumSize);
-
+                // compute filename - from ContentsHash to EOF
+                MD5Hash newChecksum = ms.HashSlice(md5, footerStartPos + IndexFooter.ChecksumSize, IndexFooter.Size - IndexFooter.ChecksumSize);
                 // update the CDN Config
-                UpdateConfig(configContainer, Checksum);
+                UpdateConfig(configContainer, newChecksum, Checksum);
+
+                // remove old index file
+                Helpers.Delete(Checksum.ToString() + ".index", directory);
+
+                // update Checksum
+                Checksum = newChecksum;
 
                 // Group Indicies are generated client-side
                 if (IsGroupIndex)
@@ -376,7 +381,7 @@ namespace TACT.Net.Indices
             return type;
         }
 
-        private void UpdateConfig(Configs.ConfigContainer configContainer, MD5Hash hash)
+        private void UpdateConfig(Configs.ConfigContainer configContainer, MD5Hash hash, MD5Hash? oldHash = null)
         {
             if (configContainer?.CDNConfig == null)
                 return;
@@ -400,6 +405,10 @@ namespace TACT.Net.Indices
                 }
                 else
                 {
+                    // Remove old hash
+                    if (oldHash.Value != null && collection.Contains(oldHash.ToString()))
+                        collection.Remove(oldHash.ToString());
+
                     collection.Remove(Checksum.ToString()); // all others are collections
                     collection.Add(hash.ToString());
                 }

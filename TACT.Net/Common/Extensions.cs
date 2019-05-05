@@ -9,7 +9,7 @@ using TACT.Net.Cryptography;
 
 namespace TACT.Net.Common
 {
-    internal static class Extensions
+    public static class Extensions
     {
         #region MD5 Extensions
 
@@ -232,6 +232,18 @@ namespace TACT.Net.Common
             return Array.FindIndex(array, t => t.Equals(needle, StringComparison.OrdinalIgnoreCase));
         }
 
+        /// <summary>
+        /// Normalise local file path to casc path
+        /// </summary>
+        /// <param name="str"></param>
+        /// <returns></returns>
+        public static string WoWNormalise(this string str, string basePath = "")
+        {
+            return str.Replace(basePath, "")
+                      .TrimStart(new char[] { '\\', '/' })
+                      .Replace('\\', '/')
+                      .ToLowerInvariant();
+        }
         #endregion
     }
 }

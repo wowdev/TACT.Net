@@ -14,6 +14,7 @@ namespace TACT.Net.Install
     /// </summary>
     public class InstallFile : TagFileBase
     {
+        public string FilePath { get; private set; }
         public InstallHeader InstallHeader { get; private set; }
         public IEnumerable<InstallFileEntry> Files => _FileEntries.Values;
 
@@ -45,6 +46,8 @@ namespace TACT.Net.Install
         {
             if (!File.Exists(path))
                 throw new FileNotFoundException("Unable to open InstallFile", path);
+
+            FilePath = path;
 
             using (var fs = File.OpenRead(path))
             using (var bt = new BlockTableStreamReader(fs))
@@ -90,7 +93,7 @@ namespace TACT.Net.Install
                 {
                     var fileEntry = new InstallFileEntry();
                     fileEntry.Read(br, InstallHeader);
-                    _FileEntries.Add(fileEntry.FilePath, fileEntry);
+                    _FileEntries.TryAdd(fileEntry.FilePath, fileEntry);
                 }
 
                 Checksum = stream.MD5Hash();
@@ -128,6 +131,10 @@ namespace TACT.Net.Install
                 string saveLocation = Helpers.GetCDNPath(record.EKey.ToString(), "data", directory, true);
                 using (var fs = File.Create(saveLocation))
                 {
+                    // remove old file
+                    if (FilePath != null && FilePath != saveLocation)
+                        Helpers.Delete(FilePath, true);
+
                     bt.WriteTo(fs);
                     record.BLTEPath = saveLocation;
                 }
@@ -151,6 +158,7 @@ namespace TACT.Net.Install
             }
 
             Checksum = record.CKey;
+            FilePath = record.BLTEPath;
             return record;
         }
 
