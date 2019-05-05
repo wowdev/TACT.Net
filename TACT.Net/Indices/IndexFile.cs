@@ -209,14 +209,11 @@ namespace TACT.Net.Indices
                 if (IsGroupIndex)
                     return;
 
-                string saveLocation = Helpers.GetCDNPath(checksum.ToString() + ".index", "data", directory, true);
+                string saveLocation = Helpers.GetCDNPath(Checksum.ToString() + ".index", "data", directory, true);
                 if (!File.Exists(saveLocation))
                 {
                     // save to disk
                     File.WriteAllBytes(saveLocation, ms.ToArray());
-
-                    // update file checksum
-                    Checksum = checksum;
                 }
             }
         }
