@@ -194,23 +194,21 @@ namespace TACT.Net.Indices
                 // write footer
                 IndexFooter.Write(bw);
 
-                // compute filename - from ContentsHash to EOF
-                var checksum = ms.HashSlice(md5, footerStartPos + IndexFooter.ChecksumSize, IndexFooter.Size - IndexFooter.ChecksumSize);
+                // compute filename - from ContentsHash to EOF and update file checksum
+                Checksum = ms.HashSlice(md5, footerStartPos + IndexFooter.ChecksumSize, IndexFooter.Size - IndexFooter.ChecksumSize);
+
                 // update the CDN Config
-                UpdateConfig(configContainer, checksum);
+                UpdateConfig(configContainer, Checksum);
 
                 // Group Indicies are generated client-side
                 if (IsGroupIndex)
                     return;
 
-                string saveLocation = Helpers.GetCDNPath(checksum.ToString() + ".index", "data", directory, true);
+                string saveLocation = Helpers.GetCDNPath(Checksum.ToString() + ".index", "data", directory, true);
                 if (!File.Exists(saveLocation))
                 {
                     // save to disk
                     File.WriteAllBytes(saveLocation, ms.ToArray());
-
-                    // update file checksum
-                    Checksum = checksum;
                 }
             }
         }
