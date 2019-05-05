@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Linq;
 
 namespace TACT.Net.Common
 {
@@ -40,10 +41,35 @@ namespace TACT.Net.Common
         /// Determines a file exists before attempting to delete
         /// </summary>
         /// <param name="filename"></param>
-        public static void Delete(string filename)
+        public static void Delete(string filename, bool deleteParentFolder = false)
         {
             if (File.Exists(filename))
                 File.Delete(filename);
+
+            string folderPath = Path.GetDirectoryName(filename);
+
+            if (!Directory.EnumerateFileSystemEntries(folderPath).Any())
+            {
+                Directory.Delete(folderPath);
+
+                string parentFolder = Directory.GetParent(folderPath).FullName;
+                if (!Directory.EnumerateFileSystemEntries(parentFolder).Any())
+                {
+                    Directory.Delete(parentFolder);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Delete if file and if folder is empty the folder and parent
+        /// </summary>
+        /// <param name="filename"></param>
+        /// <param name="directory"></param>
+        /// <param name="folder"></param>
+        public static void Delete(string filename, string directory, string folder = "data")
+        {
+            string filePath = GetCDNPath(filename, folder, directory);
+            Delete(filePath, true);
         }
 
         /// <summary>

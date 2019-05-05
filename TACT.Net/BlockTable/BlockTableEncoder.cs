@@ -202,7 +202,6 @@ namespace TACT.Net.BlockTable
         /// <returns></returns>
         public static IDictionary<string, CASRecord> BulkEncodeAndExport(string inputDirectory, string outputDirectory, Func<string, string> nameFactory = null)
         {
-            var resultSet = new ConcurrentDictionary<string, CASRecord>();
             var files = Directory.EnumerateFiles(inputDirectory, "*", SearchOption.AllDirectories);
 
             return BulkEncodeAndExport(files, outputDirectory, nameFactory);
@@ -219,7 +218,7 @@ namespace TACT.Net.BlockTable
         {
             var resultSet = new ConcurrentDictionary<string, CASRecord>();
 
-            Parallel.ForEach(filenames, file => resultSet.TryAdd(file, EncodeAndExport(directory, file, nameFactory?.Invoke(file))));
+            Parallel.ForEach(filenames, file => resultSet.TryAdd(file, EncodeAndExport(file, directory, nameFactory?.Invoke(file))));
             return resultSet;
         }
 

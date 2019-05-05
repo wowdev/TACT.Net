@@ -20,6 +20,7 @@ namespace TACT.Net.Encoding
     /// </summary>
     public class EncodingFile : ISystemFile
     {
+        public string FilePath { get; private set; }
         public EncodingHeader EncodingHeader { get; private set; }
         public MD5Hash Checksum { get; private set; }
         public List<string> ESpecStringTable { get; private set; }
@@ -65,6 +66,7 @@ namespace TACT.Net.Encoding
             if (!File.Exists(path))
                 throw new FileNotFoundException("Unable to open EncodingFile", path);
 
+            FilePath = path;
             Partial = partial;
 
             using (var fs = File.OpenRead(path))
@@ -179,6 +181,10 @@ namespace TACT.Net.Encoding
                 string saveLocation = Helpers.GetCDNPath(record.EKey.ToString(), "data", directory, true);
                 using (var fs = File.Create(saveLocation))
                 {
+                    // remove old file
+                    if (FilePath != null && FilePath != saveLocation)
+                        Helpers.Delete(FilePath, true);
+
                     bt.WriteTo(fs);
                     record.BLTEPath = saveLocation;
                 }
@@ -194,6 +200,7 @@ namespace TACT.Net.Encoding
             }
 
             Checksum = record.CKey;
+            FilePath = record.BLTEPath;
             return record;
         }
 
