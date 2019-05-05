@@ -41,6 +41,7 @@ namespace TACT.Net.Common
         /// Determines a file exists before attempting to delete
         /// </summary>
         /// <param name="filename"></param>
+        /// <param name="deleteParentFolder"></param>
         public static void Delete(string filename, bool deleteParentFolder = false)
         {
             if (File.Exists(filename))
