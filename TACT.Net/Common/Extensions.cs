@@ -236,11 +236,16 @@ namespace TACT.Net.Common
         /// Normalise local file path to casc path
         /// </summary>
         /// <param name="str"></param>
+        /// <param name="basePath"></param>
         /// <returns></returns>
         public static string WoWNormalise(this string str, string basePath = "")
         {
-            return str.Replace(basePath, "")
-                      .TrimStart(new char[] { '\\', '/' })
+            str = str.Trim();
+
+            if (basePath != "")
+                str = str.Replace(basePath, "");
+
+            return str.TrimStart(new char[] { '\\', '/' })
                       .Replace('\\', '/')
                       .ToLowerInvariant();
         }

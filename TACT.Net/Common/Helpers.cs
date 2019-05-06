@@ -49,7 +49,7 @@ namespace TACT.Net.Common
 
             string folderPath = Path.GetDirectoryName(filename);
 
-            if (!Directory.EnumerateFileSystemEntries(folderPath).Any())
+            if (Directory.Exists(folderPath) && !Directory.EnumerateFileSystemEntries(folderPath).Any())
             {
                 Directory.Delete(folderPath);
 

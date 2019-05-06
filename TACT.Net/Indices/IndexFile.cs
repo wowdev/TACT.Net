@@ -200,7 +200,8 @@ namespace TACT.Net.Indices
                 UpdateConfig(configContainer, newChecksum, Checksum);
 
                 // remove old index file
-                Helpers.Delete(Checksum.ToString() + ".index", directory);
+                if (!Checksum.IsEmpty)
+                    Helpers.Delete(Checksum.ToString() + ".index", directory);
 
                 // update Checksum
                 Checksum = newChecksum;
