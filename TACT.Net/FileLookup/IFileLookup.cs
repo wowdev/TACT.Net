@@ -8,6 +8,7 @@
         /// Opens the FileLookup and loads its contents
         /// </summary>
         void Open();
+
         /// <summary>
         /// Saves the FileLookup to it's backing storage
         /// </summary>
