@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using Joveler.Compression.ZLib;
 using TACT.Net.Common.ZLib;
 
 /*

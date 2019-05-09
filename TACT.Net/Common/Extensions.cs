@@ -249,6 +249,38 @@ namespace TACT.Net.Common
                       .Replace('\\', '/')
                       .ToLowerInvariant();
         }
+
+        /// <summary>
+        /// Compresses and resuses the ZLibStream's own BaseStream
+        /// </summary>
+        /// <param name="offset"></param>
+        public static void WriteBasestream(this Joveler.Compression.ZLib.ZLibStream stream, long offset = 0)
+        {
+            stream.BaseStream.Position = 0;
+
+            // the largest multiple of 4096 smaller than the LOH threshold
+            byte[] buffer = new byte[81920];
+
+            // calculate the read position delta
+            offset -= stream.TotalIn;
+
+            // reading in chunks and jumping stream position is faster and allocates less with large streams
+            int read;
+            while ((read = stream.BaseStream.Read(buffer, 0, buffer.Length)) != 0)
+            {
+                // jump to the write position
+                stream.BaseStream.Position = offset + stream.TotalOut;
+                stream.Write(buffer, 0, read);
+
+                // reset to the next read position
+                stream.BaseStream.Position = offset + stream.TotalIn;
+            }
+
+            // jump to the final write position and flush the buffer
+            stream.BaseStream.Position = offset + stream.TotalOut;
+            stream.Flush();
+        }
+
         #endregion
     }
 }

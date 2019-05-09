@@ -1,6 +1,8 @@
 ﻿using System;
 using System.IO;
 using System.Security.Cryptography;
+using Joveler.Compression.ZLib;
+using TACT.Net.Common;
 using TACT.Net.Common.ZLib;
 
 namespace TACT.Net.BlockTable
@@ -103,8 +105,8 @@ namespace TACT.Net.BlockTable
 
             if (EncodingMap.Type == EType.ZLib)
             {
-                var writeType = EncodingMap.MPQ ? ZLibWriteType.MPQ : ZLibWriteType.ZLib;
-                using (var zlib = new ZLibStream(this, ZLibMode.Compress, (ZLibCompLevel)EncodingMap.Level, writeType, true))
+                var writeType = EncodingMap.MPQ ? 0 : ZLibWriteType.ZLib;
+                using (var zlib = ZLibFactory.CreateStream(this, ZLibMode.Compress, (ZLibCompLevel)EncodingMap.Level, writeType, true))
                 {
                     zlib.WriteBasestream();
                     CompressedSize = (uint)zlib.TotalOut + 1;
