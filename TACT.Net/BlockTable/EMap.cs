@@ -22,7 +22,9 @@
         {
             Type = type;
             Level = level;
-            MPQ = mpq;
+
+            // TODO - 0 windowbits appears to be unsupported by zlibwapi
+            MPQ = false; // mpq;
         }
 
         /// <summary>
