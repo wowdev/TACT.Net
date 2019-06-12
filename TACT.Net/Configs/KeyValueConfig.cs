@@ -104,7 +104,11 @@ namespace TACT.Net.Configs
         /// <returns></returns>
         public string GetValue(string key, int index = 0)
         {
-            return GetValues(key)?[index];
+            var values = GetValues(key);
+            if (values == null || values.Count <= index)
+                return null;
+
+            return values[index];
         }
 
         /// <summary>
@@ -126,8 +130,9 @@ namespace TACT.Net.Configs
         /// <param name="index"></param>
         public void SetValue(string key, object value, int index = 0)
         {
-            if (_data.ContainsKey(key))
-                _data[key][index] = value.ToString();
+            if (_data.TryGetValue(key, out var values))
+                if (values.Count > index)
+                    values[index] = value.ToString();
         }
 
         /// <summary>
@@ -149,8 +154,8 @@ namespace TACT.Net.Configs
         /// <param name="index"></param>
         public void InsertValue(string key, string value, int index)
         {
-            if (_data.ContainsKey(key))
-                _data[key].Insert(index, value);
+            if (_data.TryGetValue(key, out var values))
+                values.Insert(index, value);
         }
 
         /// <summary>
@@ -171,8 +176,9 @@ namespace TACT.Net.Configs
         /// <param name="index"></param>
         public void RemoveValue(string key, int index)
         {
-            if (_data.ContainsKey(key))
-                _data[key].RemoveAt(index);
+            if (_data.TryGetValue(key, out var values))
+                if (values.Count > index)
+                    values.RemoveAt(index);
         }
 
         #endregion
