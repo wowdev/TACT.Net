@@ -46,8 +46,11 @@ namespace TACT.Net.Configs
         public MD5Hash EncodingMD5 => TryGetKey(BuildConfig, "encoding");
         public MD5Hash EncodingEKey => TryGetKey(BuildConfig, "encoding", 1);
         public MD5Hash InstallMD5 => TryGetKey(BuildConfig, "install");
+        public MD5Hash InstallEKey => TryGetKey(BuildConfig, "install", 1);
         public MD5Hash DownloadMD5 => TryGetKey(BuildConfig, "download");
+        public MD5Hash DownloadEKey => TryGetKey(BuildConfig, "download", 1);
         public MD5Hash DownloadSizeMD5 => TryGetKey(BuildConfig, "size");
+        public MD5Hash DownloadSizeEKey => TryGetKey(BuildConfig, "size", 1);
         public MD5Hash PatchMD5 => TryGetKey(BuildConfig, "patch");
 
         #endregion
