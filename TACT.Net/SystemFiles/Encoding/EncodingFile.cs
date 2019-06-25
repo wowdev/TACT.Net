@@ -380,14 +380,14 @@ namespace TACT.Net.Encoding
         /// <returns></returns>
         private PageIndexTable WritePageImpl<T>(BinaryWriter bw, int pageSize, IDictionary<MD5Hash, T> container) where T : EncodingEntryBase
         {
-            PageIndexTable pageIndices = new PageIndexTable();
-            bool EOFflag = typeof(T) == typeof(EncodingEncodedEntry);
-
             using (var md5 = MD5.Create())
             {
                 // split entries into pages of pageSize
                 var pages = EnumerablePartitioner.ConcreteBatch(container.Values, pageSize, (x) => x.Size);
                 uint pageCount = (uint)pages.Count();
+
+                PageIndexTable pageIndices = new PageIndexTable((int)pageCount);
+                bool EOFflag = typeof(T) == typeof(EncodingEncodedEntry);
 
                 // set Header PageCount
                 EncodingHeader.SetPageCount<T>(pageCount);
@@ -412,9 +412,9 @@ namespace TACT.Net.Encoding
                     pageIndices[page[0].Key] = bw.BaseStream.HashSlice(md5, bw.BaseStream.Position - pageSize, pageSize);
                     page.Clear();
                 }
-            }
 
-            return pageIndices;
+                return pageIndices;
+            }
         }
 
         /// <summary>
