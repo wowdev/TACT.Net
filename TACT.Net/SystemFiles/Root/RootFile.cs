@@ -116,6 +116,7 @@ namespace TACT.Net.Root
                 throw new NotSupportedException($"Unable to read RootFile stream");
 
             _blocks.Capacity = 0x400; // arbitrary number based on 8.1.5
+            _idLookup.EnsureCapacity((int)RootHeader.NamedRecordCount);
 
             using (var br = new BinaryReader(stream))
             {
@@ -127,10 +128,22 @@ namespace TACT.Net.Root
                 {
                     var block = CreateRootBlock();
                     block.Read(br);
-                    _blocks.Add(block);
+                    _blocks.Add(block);                    
                 }
 
                 _blocks.TrimExcess();
+
+                // build the namehash to id lookup
+                foreach(var block in _blocks)
+                {
+                    if (block.ContentFlags.HasFlag(ContentFlags.NoNameHash))
+                        continue;
+
+                    _idLookup.EnsureCapacity(_idLookup.Count + block.Records.Count);
+                    foreach (var entry in block.Records)
+                        _idLookup[entry.Value.NameHash] = entry.Key;
+                }
+
                 Checksum = stream.MD5Hash();
             }
 
@@ -375,7 +388,14 @@ namespace TACT.Net.Root
         /// </summary>
         /// <param name="fileid"></param>
         /// <returns></returns>
-        public bool ContainsFileId(uint fileid) => _idLookup.ContainsKey(fileid);
+        public bool ContainsFileId(uint fileid)
+        {
+            foreach (var block in _blocks)
+                if (block.Records.ContainsKey(fileid))
+                    return true;
+
+            return false;
+        }
         /// <summary>
         /// Determines if the supplied NameHash exists
         /// </summary>
