@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using TACT.Net.BlockTable;
 using TACT.Net.Common;
 using TACT.Net.Cryptography;
@@ -128,13 +127,13 @@ namespace TACT.Net.Root
                 {
                     var block = CreateRootBlock();
                     block.Read(br);
-                    _blocks.Add(block);                    
+                    _blocks.Add(block);
                 }
 
                 _blocks.TrimExcess();
 
                 // build the namehash to id lookup
-                foreach(var block in _blocks)
+                foreach (var block in _blocks)
                 {
                     if (block.ContentFlags.HasFlag(ContentFlags.NoNameHash))
                         continue;
