@@ -175,10 +175,10 @@ namespace TACT.Net.BlockTable
                 spec = "256K*=";
             // closest floored KB + greedy
             else if (CompressedSize > 1024)
-                spec = (int)Math.Floor(CompressedSize / 1024d) + "K*";
+                spec = (int)Math.Floor(CompressedSize / 1024d) + "K*=";
             // actual size + greedy
             else
-                spec = CompressedSize + "*";
+                spec = CompressedSize + "*=";
 
             spec += EncodingMap.ToString();
 
