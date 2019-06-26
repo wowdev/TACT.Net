@@ -181,10 +181,6 @@ namespace TACT.Net.Encoding
                 string saveLocation = Helpers.GetCDNPath(record.EKey.ToString(), "data", directory, true);
                 using (var fs = File.Create(saveLocation))
                 {
-                    // remove old file
-                    if (FilePath != null && FilePath != saveLocation)
-                        Helpers.Delete(FilePath, true);
-
                     bt.WriteTo(fs);
                     record.BLTEPath = saveLocation;
                 }
