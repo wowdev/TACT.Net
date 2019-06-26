@@ -25,7 +25,7 @@ namespace TACT.Net.Configs
         /// <summary>
         /// Lists the various patch files and their size, encoding and checksums
         /// </summary>
-        public KeyValueConfig PatchConfig { get; private set; }
+        public KeyValueConfig PatchConfig { get; set; }
         /// <summary>
         /// Information for downloading files by region
         /// </summary>
@@ -175,8 +175,13 @@ namespace TACT.Net.Configs
             if (CDNConfigMD5.Value != null)
                 CDNConfig = new KeyValueConfig(CDNConfigMD5.ToString(), directory, ConfigType.CDNConfig);
 
+            // optionally load the patch config
             if (PatchConfigMD5.Value != null)
-                PatchConfig = new KeyValueConfig(PatchConfigMD5.ToString(), directory, ConfigType.PatchConfig);
+            {
+                string path = Helpers.GetCDNPath(PatchConfigMD5.ToString(), "config", directory);
+                if (File.Exists(path))
+                    PatchConfig = new KeyValueConfig(PatchConfigMD5.ToString(), directory, ConfigType.PatchConfig);
+            }
         }
 
         /// <summary>
@@ -186,7 +191,7 @@ namespace TACT.Net.Configs
         public void Save(string directory)
         {
             // save and update patch config value
-            if (PatchConfigMD5.Value != null)
+            if (PatchConfig != null)
             {
                 PatchConfig?.Write(directory);
                 BuildConfig?.SetValue("patch-config", PatchConfig.Checksum.ToString());
