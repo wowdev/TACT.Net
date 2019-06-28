@@ -101,10 +101,6 @@ namespace TACT.Net.Indices
                 index.WriteBlob(directory);
             }
 
-            // TODO 1. verify if this is required 2. fix
-            // compute the Data Index Group hash
-            //GenerateIndexGroup(directory, configContainer);
-
             // reload indices
             _indices.Clear();
             Open(directory, _useParallelism);

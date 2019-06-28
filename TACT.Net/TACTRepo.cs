@@ -60,7 +60,6 @@ namespace TACT.Net
             InstallFile = new Install.InstallFile();
             DownloadFile = new Download.DownloadFile();
 
-            // TODO check this
             ApplyVersionSpecificSettings(build);            
 
             // set the default tag entries
@@ -83,7 +82,6 @@ namespace TACT.Net
             if (uint.TryParse(ConfigContainer?.VersionsFile?.GetValue("BuildId", locale), out uint build))
                 Build = build;
 
-            // TODO check this
             ApplyVersionSpecificSettings(build);
 
             IndexContainer = new Indices.IndexContainer();
@@ -114,7 +112,6 @@ namespace TACT.Net
             if (ConfigContainer.PatchMD5.Value != null)
                 PatchFile = new Patch.PatchFile(BaseDirectory, ConfigContainer.PatchMD5);
 
-            // TODO check this
             ApplyVersionSpecificSettings(Build);
         }
 
@@ -184,12 +181,15 @@ namespace TACT.Net
                     PatchFile = new Patch.PatchFile(BaseDirectory, patchEKey);
             }
 
-            // TODO check this
             ApplyVersionSpecificSettings(Build);
         }
 
         public void Save(string directory)
         {
+            // if this field exists and mismatches the generated file; the client will error
+            // if this field is missing the client will generate the file and variable itself
+            ConfigContainer?.CDNConfig?.GetValues("archive-group")?.Clear();
+
             IndexContainer?.Save(directory, ConfigContainer);
             RootFile?.Write(directory, this);
             DownloadFile?.Write(directory, this);
