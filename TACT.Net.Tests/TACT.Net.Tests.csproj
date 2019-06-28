@@ -28,6 +28,9 @@
     <None Update="Resources\seagiant2_28807.m2">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="Resources\ui_mainmenu_legion_27826.m2">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

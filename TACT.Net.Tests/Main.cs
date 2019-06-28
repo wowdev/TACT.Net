@@ -202,7 +202,6 @@ namespace TACT.Net.Tests
         }
 
         [TestMethod]
-        //[Ignore]
         public void CreateNewTactRepo()
         {
             if (Directory.Exists(@"C:\wamp64\www\tpr"))
@@ -241,6 +240,61 @@ namespace TACT.Net.Tests
             record.FileName = "WoW.exe";
             tactRepo.InstallFile.AddOrUpdate(record, tactRepo);
 
+            tactRepo.Save(tactRepo.BaseDirectory);
+        }
+
+        [TestMethod]
+        public void OverrideExistingFile_Simple()
+        {
+            // This is "simple" as I only have the Encoding, Root and configs downloaded - no CDN backup.
+            // By using CDNClient all of this can be achieved without any source files on disk.
+
+            string customfilepath = "Resources/ui_mainmenu_legion_27826.m2"; // local filename
+            string targetfilename = "interface/glues/models/ui_mainmenu_battleforazeroth/ui_mainmenu_battleforazeroth.m2"; // root filename
+            uint targetfileid = 2021650; // filedataid of the above
+
+            TACTRepo tactRepo = new TACTRepo(@"C:\wamp64\www")
+            {
+                ConfigContainer = new ConfigContainer("wow", Locale.EU)
+            };
+
+            // open the configs
+            // note: the Patch file is removed since it isn't accessible (aka downloaded)
+            tactRepo.ConfigContainer.OpenLocal(tactRepo.BaseDirectory);
+
+            // update the cdns config to point to localhost
+            var hosts = tactRepo.ConfigContainer.CDNsFile.GetValue("hosts", Locale.EU);
+            if (!hosts.Contains("127.0.0.1"))
+                tactRepo.ConfigContainer.CDNsFile.SetValue("hosts", hosts.Insert(0, "127.0.0.1 "), Locale.EU);
+
+            var servers = tactRepo.ConfigContainer.CDNsFile.GetValue("servers", Locale.EU);
+            if (!servers.Contains("http://127.0.0.1"))
+                tactRepo.ConfigContainer.CDNsFile.SetValue("servers", hosts.Insert(0, "http://127.0.0.1 "), Locale.EU);
+
+            // create an index container
+            tactRepo.IndexContainer = new Indices.IndexContainer();
+
+            // open encoding
+            tactRepo.EncodingFile = new Encoding.EncodingFile(tactRepo.BaseDirectory, tactRepo.ConfigContainer.EncodingEKey);
+
+            // open root
+            tactRepo.EncodingFile.TryGetCKeyEntry(tactRepo.ConfigContainer.RootMD5, out var rootCKeyEntry);
+            tactRepo.RootFile = new Root.RootFile(tactRepo.BaseDirectory, rootCKeyEntry.EKey)
+            {
+                FileLookup = new MockFileLookup()
+                {
+                    [targetfilename] = targetfileid // mock the custom file
+                }
+            };
+
+            // encode and export the "custom" file to a temp folder
+            // - one must export otherwise the file won't be added to an archive
+            var blte = BlockTable.BlockTableEncoder.EncodeAndExport(customfilepath, "test", targetfilename);
+
+            // add the "custom" file to root, this will propagate via 'tactRepo'
+            tactRepo.RootFile.AddOrUpdate(blte, tactRepo);
+
+            // save the repo
             tactRepo.Save(tactRepo.BaseDirectory);
         }
 

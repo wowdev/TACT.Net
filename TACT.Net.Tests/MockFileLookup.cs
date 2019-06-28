@@ -17,6 +17,12 @@ namespace TACT.Net.Tests
             FileLookup = new Dictionary<string, uint>(StringComparer.OrdinalIgnoreCase);
         }
 
+        public uint this[string name]
+        {
+            get => FileLookup[name];
+            set => FileLookup[name] = value;
+        }
+
         public uint GetOrCreateFileId(string filename)
         {
             if (!FileLookup.TryGetValue(filename, out uint id))
