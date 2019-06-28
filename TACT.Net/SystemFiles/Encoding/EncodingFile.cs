@@ -150,6 +150,9 @@ namespace TACT.Net.Encoding
             if (Partial)
                 throw new NotSupportedException("Writing is not supported for partial EncodingFiles");
 
+            if (_EKeyEntries.Count != _CKeyEntries.Count)
+                throw new InvalidDataException("CKeyEntry and EKeyEntry count must match");
+
             EBlock[] eblocks = new EBlock[_EncodingMap.Length];
 
             CASRecord record;
@@ -210,16 +213,24 @@ namespace TACT.Net.Encoding
         /// <param name="record"></param>
         public void AddOrUpdate(CASRecord record)
         {
-            // CKeyPageTable - overwrite existing
-            var cKeyEntry = new EncodingContentEntry
+            // CKeyPageTable
+            if (_CKeyEntries.TryGetValue(record.CKey, out var cKeyEntry))
             {
-                CKey = record.CKey,
-                DecompressedSize = record.EBlock.DecompressedSize
-            };
-            cKeyEntry.EKey = record.EKey;
-            _CKeyEntries[record.CKey] = cKeyEntry;
+                _EKeyEntries.Remove(cKeyEntry.EKey);
+                cKeyEntry.EKey = record.EKey;
+            }
+            else
+            {
+                cKeyEntry = new EncodingContentEntry
+                {
+                    CKey = record.CKey,
+                    EKey = record.EKey,
+                    DecompressedSize = record.EBlock.DecompressedSize,
+                };
 
-            // EKeyPageTable - overwrite existing
+                _CKeyEntries.Add(record.CKey, cKeyEntry);
+            }
+
             // get or add to the ESpecStringTable
             int especIndex = ESpecStringTable.IndexOf(record.ESpec);
             if (especIndex == -1)
@@ -228,22 +239,31 @@ namespace TACT.Net.Encoding
                 ESpecStringTable.Insert(especIndex, record.ESpec);
             }
 
-            // create the entry
+            // EKeyPageTable
             var eKeyEntry = new EncodingEncodedEntry()
             {
                 CompressedSize = record.EBlock.CompressedSize,
                 EKey = record.EKey,
                 ESpecIndex = (uint)especIndex
             };
+
             _EKeyEntries[record.EKey] = eKeyEntry;
         }
-
+        /// <summary>
+        /// Removes a Content Entry
+        /// <para>Note: CKeys and EKeys must have a 1:1 relationship</para>
+        /// </summary>
+        /// <param name="entry"></param>
         public void AddOrUpdate(EncodingContentEntry entry)
         {
             entry.Validate();
             _CKeyEntries[entry.CKey] = entry;
         }
-
+        /// <summary>
+        /// Removes am Encoding Entry
+        /// <para>Note: CKeys and EKeys must have a 1:1 relationship</para>
+        /// </summary>
+        /// <param name="entry"></param>
         public void AddOrUpdate(EncodingEncodedEntry entry)
         {
             entry.Validate();
@@ -254,23 +274,41 @@ namespace TACT.Net.Encoding
         /// Removes a CASRecord
         /// </summary>
         /// <param name="record"></param>
-        public void Remove(CASRecord record)
+        public bool Remove(CASRecord record)
         {
-            if (_CKeyEntries.TryGetValue(record.CKey, out var cKeyEntry))
-                Remove(cKeyEntry);
-            if (_EKeyEntries.TryGetValue(record.CKey, out var eKeyEntry))
-                Remove(eKeyEntry);
+            if (record == null)
+                return false;
+
+            if (_CKeyEntries.TryGetValue(record.CKey, out var entry))
+            {
+                _CKeyEntries.Remove(record.CKey);
+                _EKeyEntries.Remove(record.EKey);
+                return true;
+            }
+
+            return false;
+        }
+        /// <summary>
+        /// Removes a Content Entry
+        /// <para>Note: CKeys and EKeys must have a 1:1 relationship</para>
+        /// </summary>
+        /// <param name="entry"></param>
+        /// <returns></returns>
+        public bool Remove(EncodingContentEntry entry)
+        {
+            return entry == null || _CKeyEntries.Remove(entry.CKey);
+        }
+        /// <summary>
+        /// Removes an Encoding Entry
+        /// <para>Note: CKeys and EKeys must have a 1:1 relationship</para>
+        /// </summary>
+        /// <param name="entry"></param>
+        /// <returns></returns>
+        public bool Remove(EncodingEncodedEntry entry)
+        {
+            return entry == null || _EKeyEntries.Remove(entry.EKey);
         }
 
-        public void Remove(EncodingContentEntry entry)
-        {
-            _CKeyEntries.Remove(entry.CKey);
-        }
-
-        public void Remove(EncodingEncodedEntry entry)
-        {
-            _EKeyEntries.Remove(entry.EKey);
-        }
 
         /// <summary>
         /// Gets a CKeyEntry by it's Content Key
@@ -280,15 +318,17 @@ namespace TACT.Net.Encoding
         /// <returns></returns>
         public bool TryGetCKeyEntry(MD5Hash ckey, out EncodingContentEntry entry) => _CKeyEntries.TryGetValue(ckey, out entry);
         /// <summary>
-        /// Returns all CKeyEntries containing a specific Encoding Key
+        /// Gets a Content Entry by it's Encoding Key
         /// </summary>
         /// <param name="ekey"></param>
         /// <returns></returns>
-        public IEnumerable<EncodingContentEntry> GetCKeyEntryByEKey(MD5Hash ekey)
+        public EncodingContentEntry GetCKeyEntryByEKey(MD5Hash ekey)
         {
             foreach (var ckeyEntry in _CKeyEntries.Values)
                 if (ckeyEntry.EKey == ekey)
-                    yield return ckeyEntry;
+                    return ckeyEntry;
+
+            return null;
         }
         /// <summary>
         /// Gets a EKeyEntry by it's Encoding Key
