@@ -197,11 +197,11 @@ namespace TACT.Net.Indices
                 // compute filename - from ContentsHash to EOF
                 MD5Hash newChecksum = ms.HashSlice(md5, footerStartPos + IndexFooter.ChecksumSize, IndexFooter.Size - IndexFooter.ChecksumSize);
                 // update the CDN Config
-                UpdateConfig(configContainer, newChecksum, Checksum);
+                UpdateConfig(configContainer, newChecksum, bw.BaseStream.Length);
 
-                // remove old index file
-                if (!Checksum.IsEmpty)
-                    Helpers.Delete(Checksum.ToString() + ".index", directory);
+                //// remove old index file
+                //if (!Checksum.IsEmpty)
+                //    Helpers.Delete(Checksum.ToString() + ".index", directory);
 
                 // update Checksum
                 Checksum = newChecksum;
@@ -267,7 +267,7 @@ namespace TACT.Net.Indices
                         record.WriteTo(fs);
                         fs.Flush();
                     }
-                    else if (blobLength > entry.Offset)
+                    else if (blobLength >= entry.Offset + (uint)entry.CompressedSize)
                     {
                         // copy data from the old blob
                         blob.Position = entry.Offset;
@@ -382,40 +382,57 @@ namespace TACT.Net.Indices
             return type;
         }
 
-        private void UpdateConfig(Configs.ConfigContainer configContainer, MD5Hash hash, MD5Hash? oldHash = null)
+        private void UpdateConfig(Configs.ConfigContainer configContainer, MD5Hash hash, long size)
         {
             if (configContainer?.CDNConfig == null)
                 return;
 
-            // determine the field name
-            string identifier;
+            // determine the field names
+            string archivefield, sizefield;
             if (IsGroupIndex)
-                identifier = IsPatchIndex ? "patch-archive-group" : "archive-group";
+            {
+                archivefield = IsPatchIndex ? "patch-archive-group" : "archive-group";
+                sizefield = null;
+            }
             else if (IsLooseIndex)
-                identifier = IsPatchIndex ? "patch-file-index" : "file-index";
+            {
+                archivefield = IsPatchIndex ? "patch-file-index" : "file-index";
+                sizefield = archivefield + "-size";
+            }
             else
-                identifier = IsPatchIndex ? "patch-archives" : "archives";
+            {
+                archivefield = IsPatchIndex ? "patch-archives" : "archives";
+                sizefield = archivefield + "-index-size";
+            }
 
-            // update the collection
-            var collection = configContainer.CDNConfig.GetValues(identifier);
-            if (collection != null)
+            // update the collections
+            var archives = configContainer.CDNConfig.GetValues(archivefield);
+            var sizes = configContainer.CDNConfig.GetValues(sizefield);
+
+            if (archives != null)
             {
                 if (IsGroupIndex)
                 {
-                    collection[0] = hash.ToString(); // group indicies are single entries
+                    archives[0] = hash.ToString(); // group indicies are single entries
                 }
                 else
                 {
-                    // Remove old hash
-                    if (oldHash.Value != null && collection.Contains(oldHash.ToString()))
-                        collection.Remove(oldHash.ToString());
+                    // remove old hash
+                    int index = archives.IndexOf(Checksum.ToString());
+                    if (Checksum.Value != null && index > -1)
+                    {
+                        archives.RemoveAt(index);
+                        sizes?.RemoveAt(index);
+                    }
 
-                    collection.Remove(Checksum.ToString()); // all others are collections
-                    collection.Add(hash.ToString());
+                    // add if new
+                    if (!archives.Contains(hash.ToString()))
+                    {
+                        archives.Add(hash.ToString());
+                        sizes?.Add(size.ToString());
+                    }
                 }
             }
-
-            // TODO sizes - not sure how these are calculated
         }
 
         private (int PageSize, int EntriesPerPage, int PageCount) GetFileDimensions()

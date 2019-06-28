@@ -279,10 +279,38 @@ namespace TACT.Net.Configs
             if (Type != ConfigType.CDNConfig)
                 return;
 
-            string[] items = new[] { "patch-file-index", "file-index", "patch-archives", "archives" };
-            foreach (var item in items)
-                if (_data.ContainsKey(item) && _data[item].Count > 0)
-                    _data[item].Sort(new MD5HashComparer());
+            // archive collection - size collection
+            string[,] entries = new string[,]
+            {
+                { "patch-file-index", "patch-file-index-size"  },
+                { "file-index",       "file-index-size"  },
+                { "patch-archives",   "patch-archives-index-size"  },
+                { "archives",         "archives-index-size"  },
+            };
+
+            var comparer = new MD5HashComparer();
+
+            for (int i = 0; i < entries.GetLength(0); i++)
+            {
+                if (_data.TryGetValue(entries[i, 0], out var values) && values.Count > 1)
+                {
+                    if (!_data.TryGetValue(entries[i, 1], out var sizes))
+                    {
+                        values.Sort(comparer);                        
+                    }
+                    else
+                    {
+                        // sizes and values must maintain same index
+                        var sort = values.Zip(sizes, (v, s) => (v, s)).OrderBy(x => x.v, comparer).ToArray();
+                        for (int j = 0; j < sort.Length; j++)
+                        {
+                            values[j] = sort[j].v;
+                            sizes[j] = sort[j].s;
+                        }
+                    }
+                }
+            }
+
         }
 
         #endregion
