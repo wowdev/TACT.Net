@@ -32,19 +32,15 @@ namespace TACT.Net.Root
             }
         }
         public string FilePath { get; private set; }
-
         /// <summary>
         /// LocaleFlags to target a specific locale
         /// </summary>
         public LocaleFlags LocaleFlags { get; set; } = LocaleFlags.enUS;
-
         /// <summary>
         /// ContentFlags to target a specific file set
         /// </summary>
         public ContentFlags ContentFlags { get; set; } = ContentFlags.None;
-
         public MD5Hash Checksum { get; private set; }
-
         public RootHeader RootHeader;
 
         private readonly EMap[] _EncodingMap = new[] { new EMap(EType.ZLib, 9) };

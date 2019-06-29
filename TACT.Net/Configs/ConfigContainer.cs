@@ -136,19 +136,19 @@ namespace TACT.Net.Configs
 
                 if (BuildConfigMD5.Value != null)
                 {
-                    string configUrl = string.Format("{0}/{1}", url.TrimEnd('/'), Helpers.GetCDNPath(BuildConfigMD5.ToString(), "config", "", false, true));
+                    string configUrl = string.Format("{0}/{1}", url.TrimEnd('/'), Helpers.GetCDNPath(BuildConfigMD5.ToString(), "config", url: true));
                     BuildConfig = new KeyValueConfig(webClient.OpenRead(configUrl), ConfigType.BuildConfig);
                 }
 
                 if (CDNConfigMD5.Value != null)
                 {
-                    string configUrl = string.Format("{0}/{1}", url.TrimEnd('/'), Helpers.GetCDNPath(CDNConfigMD5.ToString(), "config", "", false, true));
+                    string configUrl = string.Format("{0}/{1}", url.TrimEnd('/'), Helpers.GetCDNPath(CDNConfigMD5.ToString(), "config", url: true));
                     CDNConfig = new KeyValueConfig(webClient.OpenRead(configUrl), ConfigType.CDNConfig);
                 }
 
                 if (PatchConfigMD5.Value != null)
                 {
-                    string configUrl = string.Format("{0}/{1}", url.TrimEnd('/'), Helpers.GetCDNPath(PatchConfigMD5.ToString(), "config", "", false, true));
+                    string configUrl = string.Format("{0}/{1}", url.TrimEnd('/'), Helpers.GetCDNPath(PatchConfigMD5.ToString(), "config", url: true));
                     PatchConfig = new KeyValueConfig(webClient.OpenRead(configUrl), ConfigType.PatchConfig);
                 }
             }
