@@ -85,9 +85,12 @@ namespace TACT.Net.Network
                 try
                 {
                     using (var resp = (HttpWebResponse)await req.GetResponseAsync().ConfigureAwait(false))
+                    using (var respStream = resp.GetResponseStream())
                     {
-                        var respStream = resp.GetResponseStream();
-                        return ApplyDecryption ? Armadillo.Decrypt(cdnpath, respStream) : respStream;
+                        var resultStream = new MemoryStream();
+                        await (ApplyDecryption ? Armadillo.Decrypt(cdnpath, respStream) : respStream).CopyToAsync(resultStream);
+                        resultStream.Position = 0;
+                        return resultStream;
                     }
                 }
                 catch (WebException) { }
