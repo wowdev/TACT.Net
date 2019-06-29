@@ -200,9 +200,11 @@ namespace TACT.Net
 
             RootFile?.FileLookup?.Close();
         }
+        
         #endregion
 
         #region Helpers
+
         private void ApplyVersionSpecificSettings(uint build)
         {
             if (build > 24473 && DownloadFile != null)
@@ -235,6 +237,7 @@ namespace TACT.Net
 
             return key;
         }
+
         #endregion
     }
 }

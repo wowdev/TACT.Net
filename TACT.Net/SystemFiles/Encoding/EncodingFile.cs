@@ -308,8 +308,7 @@ namespace TACT.Net.Encoding
         {
             return entry == null || _EKeyEntries.Remove(entry.EKey);
         }
-
-
+        
         /// <summary>
         /// Gets a CKeyEntry by it's Content Key
         /// </summary>
