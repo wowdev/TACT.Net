@@ -74,6 +74,8 @@ namespace TACT.Net.Configs
         {
             Type = type;
 
+            if(stream == null)
+                throw new ArgumentNullException(nameof(stream));
             if (!stream.CanRead)
                 throw new NotSupportedException($"Unable to read {type} stream");
 

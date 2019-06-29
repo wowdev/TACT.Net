@@ -4,6 +4,7 @@ using System.IO;
 using TACT.Net.Common;
 using TACT.Net.Common.Patching;
 using TACT.Net.Cryptography;
+using TACT.Net.Network;
 
 namespace TACT.Net.Patch
 {
@@ -44,7 +45,22 @@ namespace TACT.Net.Patch
         /// </summary>
         /// <param name="directory">Base directory</param>
         /// <param name="ekey">PatchFile MD5</param>
-        public PatchFile(string directory, MD5Hash ekey) : this(Helpers.GetCDNPath(ekey.ToString(), "patch", directory)) { }
+        public PatchFile(string directory, MD5Hash ekey) :
+            this(Helpers.GetCDNPath(ekey.ToString(), "patch", directory))
+        { }
+
+        /// <summary>
+        /// Loads an existing PatchFile from a remote CDN
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="ekey"></param>
+        public PatchFile(CDNClient client, MD5Hash ekey) : this()
+        {
+            string url = Helpers.GetCDNPath(ekey.ToString(), "data", url: true);
+
+            using (var stream = client.OpenStream(url).Result)
+                Read(stream);
+        }
 
         /// <summary>
         /// Loads an existing PatchFile

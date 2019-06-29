@@ -7,6 +7,7 @@ using TACT.Net.Common;
 using TACT.Net.Cryptography;
 using TACT.Net.Encoding;
 using TACT.Net.FileLookup;
+using TACT.Net.Network;
 using TACT.Net.Root.Blocks;
 
 namespace TACT.Net.Root
@@ -87,7 +88,25 @@ namespace TACT.Net.Root
         /// </summary>
         /// <param name="directory">Base directory</param>
         /// <param name="ekey">RootFile MD5</param>
-        public RootFile(string directory, MD5Hash ekey) : this(Helpers.GetCDNPath(ekey.ToString(), "data", directory)) { }
+        public RootFile(string directory, MD5Hash ekey) :
+            this(Helpers.GetCDNPath(ekey.ToString(), "data", directory))
+        { }
+
+        /// <summary>
+        /// Loads an existing RootFile from a remote CDN
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="ekey"></param>
+        public RootFile(CDNClient client, MD5Hash ekey) : this()
+        {
+            _blocks.Clear();
+
+            string url = Helpers.GetCDNPath(ekey.ToString(), "data", url: true);
+
+            using (var stream = client.OpenStream(url).Result)
+            using (var bt = new BlockTableStreamReader(stream))
+                Read(bt);
+        }
 
         /// <summary>
         /// Loads an existing RootFile

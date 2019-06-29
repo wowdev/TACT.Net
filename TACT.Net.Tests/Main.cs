@@ -84,7 +84,7 @@ namespace TACT.Net.Tests
             tactRepo.ConfigContainer.OpenLocal(@"D:\Backup\");
             Assert.IsNotNull(tactRepo.ConfigContainer.VersionsFile);
             Assert.IsNotNull(tactRepo.ConfigContainer.BuildConfig);
-            Assert.IsFalse(tactRepo.ConfigContainer.RootMD5.IsEmpty);
+            Assert.IsFalse(tactRepo.ConfigContainer.RootCKey.IsEmpty);
         }
 
         [TestMethod]
@@ -108,7 +108,7 @@ namespace TACT.Net.Tests
             tactRepo.EncodingFile = new Encoding.EncodingFile(tactRepo.BaseDirectory, tactRepo.ConfigContainer.EncodingEKey);
 
             // get the root ckey
-            Assert.IsTrue(tactRepo.EncodingFile.TryGetCKeyEntry(tactRepo.ConfigContainer.RootMD5, out var rootCEntry));
+            Assert.IsTrue(tactRepo.EncodingFile.TryGetCKeyEntry(tactRepo.ConfigContainer.RootCKey, out var rootCEntry));
 
             // open the root
             tactRepo.RootFile = new Root.RootFile(tactRepo.BaseDirectory, rootCEntry.EKey);
@@ -182,7 +182,7 @@ namespace TACT.Net.Tests
             tactRepo.IndexContainer.Open(tactRepo.BaseDirectory);
 
             // open the patch file
-            tactRepo.PatchFile = new Patch.PatchFile(tactRepo.BaseDirectory, tactRepo.ConfigContainer.PatchMD5);
+            tactRepo.PatchFile = new Patch.PatchFile(tactRepo.BaseDirectory, tactRepo.ConfigContainer.PatchEKey);
 
             // get the seagiant2.m2 patch
             Assert.IsTrue(tactRepo.PatchFile.TryGet(new Cryptography.MD5Hash("8fbb9c89e91e0b30ab5eeec1cee0666d"), out var patchEntry));
@@ -278,7 +278,7 @@ namespace TACT.Net.Tests
             tactRepo.EncodingFile = new Encoding.EncodingFile(tactRepo.BaseDirectory, tactRepo.ConfigContainer.EncodingEKey);
 
             // open root
-            tactRepo.EncodingFile.TryGetCKeyEntry(tactRepo.ConfigContainer.RootMD5, out var rootCKeyEntry);
+            tactRepo.EncodingFile.TryGetCKeyEntry(tactRepo.ConfigContainer.RootCKey, out var rootCKeyEntry);
             tactRepo.RootFile = new Root.RootFile(tactRepo.BaseDirectory, rootCKeyEntry.EKey)
             {
                 FileLookup = new MockFileLookup()

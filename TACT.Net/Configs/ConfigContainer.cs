@@ -42,16 +42,16 @@ namespace TACT.Net.Configs
         public MD5Hash BuildConfigMD5 => TryGetKey(VersionsFile, "buildconfig");
         public MD5Hash CDNConfigMD5 => TryGetKey(VersionsFile, "cdnconfig");
         public MD5Hash PatchConfigMD5 => TryGetKey(BuildConfig, "patch-config");
-        public MD5Hash RootMD5 => TryGetKey(BuildConfig, "root");
-        public MD5Hash EncodingMD5 => TryGetKey(BuildConfig, "encoding");
+        public MD5Hash RootCKey => TryGetKey(BuildConfig, "root");
+        public MD5Hash EncodingCKey => TryGetKey(BuildConfig, "encoding");
         public MD5Hash EncodingEKey => TryGetKey(BuildConfig, "encoding", 1);
-        public MD5Hash InstallMD5 => TryGetKey(BuildConfig, "install");
+        public MD5Hash InstallCKey => TryGetKey(BuildConfig, "install");
         public MD5Hash InstallEKey => TryGetKey(BuildConfig, "install", 1);
-        public MD5Hash DownloadMD5 => TryGetKey(BuildConfig, "download");
+        public MD5Hash DownloadCKey => TryGetKey(BuildConfig, "download");
         public MD5Hash DownloadEKey => TryGetKey(BuildConfig, "download", 1);
-        public MD5Hash DownloadSizeMD5 => TryGetKey(BuildConfig, "size");
+        public MD5Hash DownloadSizeCKey => TryGetKey(BuildConfig, "size");
         public MD5Hash DownloadSizeEKey => TryGetKey(BuildConfig, "size", 1);
-        public MD5Hash PatchMD5 => TryGetKey(BuildConfig, "patch");
+        public MD5Hash PatchEKey => TryGetKey(BuildConfig, "patch");
 
         #endregion
 
@@ -103,9 +103,9 @@ namespace TACT.Net.Configs
         }
 
         /// <summary>
-        /// Opens the CDNs and Versions files from Ribbit and the config files from disk
+        /// Opens the CDNs, Versions from Ribbit and the config files from Blizzard's CDN
         /// </summary>
-        public void OpenRemote(string directory)
+        public void OpenRemote()
         {
             var ribbit = new RibbitClient(Locale);
 
@@ -114,47 +114,42 @@ namespace TACT.Net.Configs
             {
                 CDNsFile = new VariableConfig(cdnstream, ConfigType.CDNs);
                 VersionsFile = new VariableConfig(verstream, ConfigType.Versions);
-            }
 
-            LoadConfigs(directory);
+                if (!VersionsFile.HasLocale(Locale))
+                    throw new Exception($"Versions missing {Locale} locale");
+
+                var cdnClient = new CDNClient(this);
+
+                if (BuildConfigMD5.Value != null)
+                {
+                    string configUrl = Helpers.GetCDNPath(BuildConfigMD5.ToString(), "config", url: true);
+                    BuildConfig = new KeyValueConfig(cdnClient.OpenStream(configUrl).Result, ConfigType.BuildConfig);
+                }
+
+                if (CDNConfigMD5.Value != null)
+                {
+                    string configUrl = Helpers.GetCDNPath(CDNConfigMD5.ToString(), "config", url: true);
+                    CDNConfig = new KeyValueConfig(cdnClient.OpenStream(configUrl).Result, ConfigType.CDNConfig);
+                }
+
+                if (PatchConfigMD5.Value != null)
+                {
+                    string configUrl = Helpers.GetCDNPath(PatchConfigMD5.ToString(), "config", url: true);
+                    PatchConfig = new KeyValueConfig(cdnClient.OpenStream(configUrl).Result, ConfigType.PatchConfig);
+                }
+            }
         }
 
         /// <summary>
         /// Download and load the config files from remote
         /// </summary>
-        /// <param name="url"></param>
         /// <param name="directory"></param>
-        public void DownloadRemote(string url, string directory)
+        public void DownloadRemote(string directory)
         {
-            var webClient = new WebClient();
-
-            using (var cdnstream = webClient.OpenRead(string.Format("{0}/{1}/cdns", url.TrimEnd('/'), Product)))
-            using (var verstream = webClient.OpenRead(string.Format("{0}/{1}/versions", url.TrimEnd('/'), Product)))
-            {
-                CDNsFile = new VariableConfig(cdnstream, ConfigType.CDNs);
-                VersionsFile = new VariableConfig(verstream, ConfigType.Versions);
-
-                if (BuildConfigMD5.Value != null)
-                {
-                    string configUrl = string.Format("{0}/{1}", url.TrimEnd('/'), Helpers.GetCDNPath(BuildConfigMD5.ToString(), "config", url: true));
-                    BuildConfig = new KeyValueConfig(webClient.OpenRead(configUrl), ConfigType.BuildConfig);
-                }
-
-                if (CDNConfigMD5.Value != null)
-                {
-                    string configUrl = string.Format("{0}/{1}", url.TrimEnd('/'), Helpers.GetCDNPath(CDNConfigMD5.ToString(), "config", url: true));
-                    CDNConfig = new KeyValueConfig(webClient.OpenRead(configUrl), ConfigType.CDNConfig);
-                }
-
-                if (PatchConfigMD5.Value != null)
-                {
-                    string configUrl = string.Format("{0}/{1}", url.TrimEnd('/'), Helpers.GetCDNPath(PatchConfigMD5.ToString(), "config", url: true));
-                    PatchConfig = new KeyValueConfig(webClient.OpenRead(configUrl), ConfigType.PatchConfig);
-                }
-            }
-
+            OpenRemote();
             Save(directory);
         }
+
 
         /// <summary>
         /// Loads the Build, CDN and Patch configs

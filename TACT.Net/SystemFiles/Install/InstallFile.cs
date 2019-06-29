@@ -4,6 +4,7 @@ using System.IO;
 using TACT.Net.BlockTable;
 using TACT.Net.Common;
 using TACT.Net.Cryptography;
+using TACT.Net.Network;
 using TACT.Net.Tags;
 
 namespace TACT.Net.Install
@@ -59,7 +60,23 @@ namespace TACT.Net.Install
         /// </summary>
         /// <param name="directory">Base directory</param>
         /// <param name="ekey">InstallFile MD5</param>
-        public InstallFile(string directory, MD5Hash ekey) : this(Helpers.GetCDNPath(ekey.ToString(), "data", directory)) { }
+        public InstallFile(string directory, MD5Hash ekey) :
+            this(Helpers.GetCDNPath(ekey.ToString(), "data", directory))
+        { }
+
+        /// <summary>
+        /// Loads an existing InstallFile from a remote CDN
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="ekey"></param>
+        public InstallFile(CDNClient client, MD5Hash ekey) : this()
+        {
+            string url = Helpers.GetCDNPath(ekey.ToString(), "data", url: true);
+
+            using (var stream = client.OpenStream(url).Result)
+            using (var bt = new BlockTableStreamReader(stream))
+                Read(bt);
+        }
 
         /// <summary>
         /// Loads an existing InstallFile

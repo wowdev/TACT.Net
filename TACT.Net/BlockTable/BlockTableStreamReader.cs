@@ -52,7 +52,7 @@ namespace TACT.Net.BlockTable
 
         public BlockTableStreamReader(Stream src)
         {
-            stream = src;
+            stream = src ?? throw new ArgumentException(nameof(src));
             reader = new BinaryReader(src);
             Parse();
         }

@@ -6,6 +6,7 @@ using System.Security.Cryptography;
 using TACT.Net.BlockTable;
 using TACT.Net.Common;
 using TACT.Net.Cryptography;
+using TACT.Net.Network;
 
 namespace TACT.Net.Encoding
 {
@@ -84,6 +85,22 @@ namespace TACT.Net.Encoding
             this(Helpers.GetCDNPath(ekey.ToString(), "data", directory), partial)
         { }
 
+        /// <summary>
+        /// Loads an existing EncodingFile from a remote CDN
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="ekey"></param>
+        /// <param name="partial">Only reads the mandatory information. Prevents write support</param>
+        public EncodingFile(CDNClient client, MD5Hash ekey, bool partial = false) : this()
+        {
+            Partial = partial;
+
+            string url = Helpers.GetCDNPath(ekey.ToString(), "data", url: true);
+
+            using (var stream = client.OpenStream(url).Result)
+            using (var bt = new BlockTableStreamReader(stream))
+                Read(bt);
+        }
 
         /// <summary>
         /// Loads an existing EncodingFile
@@ -308,7 +325,7 @@ namespace TACT.Net.Encoding
         {
             return entry == null || _EKeyEntries.Remove(entry.EKey);
         }
-        
+
         /// <summary>
         /// Gets a CKeyEntry by it's Content Key
         /// </summary>
