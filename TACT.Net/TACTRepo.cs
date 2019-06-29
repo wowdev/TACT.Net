@@ -230,7 +230,7 @@ namespace TACT.Net
                     return new MD5Hash();
             }
 
-            string systemFileUrl = String.Format("{0}/{1}", url.TrimEnd('/'), Helpers.GetCDNPath(key.ToString(), dataFolder, "", false, true));
+            string systemFileUrl = string.Format("{0}/{1}", url.TrimEnd('/'), Helpers.GetCDNPath(key.ToString(), dataFolder, "", false, true));
             WebClient.DownloadFile(systemFileUrl, Helpers.GetCDNPath(key.ToString(), dataFolder, directory, true));
 
             return key;

@@ -128,27 +128,27 @@ namespace TACT.Net.Configs
         {
             var webClient = new WebClient();
 
-            using (var cdnstream = webClient.OpenRead(String.Format("{0}/{1}/cdns", url.TrimEnd('/'), Product)))
-            using (var verstream = webClient.OpenRead(String.Format("{0}/{1}/versions", url.TrimEnd('/'), Product)))
+            using (var cdnstream = webClient.OpenRead(string.Format("{0}/{1}/cdns", url.TrimEnd('/'), Product)))
+            using (var verstream = webClient.OpenRead(string.Format("{0}/{1}/versions", url.TrimEnd('/'), Product)))
             {
                 CDNsFile = new VariableConfig(cdnstream, ConfigType.CDNs);
                 VersionsFile = new VariableConfig(verstream, ConfigType.Versions);
 
                 if (BuildConfigMD5.Value != null)
                 {
-                    string configUrl = String.Format("{0}/{1}", url.TrimEnd('/'), Helpers.GetCDNPath(BuildConfigMD5.ToString(), "config", "", false, true));
+                    string configUrl = string.Format("{0}/{1}", url.TrimEnd('/'), Helpers.GetCDNPath(BuildConfigMD5.ToString(), "config", "", false, true));
                     BuildConfig = new KeyValueConfig(webClient.OpenRead(configUrl), ConfigType.BuildConfig);
                 }
 
                 if (CDNConfigMD5.Value != null)
                 {
-                    string configUrl = String.Format("{0}/{1}", url.TrimEnd('/'), Helpers.GetCDNPath(CDNConfigMD5.ToString(), "config", "", false, true));
+                    string configUrl = string.Format("{0}/{1}", url.TrimEnd('/'), Helpers.GetCDNPath(CDNConfigMD5.ToString(), "config", "", false, true));
                     CDNConfig = new KeyValueConfig(webClient.OpenRead(configUrl), ConfigType.CDNConfig);
                 }
 
                 if (PatchConfigMD5.Value != null)
                 {
-                    string configUrl = String.Format("{0}/{1}", url.TrimEnd('/'), Helpers.GetCDNPath(PatchConfigMD5.ToString(), "config", "", false, true));
+                    string configUrl = string.Format("{0}/{1}", url.TrimEnd('/'), Helpers.GetCDNPath(PatchConfigMD5.ToString(), "config", "", false, true));
                     PatchConfig = new KeyValueConfig(webClient.OpenRead(configUrl), ConfigType.PatchConfig);
                 }
             }
