@@ -72,7 +72,7 @@ namespace TACT.Net.Network
         /// </summary>
         /// <param name="cdnpath">CDN file path excluding the host</param>
         /// <returns></returns>
-        public async Task<Stream> OpenStream(string cdnpath)
+        public async Task<Stream> OpenStream(string cdnpath, long from = -1, long to = -1)
         {
             // used as a 404 check
             if (await GetContentLength(cdnpath) == -1)
@@ -81,14 +81,18 @@ namespace TACT.Net.Network
             foreach (var host in GetHosts())
             {
                 HttpWebRequest req = WebRequest.CreateHttp("http://" + host + "/" + cdnpath);
+                if (from != -1 && to != -1 && to > from)
+                    req.AddRange(from, to);
 
                 try
                 {
                     using (var resp = (HttpWebResponse)await req.GetResponseAsync().ConfigureAwait(false))
-                    using (var respStream = resp.GetResponseStream())
+                    using (var stream = resp.GetResponseStream())
+                    using (var respStream = ApplyDecryption ? Armadillo.Decrypt(cdnpath, stream) : stream)
                     {
-                        var resultStream = new MemoryStream();
-                        await (ApplyDecryption ? Armadillo.Decrypt(cdnpath, respStream) : respStream).CopyToAsync(resultStream);
+                        var resultStream = new MemoryStream((int)resp.ContentLength);
+                        await respStream.CopyToAsync(resultStream).ConfigureAwait(false);
+
                         resultStream.Position = 0;
                         return resultStream;
                     }
@@ -105,7 +109,7 @@ namespace TACT.Net.Network
         /// <param name="cdnpath">CDN file path excluding the host</param>
         /// <param name="filepath">File save location</param>
         /// <returns></returns>
-        public async Task<bool> DownloadFile(string cdnpath, string filepath)
+        public async Task<bool> DownloadFile(string cdnpath, string filepath, long from = -1, long to = -1)
         {
             // used as a 404 check
             if (await GetContentLength(cdnpath) == -1)
@@ -113,17 +117,18 @@ namespace TACT.Net.Network
 
             foreach (var host in GetHosts())
             {
+                HttpWebRequest req = WebRequest.CreateHttp("http://" + host + "/" + cdnpath);
+                if (from != -1 && to != -1 && to > from)
+                    req.AddRange(from, to);
+
                 try
                 {
-                    HttpWebRequest req = WebRequest.CreateHttp("http://" + host + "/" + cdnpath);
-
                     using (var resp = (HttpWebResponse)await req.GetResponseAsync().ConfigureAwait(false))
                     using (var stream = resp.GetResponseStream())
+                    using (var respStream = ApplyDecryption ? Armadillo.Decrypt(cdnpath, stream) : stream)
                     using (var fs = File.Create(filepath))
                     {
-                        var respStream = ApplyDecryption ? Armadillo.Decrypt(cdnpath, stream) : stream;
                         await respStream.CopyToAsync(fs).ConfigureAwait(false);
-
                         return true;
                     }
                 }
@@ -132,6 +137,7 @@ namespace TACT.Net.Network
 
             return false;
         }
+
 
         /// <summary>
         /// Returns the size of a file or -1 if it is inaccessible
