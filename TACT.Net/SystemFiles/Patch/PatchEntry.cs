@@ -24,6 +24,9 @@ namespace TACT.Net.Patch
         #region IO
         public bool Read(BinaryReader br, PatchHeader header)
         {
+            if (br.BaseStream.Position == br.BaseStream.Length)
+                return false;
+
             byte entryCount = br.ReadByte();
             if (entryCount == 0)
                 return false;

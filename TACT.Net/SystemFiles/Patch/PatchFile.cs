@@ -56,7 +56,7 @@ namespace TACT.Net.Patch
         /// <param name="ekey"></param>
         public PatchFile(CDNClient client, MD5Hash ekey) : this()
         {
-            string url = Helpers.GetCDNUrl(ekey.ToString(), "data");
+            string url = Helpers.GetCDNUrl(ekey.ToString(), "patch");
 
             using (var stream = client.OpenStream(url).Result)
                 Read(stream);
@@ -88,6 +88,8 @@ namespace TACT.Net.Patch
 
                 // read the patch entries
                 int pageSize = 1 << PatchHeader.PageSize;
+                long length = reader.BaseStream.Length;
+
                 foreach (var offset in GetOffsets(reader))
                 {
                     reader.BaseStream.Position = offset;
