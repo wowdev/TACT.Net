@@ -122,19 +122,19 @@ namespace TACT.Net.Configs
 
                 if (BuildConfigMD5.Value != null)
                 {
-                    string configUrl = Helpers.GetCDNPath(BuildConfigMD5.ToString(), "config", url: true);
+                    string configUrl = Helpers.GetCDNUrl(BuildConfigMD5.ToString(), "config");
                     BuildConfig = new KeyValueConfig(cdnClient.OpenStream(configUrl).Result, ConfigType.BuildConfig);
                 }
 
                 if (CDNConfigMD5.Value != null)
                 {
-                    string configUrl = Helpers.GetCDNPath(CDNConfigMD5.ToString(), "config", url: true);
+                    string configUrl = Helpers.GetCDNUrl(CDNConfigMD5.ToString(), "config");
                     CDNConfig = new KeyValueConfig(cdnClient.OpenStream(configUrl).Result, ConfigType.CDNConfig);
                 }
 
                 if (PatchConfigMD5.Value != null)
                 {
-                    string configUrl = Helpers.GetCDNPath(PatchConfigMD5.ToString(), "config", url: true);
+                    string configUrl = Helpers.GetCDNUrl(PatchConfigMD5.ToString(), "config");
                     PatchConfig = new KeyValueConfig(cdnClient.OpenStream(configUrl).Result, ConfigType.PatchConfig);
                 }
             }
