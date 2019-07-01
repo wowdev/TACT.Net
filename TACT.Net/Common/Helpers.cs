@@ -31,7 +31,7 @@ namespace TACT.Net.Common
         /// <returns></returns>
         public static string GetCDNUrl(string filename, string folder)
         {
-            return string.Join("/", "tpr", "wow", folder, filename.Substring(0, 2), filename.Substring(2, 2));
+            return string.Join("/", "tpr", "wow", folder, filename.Substring(0, 2), filename.Substring(2, 2), filename);
         }
 
 
