@@ -236,46 +236,6 @@ namespace TACT.Net
             RootFile?.FileLookup?.Close();
         }
 
-        /// <summary>
-        /// WIP DNU
-        /// </summary>
-        [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
-        public void Clean()
-        {
-            if (RootFile == null ||
-                EncodingFile == null ||
-                IndexContainer == null ||
-                InstallFile == null ||
-                ConfigContainer == null)
-                return;
-
-            var comparer = new MD5HashComparer();
-
-            var installCKeys = InstallFile.Files.Select(x => x.CKey).ToHashSet(comparer);
-            var rootCKeys = RootFile.GetBlocks(0, 0).SelectMany(x => x.Records.Select(y => y.Value.CKey)).ToHashSet(comparer);
-
-            var ckeyEntries = new List<Encoding.EncodingContentEntry>();
-
-            foreach (var ckeyEntry in EncodingFile.CKeyEntries)
-            {
-                if (installCKeys.Contains(ckeyEntry.CKey) || rootCKeys.Contains(ckeyEntry.CKey))
-                    continue;
-
-                DownloadFile?.Remove(ckeyEntry.EKey);
-                DownloadSizeFile?.Remove(ckeyEntry.EKey);
-                IndexContainer?.Remove(ckeyEntry.EKey);
-
-                ckeyEntries.Add(ckeyEntry);
-            }
-
-            ckeyEntries.ForEach(x =>
-            {
-                EncodingFile.Remove(x);
-                if (EncodingFile.TryGetEKeyEntry(x.EKey, out var ekeyEntry))
-                    EncodingFile.Remove(ekeyEntry);
-            });
-        }
-
         #endregion
 
         #region Helpers
