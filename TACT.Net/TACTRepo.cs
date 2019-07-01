@@ -169,6 +169,7 @@ namespace TACT.Net
 
         /// <summary>
         /// Download and open an remote TACT container
+        /// <para>Note: This will download the entire CDN so will take a while</para>
         /// </summary>
         /// <param name="url"></param>
         /// <param name="directory"></param>
@@ -179,48 +180,43 @@ namespace TACT.Net
             ConfigContainer = new Configs.ConfigContainer(product, locale);
             ConfigContainer.DownloadRemote(directory);
 
-            if (uint.TryParse(ConfigContainer?.VersionsFile?.GetValue("BuildId", locale), out uint build))
-                Build = build;
-
             var cdnClient = new CDNClient(ConfigContainer);
-
-            IndexContainer = new Indices.IndexContainer();
-            IndexContainer.Open(directory);
+            var queuedDownload = new QueuedDownloader(directory, cdnClient);
 
             if (ConfigContainer.EncodingEKey.Value != null)
             {
                 // Download encoding file
-                MD5Hash encodingEKey = DownloadSystemFile(ConfigContainer.EncodingEKey, cdnClient, directory);
+                var encodingEKey = DownloadSystemFile(ConfigContainer.EncodingEKey, cdnClient, directory);
                 if (encodingEKey.Value != null)
-                    EncodingFile = new Encoding.EncodingFile(BaseDirectory, encodingEKey);
+                    EncodingFile = new Encoding.EncodingFile(BaseDirectory, encodingEKey, true);
+
+                // Download PatchFile
+                DownloadSystemFile(ConfigContainer.PatchEKey, cdnClient, directory, "patch");
 
                 // Download RootFile
-                MD5Hash rootEKey = DownloadSystemFile(ConfigContainer.RootCKey, cdnClient, directory, EncodingFile);
-                if (rootEKey.Value != null)
-                    RootFile = new Root.RootFile(BaseDirectory, rootEKey);
+                if (EncodingFile.TryGetCKeyEntry(ConfigContainer.RootCKey, out var ekeyEntry))
+                    queuedDownload.Enqueue(ekeyEntry.EKey.ToString());
 
                 // Download InstallFile
-                MD5Hash installEKey = DownloadSystemFile(ConfigContainer.InstallCKey, cdnClient, directory, EncodingFile);
-                if (installEKey.Value != null)
-                    InstallFile = new Install.InstallFile(BaseDirectory, installEKey);
+                if (EncodingFile.TryGetCKeyEntry(ConfigContainer.InstallCKey, out ekeyEntry))
+                    queuedDownload.Enqueue(ekeyEntry.EKey.ToString());
 
                 // Download DownloadFile
-                MD5Hash downloadEKey = DownloadSystemFile(ConfigContainer.DownloadCKey, cdnClient, directory, EncodingFile);
-                if (downloadEKey.Value != null)
-                    DownloadFile = new Download.DownloadFile(BaseDirectory, downloadEKey);
+                if (EncodingFile.TryGetCKeyEntry(ConfigContainer.DownloadCKey, out ekeyEntry))
+                    queuedDownload.Enqueue(ekeyEntry.EKey.ToString());
 
                 // Download DownloadSizeFile
-                MD5Hash downloadSizeEKey = DownloadSystemFile(ConfigContainer.DownloadSizeCKey, cdnClient, directory, EncodingFile);
-                if (downloadSizeEKey.Value != null)
-                    DownloadSizeFile = new Download.DownloadSizeFile(BaseDirectory, downloadSizeEKey);
+                if (EncodingFile.TryGetCKeyEntry(ConfigContainer.DownloadSizeCKey, out ekeyEntry))
+                    queuedDownload.Enqueue(ekeyEntry.EKey.ToString());
+
+                queuedDownload.Download("data");
             }
 
-            // Download PatchFile
-            MD5Hash patchEKey = DownloadSystemFile(ConfigContainer.PatchEKey, cdnClient, directory, null, "patch");
-            if (patchEKey.Value != null)
-                PatchFile = new Patch.PatchFile(BaseDirectory, patchEKey);
+            // Download Indices and archives
+            IndexContainer = new Indices.IndexContainer();
+            IndexContainer.DownloadRemote(directory, ConfigContainer);
 
-            ApplyVersionSpecificSettings(Build);
+            Open(directory, product, locale);
         }
 
         public void Save(string directory)
@@ -240,13 +236,16 @@ namespace TACT.Net
             RootFile?.FileLookup?.Close();
         }
 
+        /// <summary>
+        /// WIP DNU
+        /// </summary>
         [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
         public void Clean()
         {
-            if (RootFile == null || 
-                EncodingFile == null || 
-                IndexContainer == null || 
-                InstallFile == null || 
+            if (RootFile == null ||
+                EncodingFile == null ||
+                IndexContainer == null ||
+                InstallFile == null ||
                 ConfigContainer == null)
                 return;
 
@@ -298,15 +297,12 @@ namespace TACT.Net
                 RootFile.RootHeader.Version = 2;
         }
 
-        private MD5Hash DownloadSystemFile(MD5Hash key, CDNClient client, string directory, Encoding.EncodingFile encodingFile = null, string dataFolder = "data")
+        private MD5Hash DownloadSystemFile(MD5Hash key, CDNClient client, string directory, string dataFolder = "data")
         {
-            if (encodingFile != null && key.Value != null && encodingFile.TryGetCKeyEntry(key, out var encodingKey))
-                key = encodingKey.EKey;
-
             if (key.Value == null)
                 return default;
 
-            string systemFileUrl = Helpers.GetCDNPath(key.ToString(), dataFolder, url: true);
+            string systemFileUrl = Helpers.GetCDNUrl(key.ToString(), dataFolder);
             client.DownloadFile(systemFileUrl, Helpers.GetCDNPath(key.ToString(), dataFolder, directory, true)).Wait();
             return key;
         }

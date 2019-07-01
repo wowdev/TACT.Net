@@ -14,11 +14,11 @@ namespace TACT.Net.Indices
     {
         const long ArchiveDataSize = 256000000;
 
+        public bool IsRemote { get; private set; }
         public IEnumerable<IndexFile> DataIndices => _indices.Where(x => x.IsDataIndex);
         public IEnumerable<IndexFile> LooseIndices => _indices.Where(x => x.IsLooseIndex);
         public IEnumerable<IndexFile> PatchIndices => _indices.Where(x => x.IsPatchIndex);
         public MD5Hash Checksum { get; }
-        public bool IsRemote { get; private set; }
 
 
         /// <summary>
@@ -49,6 +49,8 @@ namespace TACT.Net.Indices
         /// <param name="directory"></param>
         public void Open(string directory, bool useParallelism = false)
         {
+            IsRemote = false;
+
             _sourceDirectory = directory;
             _useParallelism = useParallelism;
 
@@ -70,6 +72,7 @@ namespace TACT.Net.Indices
         {
             IsRemote = true;
 
+            _useParallelism = useParallelism;
             _client = new CDNClient(configContainer);
 
             ParallelOptions options = new ParallelOptions() { MaxDegreeOfParallelism = useParallelism ? -1 : 1 };
@@ -95,9 +98,70 @@ namespace TACT.Net.Indices
                 _indices.Add(new IndexFile(_client, patchIndex, IndexType.Loose | IndexType.Patch));
         }
 
+        /// <summary>
+        /// Downloads all Index and Archive files from a remote CDN
+        /// </summary>
+        /// <param name="directory"></param>
+        /// <param name="configContainer"></param>
+        public void DownloadRemote(string directory, Configs.ConfigContainer configContainer)
+        {
+            _client = new CDNClient(configContainer);
+
+            var queuedDownloader = new QueuedDownloader(directory, _client);
+
+            // download data archives
+            var archives = configContainer.CDNConfig.GetValues("archives");
+            if (archives != null && archives.Count > 0)
+            {
+                queuedDownloader.Enqueue(archives);
+                queuedDownloader.Enqueue(archives, (x) => x + ".index");
+                queuedDownloader.Download("data");
+            }
+
+            // download patch archives
+            var patcharchives = configContainer.CDNConfig.GetValues("patch-archives");
+            if (patcharchives != null && patcharchives.Count > 0)
+            {
+                queuedDownloader.Enqueue(patcharchives);
+                queuedDownloader.Enqueue(patcharchives, (x) => x + ".index");
+                queuedDownloader.Download("patch");
+            }
+
+            // download loose file index
+            var fileIndex = configContainer.CDNConfig.GetValue("file-index");
+            if (fileIndex != null)
+            {
+                string url = Helpers.GetCDNUrl(fileIndex, "data");
+                string path = Helpers.GetCDNPath(fileIndex, "data", directory, true);
+                _client.DownloadFile(url, path).Wait();
+
+                // download loose files
+                var index = new IndexFile(path);
+                queuedDownloader.Enqueue(index.Entries, (x) => x.Key.ToString());
+                queuedDownloader.Download("data");
+            }
+
+            // download loose patch file index
+            var patchIndex = configContainer.CDNConfig.GetValue("patch-file-index");
+            if (patchIndex != null)
+            {
+                string url = Helpers.GetCDNUrl(patchIndex, "patch");
+                string path = Helpers.GetCDNPath(patchIndex, "patch", directory, true);
+                _client.DownloadFile(url, path).Wait();
+
+                // download loose patches
+                var index = new IndexFile(path);
+                queuedDownloader.Enqueue(index.Entries, (x) => x.Key.ToString());
+                queuedDownloader.Download("patch");
+            }
+
+            Open(directory);
+        }
+
 
         /// <summary>
         /// Updates modified data indices and writes enqueued files to archives
+        /// <para>Note: IndexFile saving is limited to new entries if the container was opened remotely</para>
         /// </summary>
         /// <param name="directory"></param>
         /// <param name="dispose">Delete old files</param>
@@ -107,25 +171,28 @@ namespace TACT.Net.Indices
             bool sameDirectory = directory.Equals(_sourceDirectory, StringComparison.OrdinalIgnoreCase);
 
             // save altered Data archive indices
-            foreach (var index in DataIndices)
+            if (!IsRemote)
             {
-                if (index.IsGroupIndex)
-                    continue;
+                foreach (var index in DataIndices)
+                {
+                    if (index.IsGroupIndex)
+                        continue;
 
-                if (index.RequiresSave)
-                {
-                    // save the index file and blob
-                    string prevBlob = Helpers.GetCDNPath(index.Checksum.ToString(), "data", _sourceDirectory);
-                    index.Write(directory, configContainer);
-                    index.WriteBlob(directory, prevBlob);
-                }
-                else if (!sameDirectory)
-                {
-                    // copy the index file and blob
-                    string oldblob = Helpers.GetCDNPath(index.Checksum.ToString(), "data", _sourceDirectory);
-                    string newblob = Helpers.GetCDNPath(index.Checksum.ToString(), "data", directory, true);
-                    File.Copy(oldblob, newblob);
-                    File.Copy(oldblob + ".index", newblob + ".index");
+                    if (index.RequiresSave)
+                    {
+                        // save the index file and blob
+                        string prevBlob = Helpers.GetCDNPath(index.Checksum.ToString(), "data", _sourceDirectory);
+                        index.Write(directory, configContainer);
+                        index.WriteBlob(directory, prevBlob);
+                    }
+                    else if (!sameDirectory)
+                    {
+                        // copy the index file and blob
+                        string oldblob = Helpers.GetCDNPath(index.Checksum.ToString(), "data", _sourceDirectory);
+                        string newblob = Helpers.GetCDNPath(index.Checksum.ToString(), "data", directory, true);
+                        File.Copy(oldblob, newblob);
+                        File.Copy(oldblob + ".index", newblob + ".index");
+                    }
                 }
             }
 
@@ -313,7 +380,7 @@ namespace TACT.Net.Indices
                 return null;
 
             string archive = index.IsLooseIndex ? ekey.ToString() : index.Checksum.ToString();
-            string url = Helpers.GetCDNPath(archive, type.ToString().ToLower(), url: true);
+            string url = Helpers.GetCDNUrl(archive, type.ToString().ToLower());
 
             var stream = _client.OpenStream(url, indexEntry.Offset, indexEntry.Offset + (long)indexEntry.CompressedSize - 1).Result;
             if (stream == null)

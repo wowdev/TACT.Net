@@ -78,7 +78,7 @@ namespace TACT.Net.Indices
                 path = path + ".index";
 
             string endpoint = type.HasFlag(IndexType.Data) ? "data" : "patch";
-            string url = Helpers.GetCDNPath(path, endpoint, url: true);
+            string url = Helpers.GetCDNUrl(path, endpoint);
 
             using (var stream = client.OpenStream(url).Result)
                 Read(stream);
