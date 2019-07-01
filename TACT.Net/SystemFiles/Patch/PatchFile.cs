@@ -56,7 +56,7 @@ namespace TACT.Net.Patch
         /// <param name="ekey"></param>
         public PatchFile(CDNClient client, MD5Hash ekey) : this()
         {
-            string url = Helpers.GetCDNPath(ekey.ToString(), "data", url: true);
+            string url = Helpers.GetCDNUrl(ekey.ToString(), "data");
 
             using (var stream = client.OpenStream(url).Result)
                 Read(stream);

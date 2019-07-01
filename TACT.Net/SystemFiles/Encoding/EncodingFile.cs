@@ -95,7 +95,7 @@ namespace TACT.Net.Encoding
         {
             Partial = partial;
 
-            string url = Helpers.GetCDNPath(ekey.ToString(), "data", url: true);
+            string url = Helpers.GetCDNUrl(ekey.ToString(), "data");
 
             using (var stream = client.OpenStream(url).Result)
             using (var bt = new BlockTableStreamReader(stream))

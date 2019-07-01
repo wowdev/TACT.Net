@@ -13,19 +13,27 @@ namespace TACT.Net.Common
         /// <param name="directory"></param>
         /// <param name="create"></param>
         /// <returns></returns>
-        public static string GetCDNPath(string filename, string folder = "", string directory = "", bool create = false, bool url = false)
+        public static string GetCDNPath(string filename, string folder = "", string directory = "", bool create = false)
         {
             string dir = Path.Combine(directory, "tpr", "wow", folder, filename.Substring(0, 2), filename.Substring(2, 2));
             if (create)
                 Directory.CreateDirectory(dir);
 
-            string path = Path.Combine(dir, filename);
-
-            if (url)
-                path = path.Replace('\\', '/');
-
-            return path;
+            return Path.Combine(dir, filename);
         }
+
+        /// <summary>
+        /// Returns the Blizzard CDN Url path for a file.
+        /// </summary>
+        /// <param name="filename"></param>
+        /// <param name="folder"></param>
+        /// <param name="directory"></param>
+        /// <returns></returns>
+        public static string GetCDNUrl(string filename, string folder)
+        {
+            return string.Join("/", "tpr", "wow", folder, filename.Substring(0, 2), filename.Substring(2, 2));
+        }
+
 
         /// <summary>
         /// Creates a new file with sharing enabled

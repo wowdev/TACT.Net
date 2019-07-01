@@ -68,7 +68,7 @@ namespace TACT.Net.Download
         /// <param name="ekey"></param>
         public DownloadFile(CDNClient client, MD5Hash ekey) : this()
         {
-            string url = Helpers.GetCDNPath(ekey.ToString(), "data", url: true);
+            string url = Helpers.GetCDNUrl(ekey.ToString(), "data");
 
             using (var stream = client.OpenStream(url).Result)
             using (var bt = new BlockTableStreamReader(stream))
