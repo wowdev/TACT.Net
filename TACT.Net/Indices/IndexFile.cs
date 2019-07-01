@@ -5,6 +5,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using TACT.Net.Common;
 using TACT.Net.Cryptography;
+using TACT.Net.Network;
 
 namespace TACT.Net.Indices
 {
@@ -65,6 +66,24 @@ namespace TACT.Net.Indices
                 Read(fs);
 
             Type = DetermineType(Type, path);
+        }
+
+        /// <summary>
+        /// Loads an IndexFile from a remote CDN
+        /// </summary>
+        /// <param name="stream"></param>
+        public IndexFile(CDNClient client, string path, IndexType type) : this(IndexType.Unknown)
+        {
+            if (!path.EndsWith(".index", StringComparison.OrdinalIgnoreCase))
+                path = path + ".index";
+
+            string endpoint = type.HasFlag(IndexType.Data) ? "data" : "patch";
+            string url = Helpers.GetCDNPath(path, endpoint, url: true);
+
+            using (var stream = client.OpenStream(url).Result)
+                Read(stream);
+
+            Type = DetermineType(type);
         }
 
         /// <summary>
@@ -336,13 +355,16 @@ namespace TACT.Net.Indices
         /// Removes an index entry from the archive
         /// </summary>
         /// <param name="ekey"></param>
-        public void Remove(MD5Hash ekey)
+        public bool Remove(MD5Hash ekey)
         {
             if (_indexEntries.Remove(ekey))
             {
                 _newEntries.Remove(ekey);
                 RequiresSave = true;
+                return true;
             }
+
+            return false;
         }
 
         /// <summary>

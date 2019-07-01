@@ -6,18 +6,20 @@ using System.Threading.Tasks;
 using TACT.Net.BlockTable;
 using TACT.Net.Common;
 using TACT.Net.Cryptography;
+using TACT.Net.Network;
 
 namespace TACT.Net.Indices
 {
     public class IndexContainer : ISystemFile
     {
+        const long ArchiveDataSize = 256000000;
+
         public IEnumerable<IndexFile> DataIndices => _indices.Where(x => x.IsDataIndex);
         public IEnumerable<IndexFile> LooseIndices => _indices.Where(x => x.IsLooseIndex);
         public IEnumerable<IndexFile> PatchIndices => _indices.Where(x => x.IsPatchIndex);
-
         public MD5Hash Checksum { get; }
+        public bool IsRemote { get; private set; }
 
-        private const long ArchiveDataSize = 256000000;
 
         /// <summary>
         /// Files enqueued to be added to a new archive
@@ -27,6 +29,7 @@ namespace TACT.Net.Indices
         private ConcurrentSet<IndexFile> _indices;
         private string _sourceDirectory;
         private bool _useParallelism = false;
+        private CDNClient _client;
 
         #region Constructors
 
@@ -57,6 +60,41 @@ namespace TACT.Net.Indices
             ParallelOptions options = new ParallelOptions() { MaxDegreeOfParallelism = useParallelism ? -1 : 1 };
             Parallel.ForEach(indices, options, index => _indices.Add(new IndexFile(index)));
         }
+
+        /// <summary>
+        /// Parses all Index files from a remote CDN
+        /// </summary>
+        /// <param name="configContainer"></param>
+        /// <param name="useParallelism"></param>
+        public void OpenRemote(Configs.ConfigContainer configContainer, bool useParallelism = false)
+        {
+            IsRemote = true;
+
+            _client = new CDNClient(configContainer);
+
+            ParallelOptions options = new ParallelOptions() { MaxDegreeOfParallelism = useParallelism ? -1 : 1 };
+
+            // stream data archive indicies
+            var archives = configContainer.CDNConfig.GetValues("archives");
+            if (archives != null && archives.Count > 0)
+                Parallel.ForEach(archives, options, index => _indices.Add(new IndexFile(_client, index, IndexType.Data)));
+
+            // stream patch archive indices
+            var patcharchives = configContainer.CDNConfig.GetValues("patch-archives");
+            if (patcharchives != null && patcharchives.Count > 0)
+                Parallel.ForEach(patcharchives, options, index => _indices.Add(new IndexFile(_client, index, IndexType.Patch)));
+
+            // stream loose file index
+            var fileIndex = configContainer.CDNConfig.GetValue("file-index");
+            if (fileIndex != null)
+                _indices.Add(new IndexFile(_client, fileIndex, IndexType.Loose | IndexType.Data));
+
+            // stream loose patch file index
+            var patchIndex = configContainer.CDNConfig.GetValue("patch-file-index");
+            if (patchIndex != null)
+                _indices.Add(new IndexFile(_client, patchIndex, IndexType.Loose | IndexType.Patch));
+        }
+
 
         /// <summary>
         /// Updates modified data indices and writes enqueued files to archives
@@ -129,44 +167,32 @@ namespace TACT.Net.Indices
 
         /// <summary>
         /// Opens a stream to a data file stored in the archives
+        /// <para>Note: If IsRemote is true the entry will be streamed from a CDN</para>
         /// </summary>
         /// <param name="ekey"></param>
         /// <returns></returns>
         public Stream OpenFile(MD5Hash ekey)
         {
-            string path = GetIndexEntryAndPath(DataIndices, "data", ekey, out var indexEntry);
-            if (path == null)
-                return null;
-
-            // open a shared stream, set the offset and return a new BLTE reader
-            var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read)
-            {
-                Position = indexEntry.Offset
-            };
-            return new BlockTableStreamReader(fs);
+            if (!IsRemote)
+                return OpenLocalFile(IndexType.Data, ekey);
+            else
+                return OpenRemoteFile(IndexType.Data, ekey);
         }
 
         /// <summary>
         /// Opens a stream to a patch entry stored in the archives
+        /// <para>Note: If IsRemote is true the entry will be streamed from a CDN</para>
         /// </summary>
         /// <param name="hash"></param>
         /// <returns></returns>
         public Stream OpenPatch(MD5Hash ekey)
         {
-            string path = GetIndexEntryAndPath(PatchIndices, "patch", ekey, out var indexEntry);
-            if (path == null)
-                return null;
-
-            using (var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
-            {
-                fs.Position = indexEntry.Offset;
-
-                // segment this entry only
-                byte[] buffer = new byte[indexEntry.CompressedSize];
-                fs.Read(buffer);
-                return new MemoryStream(buffer);
-            }
+            if (!IsRemote)
+                return OpenLocalFile(IndexType.Patch, ekey);
+            else
+                return OpenRemoteFile(IndexType.Patch, ekey);
         }
+
 
         /// <summary>
         /// Returns an IndexEntry from the collection if it exists
@@ -184,12 +210,27 @@ namespace TACT.Net.Indices
             return false;
         }
 
+
         /// <summary>
         /// Removes an IndexFile from the collection
         /// </summary>
         /// <param name="index"></param>
         /// <returns></returns>
         public bool Remove(IndexFile index) => _indices.Remove(index);
+
+        /// <summary>
+        /// Removes an IndexEntry from the collection
+        /// </summary>
+        /// <param name="ekey"></param>
+        /// <returns></returns>
+        public bool Remove(MD5Hash ekey)
+        {
+            foreach (var index in _indices)
+                if (!index.IsGroupIndex && index.Contains(ekey))
+                    return index.Remove(ekey);
+
+            return false;
+        }
 
         #endregion
 
@@ -200,29 +241,97 @@ namespace TACT.Net.Indices
         /// </summary>
         /// <param name="indices"></param>
         /// <param name="path"></param>
-        /// <param name="hash"></param>
+        /// <param name="ekey"></param>
         /// <param name="indexEntry">The IndexFile containing the hash</param>
         /// <returns>Returns the path to the blob file</returns>
-        private string GetIndexEntryAndPath(IEnumerable<IndexFile> indices, string path, MD5Hash hash, out IndexEntry indexEntry)
+        private IndexFile GetIndexFileAndEntry(IndexType type, MD5Hash ekey, out IndexEntry indexEntry)
         {
             indexEntry = null;
 
+            var indices = type == IndexType.Data ? DataIndices : PatchIndices;
             foreach (var index in indices)
-            {
-                if (!index.IsGroupIndex && index.TryGet(hash, out indexEntry))
-                {
-                    // blob file location
-                    string blobpath = Helpers.GetCDNPath(index.Checksum.ToString(), path, _sourceDirectory);
-                    if (File.Exists(blobpath))
-                        return blobpath;
-
-                    return null;
-                }
-            }
+                if (!index.IsGroupIndex && index.TryGet(ekey, out indexEntry))
+                    return index;
 
             return null;
         }
 
+        /// <summary>
+        /// Opens a stream to an entry in the local data archives
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="ekey"></param>
+        /// <returns></returns>
+        private Stream OpenLocalFile(IndexType type, MD5Hash ekey)
+        {
+            var index = GetIndexFileAndEntry(type, ekey, out var indexEntry);
+            if (index == null || indexEntry == null)
+                return null;
+
+            string archive = index.IsLooseIndex ? ekey.ToString() : index.Checksum.ToString();
+            string filepath = Helpers.GetCDNPath(archive, type.ToString(), _sourceDirectory);
+            if (!File.Exists(filepath))
+                return null;
+
+            // open a shared stream and seek to the entry's offset
+            var stream = new FileStream(filepath, FileMode.Open, FileAccess.Read, FileShare.Read)
+            {
+                Position = indexEntry.Offset
+            };
+
+            switch (type)
+            {
+                case IndexType.Data:
+                    {
+                        // return a new BLTE reader
+                        return new BlockTableStreamReader(stream);
+                    }
+                case IndexType.Patch:
+                    {
+                        // segment this entry only
+                        var ms = new MemoryStream((int)indexEntry.CompressedSize);
+                        stream.PartialCopyTo(ms, ms.Length);
+                        stream.Dispose();
+                        return ms;
+                    }
+                default:
+                    stream.Dispose();
+                    return null;
+            }
+        }
+
+        /// <summary>
+        /// Opens a stream to an entry in a remote CDN's data archives
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="ekey"></param>
+        /// <returns></returns>
+        private Stream OpenRemoteFile(IndexType type, MD5Hash ekey)
+        {
+            var index = GetIndexFileAndEntry(type, ekey, out var indexEntry);
+            if (index == null || indexEntry == null)
+                return null;
+
+            string archive = index.IsLooseIndex ? ekey.ToString() : index.Checksum.ToString();
+            string url = Helpers.GetCDNPath(archive, type.ToString().ToLower(), url: true);
+
+            var stream = _client.OpenStream(url, indexEntry.Offset, indexEntry.Offset + (long)indexEntry.CompressedSize - 1).Result;
+            if (stream == null)
+                return null;
+
+            switch (type)
+            {
+                case IndexType.Data:
+                    return new BlockTableStreamReader(stream);
+                case IndexType.Patch:
+                    return stream;
+                default:
+                    stream.Dispose();
+                    return null;
+            }
+        }
+
+        [Obsolete]
         /// <summary>
         /// Creates a fake Data Index Group and stores the computed checksum
         /// </summary>

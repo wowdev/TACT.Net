@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using TACT.Net.Common;
 using TACT.Net.Cryptography;
@@ -10,7 +11,6 @@ namespace TACT.Net
     public sealed class TACTRepo
     {
         public readonly string BaseDirectory;
-        private readonly WebClient WebClient = new WebClient();
 
         public uint Build { get; private set; }
 
@@ -126,14 +126,15 @@ namespace TACT.Net
             if (uint.TryParse(ConfigContainer?.VersionsFile?.GetValue("BuildId", locale), out uint build))
                 Build = build;
 
-            var cdnClient = new CDNClient(ConfigContainer);
-
+            // stream Indicies
             IndexContainer = new Indices.IndexContainer();
-            IndexContainer.Open(BaseDirectory);
+            IndexContainer.OpenRemote(ConfigContainer, true);
+
+            var cdnClient = new CDNClient(ConfigContainer);
 
             if (ConfigContainer.EncodingEKey.Value != null)
             {
-                // Stream encoding file
+                // Stream EncodingFile
                 EncodingFile = new Encoding.EncodingFile(cdnClient, ConfigContainer.EncodingEKey);
 
                 // Stream RootFile
@@ -161,7 +162,7 @@ namespace TACT.Net
 
             // Stream PatchFile
             if (ConfigContainer.PatchEKey.Value != null)
-                PatchFile = new Patch.PatchFile(BaseDirectory, ConfigContainer.PatchEKey);
+                PatchFile = new Patch.PatchFile(cdnClient, ConfigContainer.PatchEKey);
 
             ApplyVersionSpecificSettings(Build);
         }
@@ -237,6 +238,43 @@ namespace TACT.Net
             ConfigContainer?.Save(directory);
 
             RootFile?.FileLookup?.Close();
+        }
+
+        [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
+        public void Clean()
+        {
+            if (RootFile == null || 
+                EncodingFile == null || 
+                IndexContainer == null || 
+                InstallFile == null || 
+                ConfigContainer == null)
+                return;
+
+            var comparer = new MD5HashComparer();
+
+            var installCKeys = InstallFile.Files.Select(x => x.CKey).ToHashSet(comparer);
+            var rootCKeys = RootFile.GetBlocks(0, 0).SelectMany(x => x.Records.Select(y => y.Value.CKey)).ToHashSet(comparer);
+
+            var ckeyEntries = new List<Encoding.EncodingContentEntry>();
+
+            foreach (var ckeyEntry in EncodingFile.CKeyEntries)
+            {
+                if (installCKeys.Contains(ckeyEntry.CKey) || rootCKeys.Contains(ckeyEntry.CKey))
+                    continue;
+
+                DownloadFile?.Remove(ckeyEntry.EKey);
+                DownloadSizeFile?.Remove(ckeyEntry.EKey);
+                IndexContainer?.Remove(ckeyEntry.EKey);
+
+                ckeyEntries.Add(ckeyEntry);
+            }
+
+            ckeyEntries.ForEach(x =>
+            {
+                EncodingFile.Remove(x);
+                if (EncodingFile.TryGetEKeyEntry(x.EKey, out var ekeyEntry))
+                    EncodingFile.Remove(ekeyEntry);
+            });
         }
 
         #endregion

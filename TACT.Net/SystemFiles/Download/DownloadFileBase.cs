@@ -64,6 +64,12 @@ namespace TACT.Net.Download
             }
         }
 
+        public void Remove(MD5Hash ekey)
+        {
+            if (_FileEntries.TryGetValue(ekey, out var entry))
+                Remove(entry);
+        }
+
         /// <summary>
         /// Returns a FileEntry by EKey
         /// </summary>
