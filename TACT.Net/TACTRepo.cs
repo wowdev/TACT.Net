@@ -80,8 +80,6 @@ namespace TACT.Net
             if (uint.TryParse(ConfigContainer?.VersionsFile?.GetValue("BuildId", locale), out uint build))
                 Build = build;
 
-            ApplyVersionSpecificSettings(build);
-
             IndexContainer = new Indices.IndexContainer();
             IndexContainer.Open(directory);
 
@@ -109,8 +107,6 @@ namespace TACT.Net
             // Open PatchFile
             if (ConfigContainer.PatchEKey.Value != null)
                 PatchFile = new Patch.PatchFile(BaseDirectory, ConfigContainer.PatchEKey);
-
-            ApplyVersionSpecificSettings(Build);
         }
 
         /// <summary>
@@ -163,8 +159,6 @@ namespace TACT.Net
             // Stream PatchFile
             if (ConfigContainer.PatchEKey.Value != null)
                 PatchFile = new Patch.PatchFile(cdnClient, ConfigContainer.PatchEKey);
-
-            ApplyVersionSpecificSettings(Build);
         }
 
         /// <summary>
