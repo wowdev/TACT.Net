@@ -252,7 +252,7 @@ namespace TACT.Net.Root
             {
                 tactRepo.EncodingFile?.AddOrUpdate(record);
                 tactRepo.IndexContainer?.Enqueue(record);
-                tactRepo.DownloadFile?.AddOrUpdate(record, 2);
+                tactRepo.DownloadFile?.AddOrUpdate(record);
                 tactRepo.DownloadSizeFile?.AddOrUpdate(record);
             }
         }

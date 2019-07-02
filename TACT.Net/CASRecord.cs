@@ -34,6 +34,10 @@ namespace TACT.Net
         /// Tags used to document the file in the Download, Download Size and Install files
         /// </summary>
         public string[] Tags;
+        /// <summary>
+        /// TACT download priority, 0 = highest, 2 = lowest
+        /// </summary>
+        public sbyte DownloadPriority = 2;
 
         #region Helpers
 

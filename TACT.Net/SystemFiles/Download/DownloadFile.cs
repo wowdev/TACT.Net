@@ -187,18 +187,18 @@ namespace TACT.Net.Download
         /// <param name="record"></param>
         /// <param name="priority">0 = highest, 2 = lowest, -1 for Install</param>
         /// <param name="tags"></param>
-        public void AddOrUpdate(CASRecord record, sbyte priority)
+        public void AddOrUpdate(CASRecord record)
         {
             // prevent overflow for old versions
-            if (DownloadHeader.BasePriority + priority < 0)
-                priority = 0;
+            if (DownloadHeader.BasePriority + record.DownloadPriority < 0)
+                record.DownloadPriority = 0;
 
             var entry = new DownloadFileEntry()
             {
                 EKey = record.EKey,
                 CompressedSize = record.EBlock.CompressedSize,
                 Flags = new byte[DownloadHeader.FlagSize],
-                Priority = priority,
+                Priority = record.DownloadPriority,
                 Checksum = 0 // TODO do we know what this is?
             };
 
