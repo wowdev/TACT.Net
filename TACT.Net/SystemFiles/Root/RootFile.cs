@@ -201,7 +201,7 @@ namespace TACT.Net.Root
                 if (tactRepo != null)
                 {
                     tactRepo.EncodingFile?.AddOrUpdate(record);
-                    tactRepo.DownloadFile?.AddOrUpdate(record, 0);
+                    tactRepo.DownloadFile?.AddOrUpdate(record);
                     tactRepo.DownloadSizeFile?.AddOrUpdate(record);
                     tactRepo.ConfigContainer?.BuildConfig?.SetValue("root", record.CKey, 0);
                 }

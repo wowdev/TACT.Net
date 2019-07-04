@@ -143,6 +143,7 @@ namespace TACT.Net.Install
 
                 // finalise
                 record = bt.Finalise();
+                record.DownloadPriority = -1;
 
                 // save
                 string saveLocation = Helpers.GetCDNPath(record.EKey.ToString(), "data", directory, true);
@@ -157,7 +158,7 @@ namespace TACT.Net.Install
             if (tactRepo != null)
             {
                 tactRepo.EncodingFile?.AddOrUpdate(record);
-                tactRepo.DownloadFile?.AddOrUpdate(record, -1);
+                tactRepo.DownloadFile?.AddOrUpdate(record);
                 tactRepo.DownloadSizeFile?.AddOrUpdate(record);
 
                 // update the build config with the new values
@@ -201,7 +202,7 @@ namespace TACT.Net.Install
             {
                 tactRepo.EncodingFile?.AddOrUpdate(record);
                 tactRepo.IndexContainer?.Enqueue(record);
-                tactRepo.DownloadFile?.AddOrUpdate(record, 2);
+                tactRepo.DownloadFile?.AddOrUpdate(record);
                 tactRepo.DownloadSizeFile?.AddOrUpdate(record);
             }
         }
