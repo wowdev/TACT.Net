@@ -29,6 +29,9 @@ namespace TACT.Net.Network
             Hosts = new List<string>();
             Armadillo = new Armadillo();
             ApplyDecryption = applyDecryption;
+
+            if(ServicePointManager.DefaultConnectionLimit != ushort.MaxValue)
+                ServicePointManager.DefaultConnectionLimit = ushort.MaxValue;
         }
 
         /// <summary>
