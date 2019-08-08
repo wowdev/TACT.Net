@@ -74,7 +74,7 @@ namespace TACT.Net.Configs
         {
             Type = type;
 
-            if(stream == null)
+            if (stream == null)
                 throw new ArgumentNullException(nameof(stream));
             if (!stream.CanRead)
                 throw new NotSupportedException($"Unable to read {type} stream");
@@ -165,10 +165,9 @@ namespace TACT.Net.Configs
         /// </summary>
         /// <param name="key"></param>
         /// <param name="value"></param>
-        public void RemoveValue(string key, string value)
+        public bool RemoveValue(string key, string value)
         {
-            if (_data.ContainsKey(key))
-                _data[key].Remove(value);
+            return _data.ContainsKey(key) && _data[key].Remove(value);
         }
 
         /// <summary>
@@ -176,11 +175,18 @@ namespace TACT.Net.Configs
         /// </summary>
         /// <param name="key"></param>
         /// <param name="index"></param>
-        public void RemoveValue(string key, int index)
+        public bool RemoveValue(string key, int index)
         {
             if (_data.TryGetValue(key, out var values))
+            {
                 if (values.Count > index)
+                {
                     values.RemoveAt(index);
+                    return true;
+                }                    
+            }
+
+            return false;               
         }
 
         #endregion
@@ -298,7 +304,7 @@ namespace TACT.Net.Configs
                 {
                     if (!_data.TryGetValue(entries[i, 1], out var sizes))
                     {
-                        values.Sort(comparer);                        
+                        values.Sort(comparer);
                     }
                     else
                     {

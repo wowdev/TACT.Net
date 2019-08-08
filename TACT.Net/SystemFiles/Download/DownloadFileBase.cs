@@ -6,9 +6,11 @@ using TACT.Net.Tags;
 
 namespace TACT.Net.Download
 {
-    public abstract class DownloadFileBase<T> : TagFileBase where T : IDownloadFileEntry
+    public abstract class DownloadFileBase<T> : TagFileBase, ISystemFile where T : IDownloadFileEntry
     {
         public IEnumerable<T> Files => _FileEntries.Values;
+        public MD5Hash Checksum { get; protected set; }
+        public string FilePath { get; protected set; }
 
         protected Dictionary<MD5Hash, T> _FileEntries;
 
@@ -30,6 +32,8 @@ namespace TACT.Net.Download
         #endregion
 
         #region Methods
+
+        public abstract void AddOrUpdate(CASRecord record, TACTRepo repo = null);
 
         public void AddOrUpdate(T fileEntry, params string[] tags)
         {
@@ -54,20 +58,21 @@ namespace TACT.Net.Download
             AddOrUpdateTag(tagEntry, _FileEntries.Count);
         }
 
-        public void Remove(T fileEntry)
+        public bool Remove(T fileEntry)
         {
             int index = _FileEntries.IndexOfKey(x => x == fileEntry.EKey);
             if (index > -1)
             {
                 _FileEntries.Remove(fileEntry.EKey);
-                RemoveFile(index);
+                return RemoveFile(index);
             }
+
+            return false;
         }
 
-        public void Remove(MD5Hash ekey)
+        public bool Remove(MD5Hash ekey)
         {
-            if (_FileEntries.TryGetValue(ekey, out var entry))
-                Remove(entry);
+            return _FileEntries.TryGetValue(ekey, out var entry) && Remove(entry);
         }
 
         /// <summary>

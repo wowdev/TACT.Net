@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Net;
 using TACT.Net.Common;
 using TACT.Net.Cryptography;
 using TACT.Net.Network;
@@ -10,7 +9,7 @@ namespace TACT.Net.Configs
     /// <summary>
     /// A container for the various configs used within TACT
     /// </summary>
-    public class ConfigContainer : ISystemFile
+    public class ConfigContainer
     {
         #region Configs
 
@@ -63,8 +62,6 @@ namespace TACT.Net.Configs
         /// Current Locale
         /// </summary>
         public readonly Locale Locale;
-
-        public MD5Hash Checksum { get; }
 
         #region Constructors
 

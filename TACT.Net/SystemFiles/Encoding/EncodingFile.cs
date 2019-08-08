@@ -21,9 +21,9 @@ namespace TACT.Net.Encoding
     /// </summary>
     public class EncodingFile : ISystemFile
     {
-        public string FilePath { get; private set; }
         public EncodingHeader EncodingHeader { get; private set; }
         public MD5Hash Checksum { get; private set; }
+        public string FilePath { get; private set; }
         public List<string> ESpecStringTable { get; private set; }
         public IEnumerable<EncodingContentEntry> CKeyEntries => _CKeyEntries.Values;
         public IEnumerable<EncodingEncodedEntry> EKeyEntries => _EKeyEntries.Values;
@@ -162,7 +162,7 @@ namespace TACT.Net.Encoding
         /// <param name="directory">Root Directory</param>
         /// <param name="configContainer"></param>
         /// <returns></returns>
-        public CASRecord Write(string directory, Configs.ConfigContainer configContainer = null)
+        public CASRecord Write(string directory, TACTRepo repo = null)
         {
             if (Partial)
                 throw new NotSupportedException("Writing is not supported for partial EncodingFiles");
@@ -207,12 +207,12 @@ namespace TACT.Net.Encoding
             }
 
             // update the build config with the new values
-            if (configContainer?.BuildConfig != null)
+            if (repo?.ConfigContainer?.BuildConfig != null)
             {
-                configContainer.BuildConfig.SetValue("encoding-size", record.EBlock.DecompressedSize, 0);
-                configContainer.BuildConfig.SetValue("encoding-size", record.EBlock.CompressedSize, 1);
-                configContainer.BuildConfig.SetValue("encoding", record.CKey, 0);
-                configContainer.BuildConfig.SetValue("encoding", record.EKey, 1);
+                repo.ConfigContainer.BuildConfig.SetValue("encoding-size", record.EBlock.DecompressedSize, 0);
+                repo.ConfigContainer.BuildConfig.SetValue("encoding-size", record.EBlock.CompressedSize, 1);
+                repo.ConfigContainer.BuildConfig.SetValue("encoding", record.CKey, 0);
+                repo.ConfigContainer.BuildConfig.SetValue("encoding", record.EKey, 1);
             }
 
             Checksum = record.CKey;
@@ -228,25 +228,17 @@ namespace TACT.Net.Encoding
         /// Adds a CASRecord to the EncodingFile generating all required entries. This will overwrite existing entries
         /// </summary>
         /// <param name="record"></param>
-        public void AddOrUpdate(CASRecord record)
+        public void AddOrUpdate(CASRecord record, TACTRepo tactRepo = null)
         {
             // CKeyPageTable
-            if (_CKeyEntries.TryGetValue(record.CKey, out var cKeyEntry))
+            Remove(record, tactRepo);
+            var cKeyEntry = new EncodingContentEntry
             {
-                _EKeyEntries.Remove(cKeyEntry.EKey);
-                cKeyEntry.EKey = record.EKey;
-            }
-            else
-            {
-                cKeyEntry = new EncodingContentEntry
-                {
-                    CKey = record.CKey,
-                    EKey = record.EKey,
-                    DecompressedSize = record.EBlock.DecompressedSize,
-                };
-
-                _CKeyEntries.Add(record.CKey, cKeyEntry);
-            }
+                CKey = record.CKey,
+                EKey = record.EKey,
+                DecompressedSize = record.EBlock.DecompressedSize,
+            };
+            _CKeyEntries.Add(record.CKey, cKeyEntry);
 
             // get or add to the ESpecStringTable
             int especIndex = ESpecStringTable.IndexOf(record.ESpec);
@@ -263,8 +255,15 @@ namespace TACT.Net.Encoding
                 EKey = record.EKey,
                 ESpecIndex = (uint)especIndex
             };
-
             _EKeyEntries[record.EKey] = eKeyEntry;
+
+            // propogate the new record
+            if (tactRepo != null)
+            {
+                tactRepo.IndexContainer?.Enqueue(record);
+                tactRepo.DownloadFile?.AddOrUpdate(record);
+                tactRepo.DownloadSizeFile?.AddOrUpdate(record);
+            }
         }
         /// <summary>
         /// Removes a Content Entry
@@ -291,7 +290,7 @@ namespace TACT.Net.Encoding
         /// Removes a CASRecord
         /// </summary>
         /// <param name="record"></param>
-        public bool Remove(CASRecord record)
+        public bool Remove(CASRecord record, TACTRepo tactRepo = null)
         {
             if (record == null)
                 return false;
@@ -299,7 +298,16 @@ namespace TACT.Net.Encoding
             if (_CKeyEntries.TryGetValue(record.CKey, out var entry))
             {
                 _CKeyEntries.Remove(record.CKey);
-                _EKeyEntries.Remove(record.EKey);
+                _EKeyEntries.Remove(entry.EKey);
+
+                // propagate removal
+                if (tactRepo != null)
+                {
+                    tactRepo.IndexContainer?.Remove(entry.EKey);
+                    tactRepo.DownloadFile?.Remove(entry.EKey);
+                    tactRepo.DownloadSizeFile?.Remove(entry.EKey);
+                }
+
                 return true;
             }
 

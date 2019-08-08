@@ -42,7 +42,7 @@ namespace TACT.Net.Root
         /// </summary>
         public ContentFlags ContentFlags { get; set; } = ContentFlags.None;
         public MD5Hash Checksum { get; private set; }
-        public RootHeader RootHeader;
+        public RootHeader RootHeader { get; private set; }
 
         private readonly EMap[] _EncodingMap = new[] { new EMap(EType.ZLib, 9) };
         private readonly List<IRootBlock> _blocks;
@@ -51,6 +51,7 @@ namespace TACT.Net.Root
         private IFileLookup _fileLookup;
 
         #region Constructors
+
         /// <summary>
         /// Creates a new RootFile
         /// </summary>
@@ -122,6 +123,7 @@ namespace TACT.Net.Root
         #endregion
 
         #region IO
+
         private void Read(Stream stream)
         {
             if (stream == null)
@@ -200,9 +202,7 @@ namespace TACT.Net.Root
                 // add to the encoding file and update the build config
                 if (tactRepo != null)
                 {
-                    tactRepo.EncodingFile?.AddOrUpdate(record);
-                    tactRepo.DownloadFile?.AddOrUpdate(record);
-                    tactRepo.DownloadSizeFile?.AddOrUpdate(record);
+                    tactRepo.EncodingFile?.AddOrUpdate(record, tactRepo);
                     tactRepo.ConfigContainer?.BuildConfig?.SetValue("root", record.CKey, 0);
                 }
 
@@ -215,18 +215,6 @@ namespace TACT.Net.Root
         #endregion
 
         #region Methods
-        /// <summary>
-        /// Adds or Updates a RootRecord collection and amends all associated system files. If no block is found the Common block is used.
-        /// </summary>
-        /// <param name="record"></param>
-        /// <param name="tactRepo">If provided, will add the entry to all relevant system files</param>
-        public void AddOrUpdate(ICollection<CASRecord> records, TACTRepo tactRepo = null)
-        {
-            foreach (CASRecord record in records)
-            {
-                AddOrUpdate(record, tactRepo);
-            }
-        }
 
         /// <summary>
         /// Adds or Updates a RootRecord and amends all associated system files. If no block is found the Common block is used.
@@ -247,16 +235,9 @@ namespace TACT.Net.Root
 
             AddOrUpdate(rootRecord);
 
-            // add the record to all referenced files
-            if (tactRepo != null)
-            {
-                tactRepo.EncodingFile?.AddOrUpdate(record);
-                tactRepo.IndexContainer?.Enqueue(record);
-                tactRepo.DownloadFile?.AddOrUpdate(record);
-                tactRepo.DownloadSizeFile?.AddOrUpdate(record);
-            }
+            // add the record to the EncodingFile
+            tactRepo?.EncodingFile?.AddOrUpdate(record, tactRepo);
         }
-
         /// <summary>
         /// Adds or Updates a RootRecord. If no block is found the Common block is used
         /// </summary>
@@ -267,21 +248,20 @@ namespace TACT.Net.Root
             uint fileId = rootRecord.FileId;
 
             // update the lookup
-            _idLookup[nameHash] = fileId;
+            if (nameHash != 0)
+                _idLookup[nameHash] = fileId;
 
-            var blocks = GetBlocks(LocaleFlags, ContentFlags);
-            bool isupdate = blocks.Any(x => x.Records.ContainsKey(fileId));
+            var blocks = GetBlocks(LocaleFlags, ContentFlags).Where(x => x.Records.ContainsKey(fileId));
 
-            // add or update compliant blocks
-            foreach (var block in blocks)
+            if(blocks.Any())
             {
-                if (!isupdate || block.Records.ContainsKey(fileId))
+                // update existing entries
+                foreach (var block in blocks)
                     block.Records[fileId] = rootRecord;
             }
-
-            // add the record to a common block
-            if (!blocks.Any())
+            else
             {
+                // add the record to the common block
                 var block = GetBlocks(LocaleFlags.All_WoW).First(x => x.ContentFlags == ContentFlags.None);
                 block.Records[fileId] = rootRecord;
             }
@@ -291,34 +271,42 @@ namespace TACT.Net.Root
         /// Removes files based on their <paramref name="fileId"/>
         /// </summary>
         /// <param name="fileId"></param>
-        public void Remove(uint fileId)
+        public int Remove(uint fileId)
         {
+            int count = 0;
             var blocks = GetBlocks(LocaleFlags, ContentFlags);
 
             foreach (var block in blocks)
                 if (block.Records.ContainsKey(fileId))
-                    block.Records.Remove(fileId);
+                    if (block.Records.Remove(fileId))
+                        count++;
+
+            return count;
         }
         /// <summary>
         /// Removes files based on their <paramref name="namehash"/>
         /// </summary>
         /// <param name="namehash"></param>
-        public void Remove(ulong namehash)
+        public int Remove(ulong namehash)
         {
+            int count = 0;
             var blocks = GetBlocks(LocaleFlags, ContentFlags);
 
             if (_idLookup.TryGetValue(namehash, out uint fileid))
                 foreach (var block in blocks)
-                    block.Records.Remove(fileid);
+                    if (block.Records.Remove(fileid))
+                        count++;
+
+            return count;
         }
         /// <summary>
         /// Removes files based on their <paramref name="filepath"/>
         /// </summary>
         /// <param name="filepath"></param>
-        public void Remove(string filepath)
+        public int Remove(string filepath)
         {
             ulong namehash = _lookup3.ComputeHash(filepath);
-            Remove(namehash);
+            return Remove(namehash);
         }
 
         /// <summary>
@@ -540,9 +528,9 @@ namespace TACT.Net.Root
         /// <param name="localeFlags"></param>
         /// <param name="contentFlags"></param>
         /// <returns></returns>
-        public bool RemoveBlock(LocaleFlags localeFlags, ContentFlags contentFlags)
+        public int RemoveBlocks(LocaleFlags localeFlags, ContentFlags contentFlags)
         {
-            return _blocks.RemoveAll(x => x.ContentFlags == contentFlags && x.LocaleFlags == localeFlags) > 0;
+            return _blocks.RemoveAll(x => x.ContentFlags == contentFlags && x.LocaleFlags == localeFlags);
         }
 
         #endregion

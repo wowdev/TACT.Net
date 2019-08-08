@@ -12,6 +12,7 @@ namespace TACT.Net.Patch
     {
         public PatchHeader PatchHeader { get; private set; }
         public MD5Hash Checksum { get; private set; }
+        public string FilePath { get; private set; }
         public IEnumerable<PatchEntry> PatchEntries => _PatchEntries.Values;
 
         private readonly SortedList<MD5Hash, PatchEntry> _PatchEntries;
@@ -35,6 +36,8 @@ namespace TACT.Net.Patch
         {
             if (!File.Exists(path))
                 throw new FileNotFoundException("Unable to open PatchFile", path);
+
+            FilePath = path;
 
             using (var fs = File.OpenRead(path))
                 Read(fs);
@@ -145,6 +148,11 @@ namespace TACT.Net.Patch
             }
         }
 
+        public CASRecord Write(string directory, TACTRepo tactRepo = null)
+        {
+            throw new NotImplementedException();
+        }
+
         #endregion
 
         #region Methods
@@ -203,6 +211,11 @@ namespace TACT.Net.Patch
             return true;
         }
 
+        public void AddOrUpdate(CASRecord record, TACTRepo repo = null)
+        {
+            throw new NotImplementedException();
+        }
+
         #endregion
 
         #region Helpers
@@ -219,7 +232,7 @@ namespace TACT.Net.Patch
             }
 
             return offsets;
-        }
+        }        
 
         #endregion
     }

@@ -13,11 +13,12 @@ namespace TACT.Net.Install
     /// Lists all files that are stored outside of the archives
     /// <para>Tags determine the conditions for a file to be extracted</para>
     /// </summary>
-    public class InstallFile : TagFileBase
+    public class InstallFile : TagFileBase, ISystemFile
     {
         public string FilePath { get; private set; }
         public InstallHeader InstallHeader { get; private set; }
         public IEnumerable<InstallFileEntry> Files => _FileEntries.Values;
+        public MD5Hash Checksum { get; private set; }
 
         private readonly Dictionary<string, InstallFileEntry> _FileEntries;
         private readonly EMap[] _EncodingMap;
@@ -157,9 +158,7 @@ namespace TACT.Net.Install
             // insert the record into the encoding and the download files
             if (tactRepo != null)
             {
-                tactRepo.EncodingFile?.AddOrUpdate(record);
-                tactRepo.DownloadFile?.AddOrUpdate(record);
-                tactRepo.DownloadSizeFile?.AddOrUpdate(record);
+                tactRepo.EncodingFile?.AddOrUpdate(record, tactRepo);
 
                 // update the build config with the new values
                 if (tactRepo.ConfigContainer?.BuildConfig != null)
@@ -197,14 +196,8 @@ namespace TACT.Net.Install
 
             AddOrUpdate(entry, record.Tags);
 
-            // add the record to all referenced files
-            if (tactRepo != null)
-            {
-                tactRepo.EncodingFile?.AddOrUpdate(record);
-                tactRepo.IndexContainer?.Enqueue(record);
-                tactRepo.DownloadFile?.AddOrUpdate(record);
-                tactRepo.DownloadSizeFile?.AddOrUpdate(record);
-            }
+            // add the record to the Encoding File
+            tactRepo?.EncodingFile?.AddOrUpdate(record, tactRepo);
         }
 
         public void AddOrUpdate(InstallFileEntry fileEntry, params string[] tags)
@@ -230,19 +223,32 @@ namespace TACT.Net.Install
             AddOrUpdateTag(tagEntry, _FileEntries.Count);
         }
 
+
         /// <summary>
-        /// Removes a fileEntry from the InstallFile
+        /// Removes a InstallFileEntry from the InstallFile
         /// </summary>
         /// <param name="fileEntry"></param>
-        public void Remove(InstallFileEntry fileEntry)
+        public bool Remove(InstallFileEntry fileEntry)
         {
-            int index = _FileEntries.IndexOfKey(x => x.IndexOf(fileEntry.FilePath, StringComparison.OrdinalIgnoreCase) >= 0);
+            return Remove(fileEntry.FilePath);
+        }
+
+        /// <summary>
+        /// Removes a InstallFileEntry from the InstallFile
+        /// </summary>
+        /// <param name="filePath"></param>
+        public bool Remove(string filePath)
+        {
+            int index = _FileEntries.IndexOfKey(x => x.IndexOf(filePath, StringComparison.OrdinalIgnoreCase) >= 0);
             if (index > -1)
             {
-                _FileEntries.Remove(fileEntry.FilePath);
-                RemoveFile(index);
+                _FileEntries.Remove(filePath);
+                return RemoveFile(index);
             }
+
+            return true;
         }
+
 
         /// <summary>
         /// Returns a InstallFileEntry by name
@@ -254,6 +260,7 @@ namespace TACT.Net.Install
         {
             return _FileEntries.TryGetValue(filename, out fileEntry);
         }
+
 
         /// <summary>
         /// Determines whether the specific filename exists

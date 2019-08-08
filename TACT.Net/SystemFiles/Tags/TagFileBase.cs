@@ -7,10 +7,9 @@ using TACT.Net.Cryptography;
 
 namespace TACT.Net.Tags
 {
-    public class TagFileBase : ISystemFile
+    public class TagFileBase
     {
         public IEnumerable<TagEntry> Tags => _TagEntries.Values;
-        public MD5Hash Checksum { get; protected set; }
 
         protected readonly Dictionary<string, TagEntry> _TagEntries;
 
@@ -75,15 +74,17 @@ namespace TACT.Net.Tags
         /// Removes the specified TagEntry from the collection
         /// </summary>
         /// <param name="tagEntry"></param>
-        public void Remove(TagEntry tagEntry) => _TagEntries.Remove(tagEntry.Name);
+        public bool Remove(TagEntry tagEntry) => _TagEntries.Remove(tagEntry.Name);
 
-        protected void RemoveFile(int index)
+        protected bool RemoveFile(int index)
         {
             if (index <= -1)
-                return;
+                return false;
 
             foreach (var tagEntry in _TagEntries.Values)
                 tagEntry.FileMask.Remove(index);
+
+            return true;
         }
 
         /// <summary>
@@ -214,7 +215,7 @@ namespace TACT.Net.Tags
         {
             // order by type then name, Alternate is Locale although differentiated
             return tagEntries.OrderBy(x => x.TypeId == 0x4000 ? 3 : x.TypeId).ThenBy(x => x.Name);
-        }
+        }        
 
         #endregion
     }

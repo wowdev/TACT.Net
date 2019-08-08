@@ -44,6 +44,8 @@ namespace TACT.Net.Download
             if (!File.Exists(path))
                 throw new FileNotFoundException("Unable to open DownloadSizeFile", path);
 
+            FilePath = path;
+
             using (var fs = File.OpenRead(path))
             using (var bt = new BlockTableStreamReader(fs))
                 Read(bt);
@@ -165,6 +167,7 @@ namespace TACT.Net.Download
             }
 
             Checksum = record.CKey;
+            FilePath = record.BLTEPath;
             return record;
         }
 
@@ -176,8 +179,8 @@ namespace TACT.Net.Download
         /// Adds a CASRecord, this will overwrite existing entries
         /// </summary>
         /// <param name="record"></param>
-        /// <param name="tags"></param>
-        public void AddOrUpdate(CASRecord record)
+        /// <param name="repo"></param>
+        public override void AddOrUpdate(CASRecord record, TACTRepo repo = null)
         {
             var entry = new DownloadSizeFileEntry()
             {

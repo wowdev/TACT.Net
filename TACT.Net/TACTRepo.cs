@@ -224,7 +224,7 @@ namespace TACT.Net
             DownloadFile?.Write(directory, this);
             DownloadSizeFile?.Write(directory, this);
             InstallFile?.Write(directory, this);
-            EncodingFile?.Write(directory, ConfigContainer);
+            EncodingFile?.Write(directory, this);
             ConfigContainer?.Save(directory);
 
             RootFile?.FileLookup?.Close();

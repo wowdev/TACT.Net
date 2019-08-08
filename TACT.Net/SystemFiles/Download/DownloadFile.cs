@@ -14,7 +14,6 @@ namespace TACT.Net.Download
     /// </summary>
     public class DownloadFile : DownloadFileBase<DownloadFileEntry>
     {
-        public string FilePath { get; private set; }
         public DownloadHeader DownloadHeader { get; private set; }
 
         private readonly EMap[] _EncodingMap;
@@ -185,9 +184,8 @@ namespace TACT.Net.Download
         /// Adds a CASRecord, this will overwrite existing entries
         /// </summary>
         /// <param name="record"></param>
-        /// <param name="priority">0 = highest, 2 = lowest, -1 for Install</param>
-        /// <param name="tags"></param>
-        public void AddOrUpdate(CASRecord record)
+        /// <param name="repo"></param>
+        public override void AddOrUpdate(CASRecord record, TACTRepo repo = null)
         {
             // prevent overflow for old versions
             if (DownloadHeader.BasePriority + record.DownloadPriority < 0)
