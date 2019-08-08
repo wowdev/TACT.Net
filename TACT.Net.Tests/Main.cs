@@ -93,7 +93,7 @@ namespace TACT.Net.Tests
             // create an instance
             TACTRepo tactRepo = new TACTRepo(@"D:\Backup\")
             {
-                ConfigContainer = new ConfigContainer("wow", Locale.US)
+                ConfigContainer = new ConfigContainer("wowt", Locale.US)
             };
 
             // open the configs
@@ -217,7 +217,7 @@ namespace TACT.Net.Tests
             Directory.CreateDirectory(tempPath);
 
             // open a new tact instance
-            TACTRepo tactRepo = new TACTRepo();
+            TACTRepo tactRepo = new TACTRepo("test");
             tactRepo.Create("wow", Locale.US, uint.Parse(buildId));
 
             // update the configs
@@ -233,6 +233,7 @@ namespace TACT.Net.Tests
             // set root variables
             tactRepo.RootFile.LocaleFlags = Root.LocaleFlags.enUS;
             tactRepo.RootFile.FileLookup = new MockFileLookup();
+            tactRepo.RootFile.AddBlock(Root.LocaleFlags.All_WoW, 0);
 
             var record = BlockTable.BlockTableEncoder.EncodeAndExport("Resources/seagiant2_27826.m2", tempPath, "creature/seagiant2/seagiant2.m2");
             tactRepo.RootFile.AddOrUpdate(record, tactRepo);
@@ -244,6 +245,7 @@ namespace TACT.Net.Tests
         }
 
         [TestMethod]
+        [Ignore]
         public void OverrideExistingFile_Simple()
         {
             // This is "simple" as I only have the Encoding, Root and configs downloaded - no CDN backup.
@@ -300,9 +302,9 @@ namespace TACT.Net.Tests
 
 
         [TestMethod]
+        [Ignore]
         public void TestDebugStuff()
         {
-
         }
     }
 }
