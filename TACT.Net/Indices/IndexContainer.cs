@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using TACT.Net.BlockTable;
 using TACT.Net.Common;
@@ -10,21 +11,18 @@ using TACT.Net.Network;
 
 namespace TACT.Net.Indices
 {
-    public class IndexContainer : ISystemFile
+    public class IndexContainer
     {
-        const long ArchiveDataSize = 256000000;
+        public const long ArchiveDataSize = 256000000;
 
         public bool IsRemote { get; private set; }
         public IEnumerable<IndexFile> DataIndices => _indices.Where(x => x.IsDataIndex);
         public IEnumerable<IndexFile> LooseIndices => _indices.Where(x => x.IsLooseIndex);
         public IEnumerable<IndexFile> PatchIndices => _indices.Where(x => x.IsPatchIndex);
-        public MD5Hash Checksum { get; }
-
-
         /// <summary>
         /// Files enqueued to be added to a new archive
         /// </summary>
-        private readonly SortedList<MD5Hash, CASRecord> _fileQueue;
+        public readonly SortedList<MD5Hash, CASRecord> QueuedEntries;
 
         private ConcurrentSet<IndexFile> _indices;
         private string _sourceDirectory;
@@ -36,7 +34,11 @@ namespace TACT.Net.Indices
         public IndexContainer()
         {
             _indices = new ConcurrentSet<IndexFile>();
-            _fileQueue = new SortedList<MD5Hash, CASRecord>(new MD5HashComparer());
+            QueuedEntries = new SortedList<MD5Hash, CASRecord>(new MD5HashComparer());
+
+            ThreadPool.GetMinThreads(out int workers, out _);
+            if (workers != 100)
+                ThreadPool.SetMinThreads(100, 100);
         }
 
         #endregion
@@ -197,7 +199,7 @@ namespace TACT.Net.Indices
             }
 
             // create any new archive indices
-            var partitions = EnumerablePartitioner.ConcreteBatch(_fileQueue.Values, ArchiveDataSize, (x) => x.EBlock.CompressedSize);
+            var partitions = EnumerablePartitioner.ConcreteBatch(QueuedEntries.Values, ArchiveDataSize, (x) => x.EBlock.CompressedSize);
             foreach (var entries in partitions)
             {
                 IndexFile index = new IndexFile(IndexType.Data);
@@ -213,22 +215,33 @@ namespace TACT.Net.Indices
 
 
         /// <summary>
-        /// Enqueues a CASRecord for storing archiving
+        /// Enqueues a CASRecord to be written to the indicies and archives
         /// </summary>
         /// <param name="record"></param>
         public void Enqueue(CASRecord record)
         {
-            _fileQueue.TryAdd(record.EKey, record);
+            lock (QueuedEntries)
+                QueuedEntries[record.EKey] = record;
         }
-
         /// <summary>
-        /// Enqueues multiple CASRecords for archiving
+        /// Dequeues a CASRecord from being written to the indicies and archives
         /// </summary>
-        /// <param name="records"></param>
-        public void Enqueue(IEnumerable<CASRecord> records)
+        /// <param name="record"></param>
+        /// <returns></returns>
+        public bool Dequeue(CASRecord record)
         {
-            foreach (var record in records)
-                Enqueue(record);
+            lock (QueuedEntries)
+                return QueuedEntries.Remove(record.EKey);
+        }
+        /// <summary>
+        /// Dequeues an entry from being written to the indicies and archives
+        /// </summary>
+        /// <param name="record"></param>
+        /// <returns></returns>
+        public bool Dequeue(MD5Hash ekey)
+        {
+            lock (QueuedEntries)
+                return QueuedEntries.Remove(ekey);
         }
 
 
@@ -245,7 +258,6 @@ namespace TACT.Net.Indices
             else
                 return OpenRemoteFile(IndexType.Data, ekey);
         }
-
         /// <summary>
         /// Opens a stream to a patch entry stored in the archives
         /// <para>Note: If IsRemote is true the entry will be streamed from a CDN</para>
@@ -284,7 +296,6 @@ namespace TACT.Net.Indices
         /// <param name="index"></param>
         /// <returns></returns>
         public bool Remove(IndexFile index) => _indices.Remove(index);
-
         /// <summary>
         /// Removes an IndexEntry from the collection
         /// </summary>
@@ -357,8 +368,9 @@ namespace TACT.Net.Indices
                     {
                         // segment this entry only
                         var ms = new MemoryStream((int)indexEntry.CompressedSize);
-                        stream.PartialCopyTo(ms, ms.Length);
+                        stream.PartialCopyTo(ms, (int)indexEntry.CompressedSize);
                         stream.Dispose();
+                        ms.Position = 0;
                         return ms;
                     }
                 default:

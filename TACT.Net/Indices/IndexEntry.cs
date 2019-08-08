@@ -53,5 +53,11 @@ namespace TACT.Net.Indices
         }
 
         #endregion
+
+        #region Helpers
+
+        public IndexEntry Clone() => (IndexEntry)MemberwiseClone();
+
+        #endregion
     }
 }

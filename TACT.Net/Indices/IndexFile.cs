@@ -44,7 +44,6 @@ namespace TACT.Net.Indices
             _newEntries = new Dictionary<MD5Hash, CASRecord>();
 
             Type = type;
-            Checksum = new MD5Hash(new byte[0]);
             IndexFooter = new IndexFooter();
 
             if (IsLooseIndex)
@@ -322,12 +321,32 @@ namespace TACT.Net.Indices
 
             RequiresSave = true;
         }
-
         /// <summary>
         /// Adds multiple CASRecords to the archive
         /// </summary>
         /// <param name="records"></param>
         public void Add(IEnumerable<CASRecord> records)
+        {
+            foreach (var record in records)
+                Add(record);
+        }
+        /// <summary>
+        /// Adds a IndexEntry to the archive
+        /// </summary>
+        /// <param name="entry"></param>
+        public void Add(IndexEntry entry)
+        {
+            entry.Offset = (uint)_currentOffset;
+            _currentOffset += entry.CompressedSize;
+
+            _indexEntries[entry.Key] = entry;
+            RequiresSave = true;
+        }
+        /// <summary>
+        /// Addes multiple IndexEntries to the archive
+        /// </summary>
+        /// <param name="records"></param>
+        public void Add(IEnumerable<IndexEntry> records)
         {
             foreach (var record in records)
                 Add(record);
@@ -371,10 +390,14 @@ namespace TACT.Net.Indices
         /// Removes multiple index entries from the archive
         /// </summary>
         /// <param name="hashes"></param>
-        public void Remove(IEnumerable<MD5Hash> hashes)
+        public int Remove(IEnumerable<MD5Hash> hashes)
         {
+            int count = 0;
             foreach (var hash in hashes)
-                Remove(hash);
+                if (Remove(hash))
+                    count++;
+
+            return count;
         }
 
         /// <summary>
@@ -440,11 +463,14 @@ namespace TACT.Net.Indices
                 else
                 {
                     // remove old hash
-                    int index = archives.IndexOf(Checksum.ToString());
-                    if (Checksum.Value != null && index > -1)
+                    if (Checksum.Value != null)
                     {
-                        archives.RemoveAt(index);
-                        sizes?.RemoveAt(index);
+                        int index = archives.IndexOf(Checksum.ToString());
+                        if(index > -1)
+                        {
+                            archives.RemoveAt(index);
+                            sizes?.RemoveAt(index);
+                        }
                     }
 
                     // add if new
