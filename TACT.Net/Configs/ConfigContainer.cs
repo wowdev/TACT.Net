@@ -100,6 +100,30 @@ namespace TACT.Net.Configs
         }
 
         /// <summary>
+        /// Opens the config files from disk
+        /// </summary>
+        /// <param name="directory"></param>
+        /// <param name="buildConfigMD5"></param>
+        /// <param name="cdnConfigMD5"></param>
+        /// <param name="patchConfigMD5"></param>
+        public void OpenConfigs(string directory, string buildConfigMD5, string cdnConfigMD5, string patchConfigMD5 = null)
+        {
+            if (!string.IsNullOrWhiteSpace(buildConfigMD5))
+                BuildConfig = new KeyValueConfig(buildConfigMD5, directory, ConfigType.BuildConfig);
+
+            if (!string.IsNullOrWhiteSpace(cdnConfigMD5))
+                CDNConfig = new KeyValueConfig(cdnConfigMD5, directory, ConfigType.CDNConfig);
+
+            // optionally load the patch config
+            if (!string.IsNullOrWhiteSpace(patchConfigMD5))
+            {
+                string path = Helpers.GetCDNPath(patchConfigMD5, "config", directory);
+                if (File.Exists(path))
+                    PatchConfig = new KeyValueConfig(patchConfigMD5, directory, ConfigType.PatchConfig);
+            }
+        }
+
+        /// <summary>
         /// Opens the CDNs, Versions from Ribbit and the config files from Blizzard's CDN
         /// </summary>
         public void OpenRemote()
