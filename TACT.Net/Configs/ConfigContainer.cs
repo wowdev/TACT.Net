@@ -25,21 +25,11 @@ namespace TACT.Net.Configs
         /// Lists the various patch files and their size, encoding and checksums
         /// </summary>
         public KeyValueConfig PatchConfig { get; set; }
-        /// <summary>
-        /// Information for downloading files by region
-        /// </summary>
-        public VariableConfig CDNsFile { get; private set; }
-        /// <summary>
-        /// Lists the Build and CDN configs and product details by region
-        /// </summary>
-        public VariableConfig VersionsFile { get; private set; }
 
         #endregion
 
         #region Keys
 
-        public MD5Hash BuildConfigMD5 => TryGetKey(VersionsFile, "buildconfig");
-        public MD5Hash CDNConfigMD5 => TryGetKey(VersionsFile, "cdnconfig");
         public MD5Hash PatchConfigMD5 => TryGetKey(BuildConfig, "patch-config");
         public MD5Hash RootCKey => TryGetKey(BuildConfig, "root");
         public MD5Hash EncodingCKey => TryGetKey(BuildConfig, "encoding");
@@ -54,49 +44,43 @@ namespace TACT.Net.Configs
 
         #endregion
 
-        /// <summary>
-        /// The Blizzard Product Code
-        /// </summary>
-        public readonly string Product;
-        /// <summary>
-        /// Current Locale
-        /// </summary>
-        public readonly Locale Locale;
-
-        #region Constructors
-
-        public ConfigContainer(string product, Locale locale)
-        {
-            Product = product;
-            Locale = locale;
-        }
-
-        #endregion
-
         #region Methods
 
         /// <summary>
         /// Creates a new set of configs
         /// </summary>
         /// <param name="build">Optionally loads build specific config values</param>
-        public void Create(uint build = 0)
+        public void Create()
         {
-            CDNsFile = new VariableConfig(ConfigType.CDNs);
-            VersionsFile = new VariableConfig(ConfigType.Versions);
             BuildConfig = new KeyValueConfig(ConfigType.BuildConfig);
             CDNConfig = new KeyValueConfig(ConfigType.CDNConfig);
         }
 
         /// <summary>
-        /// Opens the CDNs, Versions and config files from disk
+        /// Loads the Build, CDN and Patch configs from disk
         /// </summary>
         /// <param name="directory">Directory containing the config files</param>
-        public void OpenLocal(string directory)
+        public void OpenLocal(string directory, ManifestContainer manifestContainer)
         {
-            CDNsFile = new VariableConfig(Path.Combine(directory, Product), ConfigType.CDNs);
-            VersionsFile = new VariableConfig(Path.Combine(directory, Product), ConfigType.Versions);
+            if (manifestContainer?.VersionsFile == null || manifestContainer?.CDNsFile == null)
+                throw new Exception("Versions and CDNs files must be loaded first");
 
-            LoadConfigs(directory);
+            if (!manifestContainer.VersionsFile.HasLocale(manifestContainer.Locale))
+                throw new Exception($"Versions missing {manifestContainer.Locale} locale");
+
+            if (manifestContainer.BuildConfigMD5.Value != null)
+                BuildConfig = new KeyValueConfig(manifestContainer.BuildConfigMD5.ToString(), directory, ConfigType.BuildConfig);
+
+            if (manifestContainer.CDNConfigMD5.Value != null)
+                CDNConfig = new KeyValueConfig(manifestContainer.CDNConfigMD5.ToString(), directory, ConfigType.CDNConfig);
+
+            // optionally load the patch config
+            if (PatchConfigMD5.Value != null)
+            {
+                string path = Helpers.GetCDNPath(PatchConfigMD5.ToString(), "config", directory);
+                if (File.Exists(path))
+                    PatchConfig = new KeyValueConfig(PatchConfigMD5.ToString(), directory, ConfigType.PatchConfig);
+            }
         }
 
         /// <summary>
@@ -106,7 +90,7 @@ namespace TACT.Net.Configs
         /// <param name="buildConfigMD5"></param>
         /// <param name="cdnConfigMD5"></param>
         /// <param name="patchConfigMD5"></param>
-        public void OpenConfigs(string directory, string buildConfigMD5, string cdnConfigMD5, string patchConfigMD5 = null)
+        public void OpenLocal(string directory, string buildConfigMD5, string cdnConfigMD5, string patchConfigMD5 = null)
         {
             if (!string.IsNullOrWhiteSpace(buildConfigMD5))
                 BuildConfig = new KeyValueConfig(buildConfigMD5, directory, ConfigType.BuildConfig);
@@ -126,38 +110,32 @@ namespace TACT.Net.Configs
         /// <summary>
         /// Opens the CDNs, Versions from Ribbit and the config files from Blizzard's CDN
         /// </summary>
-        public void OpenRemote()
+        public void OpenRemote(ManifestContainer manifestContainer)
         {
-            var ribbit = new RibbitClient(Locale);
+            if (manifestContainer?.VersionsFile == null || manifestContainer?.CDNsFile == null)
+                throw new Exception("Versions and CDNs files must be loaded first");
 
-            using (var cdnstream = ribbit.GetStream(RibbitCommand.CDNs, Product).Result)
-            using (var verstream = ribbit.GetStream(RibbitCommand.Versions, Product).Result)
+            if (!manifestContainer.VersionsFile.HasLocale(manifestContainer.Locale))
+                throw new Exception($"Versions missing {manifestContainer.Locale} locale");
+
+            var cdnClient = new CDNClient(manifestContainer);
+
+            if (manifestContainer.BuildConfigMD5.Value != null)
             {
-                CDNsFile = new VariableConfig(cdnstream, ConfigType.CDNs);
-                VersionsFile = new VariableConfig(verstream, ConfigType.Versions);
+                string configUrl = Helpers.GetCDNUrl(manifestContainer.BuildConfigMD5.ToString(), "config");
+                BuildConfig = new KeyValueConfig(cdnClient.OpenStream(configUrl).Result, ConfigType.BuildConfig);
+            }
 
-                if (!VersionsFile.HasLocale(Locale))
-                    throw new Exception($"Versions missing {Locale} locale");
+            if (manifestContainer.CDNConfigMD5.Value != null)
+            {
+                string configUrl = Helpers.GetCDNUrl(manifestContainer.CDNConfigMD5.ToString(), "config");
+                CDNConfig = new KeyValueConfig(cdnClient.OpenStream(configUrl).Result, ConfigType.CDNConfig);
+            }
 
-                var cdnClient = new CDNClient(this);
-
-                if (BuildConfigMD5.Value != null)
-                {
-                    string configUrl = Helpers.GetCDNUrl(BuildConfigMD5.ToString(), "config");
-                    BuildConfig = new KeyValueConfig(cdnClient.OpenStream(configUrl).Result, ConfigType.BuildConfig);
-                }
-
-                if (CDNConfigMD5.Value != null)
-                {
-                    string configUrl = Helpers.GetCDNUrl(CDNConfigMD5.ToString(), "config");
-                    CDNConfig = new KeyValueConfig(cdnClient.OpenStream(configUrl).Result, ConfigType.CDNConfig);
-                }
-
-                if (PatchConfigMD5.Value != null)
-                {
-                    string configUrl = Helpers.GetCDNUrl(PatchConfigMD5.ToString(), "config");
-                    PatchConfig = new KeyValueConfig(cdnClient.OpenStream(configUrl).Result, ConfigType.PatchConfig);
-                }
+            if (PatchConfigMD5.Value != null)
+            {
+                string configUrl = Helpers.GetCDNUrl(PatchConfigMD5.ToString(), "config");
+                PatchConfig = new KeyValueConfig(cdnClient.OpenStream(configUrl).Result, ConfigType.PatchConfig);
             }
         }
 
@@ -165,46 +143,17 @@ namespace TACT.Net.Configs
         /// Download and load the config files from remote
         /// </summary>
         /// <param name="directory"></param>
-        public void DownloadRemote(string directory)
+        public void DownloadRemote(string directory, ManifestContainer manifestContainer)
         {
-            OpenRemote();
+            OpenRemote(manifestContainer);
             Save(directory);
-        }
-
-
-        /// <summary>
-        /// Loads the Build, CDN and Patch configs
-        /// </summary>
-        /// <param name="directory"></param>
-        /// <param name="locale"></param>
-        private void LoadConfigs(string directory)
-        {
-            if (VersionsFile == null || CDNsFile == null)
-                throw new Exception("Versions and CDNs files must be loaded first");
-
-            if (!VersionsFile.HasLocale(Locale))
-                throw new Exception($"Versions missing {Locale} locale");
-
-            if (BuildConfigMD5.Value != null)
-                BuildConfig = new KeyValueConfig(BuildConfigMD5.ToString(), directory, ConfigType.BuildConfig);
-
-            if (CDNConfigMD5.Value != null)
-                CDNConfig = new KeyValueConfig(CDNConfigMD5.ToString(), directory, ConfigType.CDNConfig);
-
-            // optionally load the patch config
-            if (PatchConfigMD5.Value != null)
-            {
-                string path = Helpers.GetCDNPath(PatchConfigMD5.ToString(), "config", directory);
-                if (File.Exists(path))
-                    PatchConfig = new KeyValueConfig(PatchConfigMD5.ToString(), directory, ConfigType.PatchConfig);
-            }
         }
 
         /// <summary>
         /// Saves the configs using to the Blizzard standard location
         /// </summary>
         /// <param name="directory"></param>
-        public void Save(string directory)
+        public void Save(string directory, ManifestContainer manifestContainer = null)
         {
             // save and update patch config value
             if (PatchConfig != null)
@@ -218,12 +167,8 @@ namespace TACT.Net.Configs
             CDNConfig?.Write(directory);
 
             // update the hashes
-            VersionsFile.SetValue("buildconfig", BuildConfig.Checksum.ToString());
-            VersionsFile.SetValue("cdnconfig", CDNConfig.Checksum.ToString());
-
-            // save the primary configs
-            CDNsFile.Write(directory, Product);
-            VersionsFile.Write(directory, Product);
+            manifestContainer?.VersionsFile.SetValue("buildconfig", BuildConfig.Checksum.ToString());
+            manifestContainer?.VersionsFile.SetValue("cdnconfig", CDNConfig.Checksum.ToString());
         }
 
         #endregion
@@ -258,15 +203,9 @@ namespace TACT.Net.Configs
             return default;
         }
 
-        private MD5Hash TryGetKey(IConfig config, string identifier, int index = 0)
+        private MD5Hash TryGetKey(KeyValueConfig config, string identifier, int index = 0)
         {
-            MD5Hash hash = default;
-
-            if (config is VariableConfig _varConf)
-                MD5Hash.TryParse(_varConf.GetValue(identifier, Locale), out hash);
-            else if (config is KeyValueConfig _keyConf)
-                MD5Hash.TryParse(_keyConf.GetValue(identifier, index), out hash);
-
+            MD5Hash.TryParse(config.GetValue(identifier, index), out MD5Hash hash);
             return hash;
         }
 

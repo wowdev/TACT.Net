@@ -15,7 +15,7 @@ namespace TACT.Net.Common
         /// <returns></returns>
         public static string GetCDNPath(string filename, string folder = "", string directory = "", bool create = false)
         {
-            string dir = Path.Combine(directory, "tpr", "wow", folder, filename.Substring(0, 2), filename.Substring(2, 2));
+            string dir = Path.Combine(directory, folder, filename.Substring(0, 2), filename.Substring(2, 2));
             if (create)
                 Directory.CreateDirectory(dir);
 

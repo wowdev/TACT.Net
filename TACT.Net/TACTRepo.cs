@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System.IO;
 using System.Runtime.CompilerServices;
 using TACT.Net.Common;
 using TACT.Net.Cryptography;
@@ -10,12 +9,18 @@ namespace TACT.Net
 {
     public sealed class TACTRepo
     {
-        public readonly string BaseDirectory;
-
+        /// <summary>
+        /// The root archive folder containing all files typically "tpr/wow/"
+        /// </summary>
+        public string BaseDirectory { get; private set; }
+        /// <summary>
+        /// The client build number of the repo
+        /// </summary>
         public uint Build { get; private set; }
 
         #region System Files
 
+        public Configs.ManifestContainer ManifestContainer { get; set; }
         public Configs.ConfigContainer ConfigContainer { get; set; }
         public Indices.IndexContainer IndexContainer { get; set; }
         public Encoding.EncodingFile EncodingFile { get; set; }
@@ -34,6 +39,20 @@ namespace TACT.Net
             BaseDirectory = baseDirectory;
         }
 
+        /// <summary>
+        /// Loads the CDNs/Versions manifests and optional stores the base directory
+        /// </summary>
+        /// <param name="product"></param>
+        /// <param name="locale"></param>
+        /// <param name="manifestDirectory"></param>
+        /// <param name="baseDirectory"></param>
+        public TACTRepo(string product, Locale locale, string manifestDirectory, string baseDirectory = "")
+        {
+            ManifestContainer = new Configs.ManifestContainer(product, locale);
+            ManifestContainer.OpenLocal(manifestDirectory);
+            BaseDirectory = baseDirectory;
+        }
+
         #endregion
 
         #region Methods
@@ -49,7 +68,10 @@ namespace TACT.Net
         {
             Build = build;
 
-            ConfigContainer = new Configs.ConfigContainer(product, locale);
+            ManifestContainer = new Configs.ManifestContainer(product, locale);
+            ManifestContainer.Create();
+
+            ConfigContainer = new Configs.ConfigContainer();
             ConfigContainer.Create();
 
             IndexContainer = new Indices.IndexContainer();
@@ -68,16 +90,20 @@ namespace TACT.Net
 
         /// <summary>
         /// Opens an existing TACT container and loads the Root and Encoding files
+        /// <para></para>
+        /// NOTE: a ManifestContainer MUST be loaded first
         /// </summary>
         /// <param name="directory"></param>
         /// <param name="product"></param>
         /// <param name="locale"></param>
-        public void Open(string directory, string product, Locale locale)
+        public void Open(string directory)
         {
-            ConfigContainer = new Configs.ConfigContainer(product, locale);
-            ConfigContainer.OpenLocal(directory);
+            BaseDirectory = directory;         
 
-            if (uint.TryParse(ConfigContainer?.VersionsFile?.GetValue("BuildId", locale), out uint build))
+            ConfigContainer = new Configs.ConfigContainer();
+            ConfigContainer.OpenLocal(directory, ManifestContainer);
+
+            if (uint.TryParse(ManifestContainer?.VersionsFile?.GetValue("BuildId", ManifestContainer.Locale), out uint build))
                 Build = build;
 
             IndexContainer = new Indices.IndexContainer();
@@ -116,17 +142,19 @@ namespace TACT.Net
         /// <param name="locale"></param>
         public void OpenRemote(string product, Locale locale)
         {
-            ConfigContainer = new Configs.ConfigContainer(product, locale);
-            ConfigContainer.OpenRemote();
+            ManifestContainer = new Configs.ManifestContainer(product, locale);
 
-            if (uint.TryParse(ConfigContainer?.VersionsFile?.GetValue("BuildId", locale), out uint build))
+            ConfigContainer = new Configs.ConfigContainer();
+            ConfigContainer.OpenRemote(ManifestContainer);
+
+            if (uint.TryParse(ManifestContainer?.VersionsFile?.GetValue("BuildId", locale), out uint build))
                 Build = build;
 
             // stream Indicies
             IndexContainer = new Indices.IndexContainer();
-            IndexContainer.OpenRemote(ConfigContainer, true);
+            IndexContainer.OpenRemote(ConfigContainer, ManifestContainer, true);
 
-            var cdnClient = new CDNClient(ConfigContainer);
+            var cdnClient = new CDNClient(ManifestContainer);
 
             if (ConfigContainer.EncodingEKey.Value != null)
             {
@@ -171,10 +199,12 @@ namespace TACT.Net
         /// <param name="locale"></param>
         public void DownloadRemote(string directory, string product, Locale locale)
         {
-            ConfigContainer = new Configs.ConfigContainer(product, locale);
-            ConfigContainer.DownloadRemote(directory);
+            ManifestContainer = new Configs.ManifestContainer(product, locale);
 
-            var cdnClient = new CDNClient(ConfigContainer);
+            ConfigContainer = new Configs.ConfigContainer();
+            ConfigContainer.DownloadRemote(directory, ManifestContainer);
+
+            var cdnClient = new CDNClient(ManifestContainer);
             var queuedDownload = new QueuedDownloader(directory, cdnClient);
 
             if (ConfigContainer.EncodingEKey.Value != null)
@@ -208,12 +238,17 @@ namespace TACT.Net
 
             // Download Indices and archives
             IndexContainer = new Indices.IndexContainer();
-            IndexContainer.DownloadRemote(directory, ConfigContainer);
+            IndexContainer.DownloadRemote(directory, ConfigContainer, ManifestContainer);
 
-            Open(directory, product, locale);
+            Open(directory);
         }
 
-        public void Save(string directory)
+        /// <summary>
+        /// Saves all open System Files to disk.
+        /// </summary>
+        /// <param name="directory"></param>
+        /// <param name="manifestDirectory">Optional stores the Versions/CDNs in a different location</param>
+        public void Save(string directory, string manifestDirectory = "")
         {
             // if this field exists and mismatches the generated file; the client will error
             // if this field is missing the client will generate the file and variable itself
@@ -225,7 +260,13 @@ namespace TACT.Net
             DownloadSizeFile?.Write(directory, this);
             InstallFile?.Write(directory, this);
             EncodingFile?.Write(directory, this);
-            ConfigContainer?.Save(directory);
+            ConfigContainer?.Save(directory, ManifestContainer);
+
+            // save the manifests
+            if (string.IsNullOrWhiteSpace(manifestDirectory))
+                manifestDirectory = directory;
+
+            ManifestContainer?.Save(manifestDirectory);
 
             RootFile?.FileLookup?.Close();
         }

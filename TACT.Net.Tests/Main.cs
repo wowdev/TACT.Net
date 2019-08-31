@@ -9,7 +9,8 @@ namespace TACT.Net.Tests
     [TestClass]
     public class Main
     {
-        const string PATH = @"D:\Backup\";
+        const string MANIFEST_PATH = @"D:\Backup\wowt";
+        const string PATH = @"D:\Backup\tpr\wow";
 
         [ClassInitialize()]
         public static void Startup(TestContext context)
@@ -32,7 +33,7 @@ namespace TACT.Net.Tests
             // WOW-28807patch8.1.0_PTR
 
             string ckey = "1a5047b2eebe491069f2f718aee082eb";
-            Indices.IndexFile index = new Indices.IndexFile(Path.Combine(PATH, @"tpr\wow\data\1a\50", "1a5047b2eebe491069f2f718aee082eb.index"));
+            Indices.IndexFile index = new Indices.IndexFile(Path.Combine(PATH, @"data\1a\50", "1a5047b2eebe491069f2f718aee082eb.index"));
             index.Write("test");
             Assert.AreEqual(ckey, index.Checksum.ToString());
 
@@ -41,7 +42,7 @@ namespace TACT.Net.Tests
             Assert.AreEqual(ckey, rootFile.Write(@"test").CKey.ToString());
 
             ckey = "c21a5f9d0a7f8ac9d332ddb15c79b97d";
-            Root.RootFile rootFileV2 = new Root.RootFile(Path.Combine(PATH, "3e6e2458346ad9507cc5a98655b192eb"));
+            Root.RootFile rootFileV2 = new Root.RootFile(Path.Combine(@"D:\Backup\", "3e6e2458346ad9507cc5a98655b192eb"));
             Assert.AreEqual(ckey, rootFileV2.Write("test").CKey.ToString());
 
             ckey = "eb25fe8bd9e5b9400cc236d196975972";
@@ -73,16 +74,18 @@ namespace TACT.Net.Tests
         [TestMethod]
         public void TestConfigs()
         {
-            TACTRepo tactRepo = new TACTRepo()
+            TACTRepo tactRepo = new TACTRepo("wow", Locale.US, MANIFEST_PATH, PATH)
             {
-                ConfigContainer = new ConfigContainer("wowt", Locale.US)
+                ManifestContainer = new ManifestContainer("wow", Locale.US),
+                ConfigContainer = new ConfigContainer()
             };
 
-            //configContainer.OpenRemote(@"D:\Backup\");
+            //configContainer.OpenRemote(PATH);
             //Assert.IsNotNull(configContainer.VersionsFile);
 
-            tactRepo.ConfigContainer.OpenLocal(@"D:\Backup\");
-            Assert.IsNotNull(tactRepo.ConfigContainer.VersionsFile);
+            tactRepo.ManifestContainer.OpenLocal(MANIFEST_PATH);
+            tactRepo.ConfigContainer.OpenLocal(PATH, tactRepo.ManifestContainer);
+            Assert.IsNotNull(tactRepo.ManifestContainer.VersionsFile);
             Assert.IsNotNull(tactRepo.ConfigContainer.BuildConfig);
             Assert.IsFalse(tactRepo.ConfigContainer.RootCKey.IsEmpty);
         }
@@ -91,13 +94,15 @@ namespace TACT.Net.Tests
         public void TestOpenFile()
         {
             // create an instance
-            TACTRepo tactRepo = new TACTRepo(@"D:\Backup\")
+            TACTRepo tactRepo = new TACTRepo(PATH)
             {
-                ConfigContainer = new ConfigContainer("wowt", Locale.US)
+                ManifestContainer = new ManifestContainer("wow", Locale.US),
+                ConfigContainer = new ConfigContainer()
             };
 
             // open the configs
-            tactRepo.ConfigContainer.OpenLocal(tactRepo.BaseDirectory);
+            tactRepo.ManifestContainer.OpenLocal(MANIFEST_PATH);
+            tactRepo.ConfigContainer.OpenLocal(tactRepo.BaseDirectory, tactRepo.ManifestContainer);
 
             // load the archives
             tactRepo.IndexContainer = new Indices.IndexContainer();
@@ -169,13 +174,15 @@ namespace TACT.Net.Tests
         public void TestZBSPatchingReal()
         {
             // create an instance
-            TACTRepo tactRepo = new TACTRepo(@"D:\Backup\")
+            TACTRepo tactRepo = new TACTRepo(PATH)
             {
-                ConfigContainer = new ConfigContainer("wowt", Locale.US)
+                ManifestContainer = new ManifestContainer("wow", Locale.US),
+                ConfigContainer = new ConfigContainer()
             };
 
             // open the configs
-            tactRepo.ConfigContainer.OpenLocal(tactRepo.BaseDirectory);
+            tactRepo.ManifestContainer.OpenLocal(MANIFEST_PATH);
+            tactRepo.ConfigContainer.OpenLocal(tactRepo.BaseDirectory, tactRepo.ManifestContainer);
 
             // load the archives
             tactRepo.IndexContainer = new Indices.IndexContainer();
@@ -222,13 +229,13 @@ namespace TACT.Net.Tests
 
             // update the configs
             // build info and server locations
-            tactRepo.ConfigContainer.VersionsFile.SetValue("BuildId", buildId);
-            tactRepo.ConfigContainer.VersionsFile.SetValue("VersionsName", versionName);
+            tactRepo.ManifestContainer.VersionsFile.SetValue("BuildId", buildId);
+            tactRepo.ManifestContainer.VersionsFile.SetValue("VersionsName", versionName);
             tactRepo.ConfigContainer.BuildConfig.SetValue("Build-Name", buildName, 0);
             tactRepo.ConfigContainer.BuildConfig.SetValue("Build-UID", "wow", 0);
             tactRepo.ConfigContainer.BuildConfig.SetValue("Build-Product", "WoW", 0);
-            tactRepo.ConfigContainer.CDNsFile.SetValue("Hosts", "localhost");
-            tactRepo.ConfigContainer.CDNsFile.SetValue("Servers", "http://127.0.0.1");
+            tactRepo.ManifestContainer.CDNsFile.SetValue("Hosts", "localhost");
+            tactRepo.ManifestContainer.CDNsFile.SetValue("Servers", "http://127.0.0.1");
 
             // set root variables
             tactRepo.RootFile.LocaleFlags = Root.LocaleFlags.enUS;
@@ -241,7 +248,7 @@ namespace TACT.Net.Tests
             record.FileName = "WoW.exe";
             tactRepo.InstallFile.AddOrUpdate(record, tactRepo);
 
-            tactRepo.Save(tactRepo.BaseDirectory);
+            tactRepo.Save(tactRepo.BaseDirectory, tactRepo.BaseDirectory);
         }
 
         [TestMethod]
@@ -257,21 +264,23 @@ namespace TACT.Net.Tests
 
             TACTRepo tactRepo = new TACTRepo(@"C:\wamp64\www")
             {
-                ConfigContainer = new ConfigContainer("wow", Locale.EU)
+                ManifestContainer = new ManifestContainer("wow", Locale.US),
+                ConfigContainer = new ConfigContainer()
             };
 
             // open the configs
             // note: the Patch file is removed since it isn't accessible (aka downloaded)
-            tactRepo.ConfigContainer.OpenLocal(tactRepo.BaseDirectory);
+            tactRepo.ManifestContainer.OpenLocal(MANIFEST_PATH);
+            tactRepo.ConfigContainer.OpenLocal(tactRepo.BaseDirectory, tactRepo.ManifestContainer);
 
             // update the cdns config to point to localhost
-            var hosts = tactRepo.ConfigContainer.CDNsFile.GetValue("hosts", Locale.EU);
+            var hosts = tactRepo.ManifestContainer.CDNsFile.GetValue("hosts", Locale.EU);
             if (!hosts.Contains("127.0.0.1"))
-                tactRepo.ConfigContainer.CDNsFile.SetValue("hosts", hosts.Insert(0, "127.0.0.1 "), Locale.EU);
+                tactRepo.ManifestContainer.CDNsFile.SetValue("hosts", hosts.Insert(0, "127.0.0.1 "), Locale.EU);
 
-            var servers = tactRepo.ConfigContainer.CDNsFile.GetValue("servers", Locale.EU);
+            var servers = tactRepo.ManifestContainer.CDNsFile.GetValue("servers", Locale.EU);
             if (!servers.Contains("http://127.0.0.1"))
-                tactRepo.ConfigContainer.CDNsFile.SetValue("servers", hosts.Insert(0, "http://127.0.0.1 "), Locale.EU);
+                tactRepo.ManifestContainer.CDNsFile.SetValue("servers", hosts.Insert(0, "http://127.0.0.1 "), Locale.EU);
 
             // create an index container
             tactRepo.IndexContainer = new Indices.IndexContainer();

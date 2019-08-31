@@ -15,7 +15,7 @@
 
   <ItemGroup>
     <PackageReference Include="Joveler.Compression.ZLib" Version="2.2.0" />
-    <PackageReference Include="MimeKitLite" Version="2.1.4" />
+    <PackageReference Include="MimeKitLite" Version="2.3.0" />
   </ItemGroup>
 
 </Project>

@@ -79,14 +79,14 @@ namespace TACT.Net.Indices
         /// <summary>
         /// Parses all Index files from a remote CDN
         /// </summary>
-        /// <param name="configContainer"></param>
+        /// <param name="manifestContainer"></param>
         /// <param name="useParallelism"></param>
-        public void OpenRemote(Configs.ConfigContainer configContainer, bool useParallelism = false)
+        public void OpenRemote(Configs.ConfigContainer configContainer, Configs.ManifestContainer manifestContainer, bool useParallelism = false)
         {
             IsRemote = true;
 
             _useParallelism = useParallelism;
-            _client = new CDNClient(configContainer);
+            _client = new CDNClient(manifestContainer);
 
             ParallelOptions options = new ParallelOptions() { MaxDegreeOfParallelism = useParallelism ? -1 : 1 };
 
@@ -116,9 +116,9 @@ namespace TACT.Net.Indices
         /// </summary>
         /// <param name="directory"></param>
         /// <param name="configContainer"></param>
-        public void DownloadRemote(string directory, Configs.ConfigContainer configContainer)
+        public void DownloadRemote(string directory, Configs.ConfigContainer configContainer, Configs.ManifestContainer manifestContainer)
         {
-            _client = new CDNClient(configContainer);
+            _client = new CDNClient(manifestContainer);
 
             var queuedDownloader = new QueuedDownloader(directory, _client);
 

@@ -39,12 +39,12 @@ namespace TACT.Net.Network
         /// </summary>
         /// <param name="configContainer"></param>
         /// <param name="applyDecryption"></param>
-        public CDNClient(Configs.ConfigContainer configContainer, bool applyDecryption = false) : this(applyDecryption)
+        public CDNClient(Configs.ManifestContainer manifestContainer, bool applyDecryption = false) : this(applyDecryption)
         {
-            if (configContainer.CDNsFile == null)
+            if (manifestContainer?.CDNsFile == null)
                 throw new ArgumentException("Unable to load CDNs file");
 
-            string[] hosts = configContainer.CDNsFile.GetValue("Hosts", configContainer.Locale)?.Split(' ');
+            string[] hosts = manifestContainer.CDNsFile.GetValue("Hosts", manifestContainer.Locale)?.Split(' ');
             foreach (var host in hosts)
                 Hosts.Add(host.Split('?')[0]);
 
