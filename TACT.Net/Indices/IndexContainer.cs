@@ -46,10 +46,14 @@ namespace TACT.Net.Indices
         #region Methods
 
         /// <summary>
-        /// Parses all Index files in the provided directory
+        /// Parses all Index files in the provided directory.
+        /// <para></para>
+        /// Providing the ConfigContainer will filter indices to just those used in the CDNConfig.
         /// </summary>
-        /// <param name="directory"></param>
-        public void Open(string directory, bool useParallelism = false)
+        /// <param name="directory">Directory the archives are located</param>
+        /// <param name="configContainer">The Configs for the repo</param>
+        /// <param name="useParallelism">Enables parallel processing</param>
+        public void Open(string directory, Configs.ConfigContainer configContainer = null, bool useParallelism = false)
         {
             IsRemote = false;
 
@@ -60,6 +64,13 @@ namespace TACT.Net.Indices
                 throw new ArgumentException("Directory not found", paramName: nameof(directory));
 
             var indices = Directory.EnumerateFiles(directory, "*.index", SearchOption.AllDirectories);
+
+            // filter the indices to just this version's
+            if(configContainer != null)
+            {
+                var applicableIndicies = GetRequiredIndices(configContainer);
+                indices = indices.Where(x => applicableIndicies.Contains(Path.GetFileNameWithoutExtension(x)));
+            }
 
             ParallelOptions options = new ParallelOptions() { MaxDegreeOfParallelism = useParallelism ? -1 : 1 };
             Parallel.ForEach(indices, options, index => _indices.Add(new IndexFile(index)));
@@ -210,7 +221,7 @@ namespace TACT.Net.Indices
 
             // reload indices
             _indices.Clear();
-            Open(directory, _useParallelism);
+            Open(directory, useParallelism: _useParallelism);
         }
 
 
@@ -314,6 +325,38 @@ namespace TACT.Net.Indices
 
         #region Helpers
 
+        /// <summary>
+        /// Returns a list of index filenames used by the specific CDNConfig
+        /// </summary>
+        /// <param name="configContainer"></param>
+        /// <returns></returns>
+        private HashSet<string> GetRequiredIndices(Configs.ConfigContainer configContainer)
+        {
+            var indices = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            // data archives
+            var archives = configContainer.CDNConfig.GetValues("archives");
+            if (archives != null)
+                indices.UnionWith(archives);
+
+            // patch archives
+            var patcharchives = configContainer.CDNConfig.GetValues("patch-archives");
+            if (patcharchives != null)
+                indices.UnionWith(patcharchives);
+
+            // loose file index
+            var fileIndex = configContainer.CDNConfig.GetValue("file-index");
+            if (fileIndex != null)
+                indices.Add(fileIndex);
+
+            // loose patch file index
+            var patchIndex = configContainer.CDNConfig.GetValue("patch-file-index");
+            if (patchIndex != null)
+                indices.Add(patchIndex);
+
+            return indices;
+        }
+        
         /// <summary>
         /// Generic method to find a hash inside a collection of IndexFiles
         /// </summary>
