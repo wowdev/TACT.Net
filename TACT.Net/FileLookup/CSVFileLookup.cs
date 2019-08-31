@@ -72,12 +72,6 @@ namespace TACT.Net.FileLookup
         }
 
         /// <summary>
-        /// Finds all unassigned Ids and adds them to the Id pool. 
-        /// If used, Ids below MinimumFileId will be discarded
-        /// </summary>
-        public void PopulateUnassignedIds() => LoadUnusedIDs();
-
-        /// <summary>
         /// Asynchronously saves the FileIdMap as a CSV
         /// </summary>
         /// <returns></returns>
@@ -131,23 +125,6 @@ namespace TACT.Net.FileLookup
         #endregion
 
         #region Helpers
-
-        /// <summary>
-        /// Generates a range of IDs that aren't used
-        /// </summary>
-        private void LoadUnusedIDs()
-        {
-            uint min = Math.Max(_fileLookup.Values.Min(), _minFileId);
-
-            IEnumerable<uint> GetRange()
-            {
-                for (; min < _curMaxId; min++)
-                    yield return min;
-            }
-
-            var idRange = GetRange().Except(_fileLookup.Values);
-            _unusedIds = new Queue<uint>(idRange);
-        }
 
         public void Dispose()
         {
