@@ -90,7 +90,7 @@ namespace TACT.Net.BlockTable
                 chunkCount = reader.ReadUInt24BE();
 
                 if (flags != 0xF || chunkCount == 0)
-                    throw new InvalidDataException($"Bad table format 0x{flags:X2}, numBlocks {chunkCount}");
+                    throw new InvalidDataException($"Bad table format 0x{flags.ToString("X2")}, numBlocks {chunkCount}");
 
                 uint frameHeaderSize = 24 * chunkCount + 12;
                 if (headerSize != frameHeaderSize)
@@ -149,7 +149,7 @@ Process:
                     memStream.Write(data, 1, data.Length - 1);
                     break;
                 default:
-                    throw new NotImplementedException($"Unknown BLTE block type {(char)block.EncodingMap.Type} (0x{block.EncodingMap.Type:X2})");
+                    throw new NotImplementedException($"Unknown BLTE block type {(char)block.EncodingMap.Type} (0x{block.EncodingMap.Type.ToString("X2")})");
             }
 
             blockIndex++;
