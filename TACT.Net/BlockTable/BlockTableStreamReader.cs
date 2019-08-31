@@ -177,8 +177,14 @@ Process:
                 throw new Exception("Invalid KeyName size");
 
             block.EncryptionKeyName = BitConverter.ToUInt64(data, 2);
+
+            // if the key doesn't exist, create an empty block with the non-compressed indicator
             if (!KeyService.TryGetKey(block.EncryptionKeyName, out byte[] key))
-                return new byte[block.DecompressedSize];
+            {
+                byte[] buffer = new byte[block.DecompressedSize + 1];
+                buffer[0] = (byte)EType.None;
+                return buffer;
+            }                
 
             byte IVSize = data[keyNameSize + 2];
             if (IVSize != 4)
