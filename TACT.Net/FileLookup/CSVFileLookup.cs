@@ -15,7 +15,6 @@ namespace TACT.Net.FileLookup
     {
         public bool IsLoaded { get; private set; }
 
-        private Queue<uint> _unusedIds;
         private SemaphoreSlim _sync;
         private uint _curMaxId;
 
@@ -112,10 +111,7 @@ namespace TACT.Net.FileLookup
             // attempt to get the fileid
             if (!_fileLookup.TryGetValue(filename, out uint id))
             {
-                // attempt to load an unusedid
-                if (_unusedIds == null || !_unusedIds.TryDequeue(out id))
-                    id = ++_curMaxId; // used the next highest id
-
+                id = ++_curMaxId; // used the next highest id
                 _fileLookup.Add(filename, id);
             }
 
