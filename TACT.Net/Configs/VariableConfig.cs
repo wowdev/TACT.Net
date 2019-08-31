@@ -65,7 +65,7 @@ namespace TACT.Net.Configs
         {
             Type = type;
 
-            string path = Path.Combine(directory, type.ToString());
+            string path = Path.Combine(directory, type.ToString().ToLowerInvariant());
             if (!File.Exists(path))
                 throw new FileNotFoundException($"Unable to load {type} config", path);
 

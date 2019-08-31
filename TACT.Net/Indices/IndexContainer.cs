@@ -390,7 +390,8 @@ namespace TACT.Net.Indices
                 return null;
 
             string archive = index.IsLooseIndex ? ekey.ToString() : index.Checksum.ToString();
-            string filepath = Helpers.GetCDNPath(archive, type.ToString(), _sourceDirectory);
+            string filepath = Helpers.GetCDNPath(archive, type.ToString().ToLowerInvariant(), _sourceDirectory);
+
             if (!File.Exists(filepath))
                 return null;
 
@@ -435,7 +436,7 @@ namespace TACT.Net.Indices
                 return null;
 
             string archive = index.IsLooseIndex ? ekey.ToString() : index.Checksum.ToString();
-            string url = Helpers.GetCDNUrl(archive, type.ToString().ToLower());
+            string url = Helpers.GetCDNUrl(archive, type.ToString().ToLowerInvariant());
 
             var stream = _client.OpenStream(url, indexEntry.Offset, indexEntry.Offset + (long)indexEntry.CompressedSize - 1).Result;
             if (stream == null)
