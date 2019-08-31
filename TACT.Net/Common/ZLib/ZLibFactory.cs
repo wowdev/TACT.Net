@@ -12,7 +12,7 @@ namespace TACT.Net.Common.ZLib
         ~ZLibFactory() => ZLibInit.GlobalCleanup();
 
 
-        public static ZLibStream CreateStream(Stream stream, ZLibMode mode, ZLibCompLevel level, ZLibWriteType writeType, bool leaveOpen)
+        public static ZLibStream CreateStream(Stream stream, ZLibMode mode, ZLibCompLevel level, ZLibWriteType writeType = ZLibWriteType.ZLib, bool leaveOpen = false)
         {
             switch (writeType)
             {
