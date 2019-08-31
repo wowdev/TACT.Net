@@ -177,6 +177,8 @@ Process:
                 throw new Exception("Invalid KeyName size");
 
             block.EncryptionKeyName = BitConverter.ToUInt64(data, 2);
+            if (!KeyService.TryGetKey(block.EncryptionKeyName, out byte[] key))
+                return new byte[block.DecompressedSize];
 
             byte IVSize = data[keyNameSize + 2];
             if (IVSize != 4)
@@ -196,9 +198,6 @@ Process:
             byte encType = data[dataOffset];
             if (encType != 0x53) // 'S'
                 throw new NotImplementedException($"Encryption type {encType} not implemented");
-
-            if (!KeyService.TryGetKey(block.EncryptionKeyName, out byte[] key))
-                throw new Exception($"Unknown KeyName {block.EncryptionKeyName:X16}");
 
             dataOffset++;
 
