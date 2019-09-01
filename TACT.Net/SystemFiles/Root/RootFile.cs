@@ -49,6 +49,7 @@ namespace TACT.Net.Root
         private readonly Lookup3 _lookup3;
         private readonly Dictionary<ulong, uint> _idLookup;
         private IFileLookup _fileLookup;
+        private bool _isClassic;
 
         #region Constructors
 
@@ -163,10 +164,7 @@ namespace TACT.Net.Root
                 Checksum = stream.MD5Hash();
             }
 
-            // validate there is a common block
-            var commonBlockTest = GetBlocks(LocaleFlags.All_WoW).Any(x => x.ContentFlags == ContentFlags.None);
-            if (!commonBlockTest)
-                throw new InvalidDataException("Root is malformed. Missing common block");
+            _isClassic = !GetBlocks(LocaleFlags.All_WoW).Any();
         }
 
         /// <summary>
@@ -262,7 +260,8 @@ namespace TACT.Net.Root
             else
             {
                 // add the record to the common block
-                var block = GetBlocks(LocaleFlags.All_WoW).First(x => x.ContentFlags == ContentFlags.None);
+                var localeFlags = _isClassic ? LocaleFlags.All_Classic_WoW : LocaleFlags.All_WoW;
+                var block = GetBlocks(localeFlags).First(x => x.ContentFlags == ContentFlags.None);
                 block.Records[fileId] = rootRecord;
             }
         }
