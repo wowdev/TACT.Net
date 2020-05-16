@@ -183,10 +183,10 @@ namespace TACT.Net.Configs
                 {
                     values.RemoveAt(index);
                     return true;
-                }                    
+                }
             }
 
-            return false;               
+            return false;
         }
 
         #endregion
@@ -236,17 +236,19 @@ namespace TACT.Net.Configs
             using (var ms = new MemoryStream())
             using (var sw = new StreamWriter(ms))
             {
+                sw.NewLine = "\n";
+
                 // append the comment line
                 switch (Type)
                 {
                     case ConfigType.BuildConfig:
-                        sw.WriteLine("# Build Configuration");
+                        sw.WriteLine("# Build Configuration\n");
                         break;
                     case ConfigType.CDNConfig:
-                        sw.WriteLine("# CDN Configuration");
+                        sw.WriteLine("# CDN Configuration\n");
                         break;
                     case ConfigType.PatchConfig:
-                        sw.WriteLine("# Patch Configuration");
+                        sw.WriteLine("# Patch Configuration\n");
                         break;
                 }
 
@@ -266,6 +268,8 @@ namespace TACT.Net.Configs
                             sw.WriteLine($"{data.Key} = {string.Join(" ", data.Value)}");
                     }
                 }
+
+                sw.WriteLine();
 
                 sw.Flush();
                 Checksum = ms.MD5Hash();
