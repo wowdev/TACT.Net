@@ -43,9 +43,9 @@ namespace TACT.Net.Common
         {
             folder = folder.ToLower();
 
-            var tasks = new List<Task>(Environment.ProcessorCount);
+            var tasks = new List<Task>();
 
-            for (int i = 0; i < tasks.Count; i++)
+            for (int i = 0; i < Environment.ProcessorCount; i++)
             {
                 var task = Task.Run(async () =>
                 {
