@@ -167,9 +167,6 @@ namespace TACT.Net.Encoding
             if (Partial)
                 throw new NotSupportedException("Writing is not supported for partial EncodingFiles");
 
-            if (_EKeyEntries.Count != _CKeyEntries.Count)
-                throw new InvalidDataException("CKeyEntry and EKeyEntry count must match");
-
             EBlock[] eblocks = new EBlock[_EncodingMap.Length];
 
             CASRecord record;

@@ -33,7 +33,6 @@ namespace TACT.Net.Encoding
 
             DecompressedSize = br.ReadUInt40BE();
             CKey = new MD5Hash(br.ReadBytes(header.CKeyHashSize));
-
             EKey = new MD5Hash(br.ReadBytes(header.EKeyHashSize));
 
             if (keyCount > 1)
