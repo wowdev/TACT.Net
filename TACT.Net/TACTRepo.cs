@@ -197,9 +197,10 @@ namespace TACT.Net
         /// <param name="directory"></param>
         /// <param name="product"></param>
         /// <param name="locale"></param>
-        public void DownloadRemote(string directory, string product, Locale locale)
+        public void DownloadRemote(string directory, string product, Locale locale, bool systemFileOnly = false)
         {
             ManifestContainer = new Configs.ManifestContainer(product, locale);
+            ManifestContainer.DownloadRemote(directory);
 
             ConfigContainer = new Configs.ConfigContainer();
             ConfigContainer.DownloadRemote(directory, ManifestContainer);
@@ -237,8 +238,11 @@ namespace TACT.Net
             }
 
             // Download Indices and archives
-            IndexContainer = new Indices.IndexContainer();
-            IndexContainer.DownloadRemote(directory, ConfigContainer, ManifestContainer);
+            if (!systemFileOnly)
+            {
+                IndexContainer = new Indices.IndexContainer();
+                IndexContainer.DownloadRemote(directory, ConfigContainer, ManifestContainer);
+            }
 
             Open(directory);
         }

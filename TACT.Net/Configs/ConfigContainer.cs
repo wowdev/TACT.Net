@@ -146,7 +146,7 @@ namespace TACT.Net.Configs
         public void DownloadRemote(string directory, ManifestContainer manifestContainer)
         {
             OpenRemote(manifestContainer);
-            Save(directory);
+            Save(directory, manifestContainer);
         }
 
         /// <summary>

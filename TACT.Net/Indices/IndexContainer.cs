@@ -141,7 +141,7 @@ namespace TACT.Net.Indices
             }
 
             // download loose file index
-            var fileIndex = configContainer.CDNConfig.GetValue("file-index");
+            var fileIndex = configContainer.CDNConfig.GetValue("file-index") + ".index";
             if (fileIndex != null)
             {
                 string url = Helpers.GetCDNUrl(fileIndex, "data");
@@ -155,7 +155,7 @@ namespace TACT.Net.Indices
             }
 
             // download loose patch file index
-            var patchIndex = configContainer.CDNConfig.GetValue("patch-file-index");
+            var patchIndex = configContainer.CDNConfig.GetValue("patch-file-index") + ".index";
             if (patchIndex != null)
             {
                 string url = Helpers.GetCDNUrl(patchIndex, "patch");
