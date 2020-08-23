@@ -236,8 +236,11 @@ namespace TACT.Net.Indices
         /// <param name="record"></param>
         public void Enqueue(CASRecord record)
         {
-            lock (QueuedEntries)
-                QueuedEntries[record.EKey] = record;
+            if(!string.IsNullOrWhiteSpace(record.BLTEPath))
+            {
+                lock (QueuedEntries)
+                    QueuedEntries[record.EKey] = record;
+            }            
         }
         /// <summary>
         /// Dequeues a CASRecord from being written to the indicies and archives
