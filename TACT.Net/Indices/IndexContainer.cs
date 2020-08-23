@@ -66,7 +66,7 @@ namespace TACT.Net.Indices
             var indices = Directory.EnumerateFiles(directory, "*.index", SearchOption.AllDirectories);
 
             // filter the indices to just this version's
-            if(configContainer != null)
+            if (configContainer != null)
             {
                 var applicableIndicies = GetRequiredIndices(configContainer);
                 indices = indices.Where(x => applicableIndicies.Contains(Path.GetFileNameWithoutExtension(x)));
@@ -208,6 +208,11 @@ namespace TACT.Net.Indices
                     }
                 }
             }
+
+            // prevent duplicated entries
+            var duplicates = QueuedEntries.Keys.Where(k => GetIndexFileAndEntry(IndexType.Data, k, out _) != null).ToArray();
+            foreach (var key in duplicates)
+                QueuedEntries.Remove(key);
 
             // create any new archive indices
             var partitions = EnumerablePartitioner.ConcreteBatch(QueuedEntries.Values, ArchiveDataSize, (x) => x.EBlock.CompressedSize);
@@ -356,7 +361,7 @@ namespace TACT.Net.Indices
 
             return indices;
         }
-        
+
         /// <summary>
         /// Generic method to find a hash inside a collection of IndexFiles
         /// </summary>

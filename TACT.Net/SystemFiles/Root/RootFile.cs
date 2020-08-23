@@ -546,6 +546,10 @@ namespace TACT.Net.Root
                 var records = block.Records.Values.ToList();
                 records.Sort((x, y) => x.FileId.CompareTo(y.FileId));
 
+                // set initial offset
+                if (records.Count > 0)
+                    records[0].FileIdDelta = records[0].FileId;
+
                 // re-calculate deltas
                 for (int i = 1; i < records.Count; i++)
                 {
