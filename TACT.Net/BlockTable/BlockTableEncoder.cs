@@ -287,7 +287,7 @@ namespace TACT.Net.BlockTable
         /// <returns></returns>
         public static EMap GetEMapFromExtension(string filename, long? filesize = null)
         {
-            if (string.IsNullOrWhiteSpace(filename) || filename.IndexOf('.') == -1 || filename.EndsWith('.'))
+            if (string.IsNullOrWhiteSpace(filename))
                 throw new ArgumentException("Invalid Filename");
 
             // not worth compressing files < 20 bytes
