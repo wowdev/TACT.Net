@@ -45,24 +45,22 @@ namespace TACT.Net.Cryptography
             if (!File.Exists(filepath))
                 return false;
 
-            using (var fs = File.OpenRead(filepath))
-            using (var br = new BinaryReader(fs))
-            using (var md5 = MD5.Create())
-            {
-                // invalid size
-                if (fs.Length != 20)
-                    return false;
+            using var fs = File.OpenRead(filepath);
+            using var br = new BinaryReader(fs);
+            using var md5 = MD5.Create();
+            // invalid size
+            if (fs.Length != 20)
+                return false;
 
-                // read the key
-                byte[] key = br.ReadBytes(0x10);
+            // read the key
+            byte[] key = br.ReadBytes(0x10);
 
-                // validate the file's checksum - first 4 bytes of MD5(key)
-                if (br.ReadUInt32() != BitConverter.ToUInt32(md5.ComputeHash(key), 0))
-                    return false;
+            // validate the file's checksum - first 4 bytes of MD5(key)
+            if (br.ReadUInt32() != BitConverter.ToUInt32(md5.ComputeHash(key), 0))
+                return false;
 
-                Key = key;
-                return true;
-            }
+            Key = key;
+            return true;
         }
 
         /// <summary>
@@ -72,8 +70,8 @@ namespace TACT.Net.Cryptography
         /// <returns></returns>
         public Stream Decrypt(string filename)
         {
-            using (var fs = File.OpenRead(filename))
-                return Decrypt(filename, fs);
+            using var fs = File.OpenRead(filename);
+            return Decrypt(filename, fs);
         }
 
         /// <summary>
@@ -90,7 +88,7 @@ namespace TACT.Net.Cryptography
                 throw new ArgumentException("Name should be a CDN hash");
 
             // final 8 bytes of CDN hash
-            byte[] IV = filename.Substring(16).ToByteArray();
+            byte[] IV = filename[16..].ToByteArray();
 
             var decryptor = Salsa20.CreateDecryptor(Key, IV);
             return new CryptoStream(stream, decryptor, CryptoStreamMode.Read);

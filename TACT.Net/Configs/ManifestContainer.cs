@@ -74,12 +74,10 @@ namespace TACT.Net.Configs
         {
             var ribbit = new RibbitClient(Locale);
 
-            using (var cdnstream = ribbit.GetStream(RibbitCommand.CDNs, Product).Result)
-            using (var verstream = ribbit.GetStream(RibbitCommand.Versions, Product).Result)
-            {
-                CDNsFile = new VariableConfig(cdnstream, ConfigType.CDNs);
-                VersionsFile = new VariableConfig(verstream, ConfigType.Versions);
-            }
+            using var cdnstream = ribbit.GetStream(RibbitCommand.CDNs, Product).Result;
+            using var verstream = ribbit.GetStream(RibbitCommand.Versions, Product).Result;
+            CDNsFile = new VariableConfig(cdnstream, ConfigType.CDNs);
+            VersionsFile = new VariableConfig(verstream, ConfigType.Versions);
         }
 
         /// <summary>

@@ -46,9 +46,9 @@ namespace TACT.Net.Download
 
             FilePath = path;
 
-            using (var fs = File.OpenRead(path))
-            using (var bt = new BlockTableStreamReader(fs))
-                Read(bt);
+            using var fs = File.OpenRead(path);
+            using var bt = new BlockTableStreamReader(fs);
+            Read(bt);
         }
 
         /// <summary>
@@ -69,9 +69,9 @@ namespace TACT.Net.Download
         {
             string url = Helpers.GetCDNUrl(ekey.ToString(), "data");
 
-            using (var stream = client.OpenStream(url).Result)
-            using (var bt = new BlockTableStreamReader(stream))
-                Read(bt);
+            using var stream = client.OpenStream(url).Result;
+            using var bt = new BlockTableStreamReader(stream);
+            Read(bt);
         }
 
         /// <summary>
@@ -93,24 +93,22 @@ namespace TACT.Net.Download
             if (!stream.CanRead || stream.Length <= 1)
                 throw new NotSupportedException($"Unable to read DownloadSizeFile stream");
 
-            using (var br = new BinaryReader(stream))
+            using var br = new BinaryReader(stream);
+            DownloadSizeHeader.Read(br);
+
+            // Tags
+            ReadTags(br, DownloadSizeHeader.TagCount, DownloadSizeHeader.EntryCount);
+
+            // File Entries
+            _FileEntries.EnsureCapacity((int)DownloadSizeHeader.EntryCount);
+            for (int i = 0; i < DownloadSizeHeader.EntryCount; i++)
             {
-                DownloadSizeHeader.Read(br);
-
-                // Tags
-                ReadTags(br, DownloadSizeHeader.TagCount, DownloadSizeHeader.EntryCount);
-
-                // File Entries
-                _FileEntries.EnsureCapacity((int)DownloadSizeHeader.EntryCount);
-                for (int i = 0; i < DownloadSizeHeader.EntryCount; i++)
-                {
-                    var fileEntry = new DownloadSizeFileEntry();
-                    fileEntry.Read(br, DownloadSizeHeader);
-                    _FileEntries[fileEntry.EKey] = fileEntry;
-                }
-
-                Checksum = stream.MD5Hash();
+                var fileEntry = new DownloadSizeFileEntry();
+                fileEntry.Read(br, DownloadSizeHeader);
+                _FileEntries[fileEntry.EKey] = fileEntry;
             }
+
+            Checksum = stream.MD5Hash();
         }
 
         /// <summary>
@@ -144,11 +142,9 @@ namespace TACT.Net.Download
 
                 // save
                 string saveLocation = Helpers.GetCDNPath(record.EKey.ToString(), "data", directory, true);
-                using (var fs = File.Create(saveLocation))
-                {
-                    bt.WriteTo(fs);
-                    record.BLTEPath = saveLocation;
-                }
+                using var fs = File.Create(saveLocation);
+                bt.WriteTo(fs);
+                record.BLTEPath = saveLocation;
             }
 
             if (tactRepo != null)
@@ -197,23 +193,21 @@ namespace TACT.Net.Download
 
         private void WriteFileEntries(BlockTableStreamWriter bt)
         {
-            using (var ms = new MemoryStream())
-            using (var bw = new BinaryWriter(ms))
-            {
-                // ordered by descending size
-                foreach (var fileEntry in _FileEntries.Values.OrderByDescending(x => x.CompressedSize))
-                    fileEntry.Write(bw, DownloadSizeHeader);
+            using var ms = new MemoryStream();
+            using var bw = new BinaryWriter(ms);
+            // ordered by descending size
+            foreach (var fileEntry in _FileEntries.Values.OrderByDescending(x => x.CompressedSize))
+                fileEntry.Write(bw, DownloadSizeHeader);
 
-                // batched into 0xFFFF size uncompressed blocks
-                // this is for client performance and isn't mandatory
-                ms.Position = 0;
-                byte[] buffer = new byte[0xFFFF];
-                int read;
-                while ((read = ms.Read(buffer)) != 0)
-                {
-                    bt.AddBlock(_EncodingMap[2]);
-                    bt.Write(buffer, 0, read);
-                }
+            // batched into 0xFFFF size uncompressed blocks
+            // this is for client performance and isn't mandatory
+            ms.Position = 0;
+            byte[] buffer = new byte[0xFFFF];
+            int read;
+            while ((read = ms.Read(buffer)) != 0)
+            {
+                bt.AddBlock(_EncodingMap[2]);
+                bt.Write(buffer, 0, read);
             }
         }
 

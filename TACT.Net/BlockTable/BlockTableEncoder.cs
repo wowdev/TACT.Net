@@ -20,14 +20,12 @@ namespace TACT.Net.BlockTable
         /// <returns></returns>
         public static CASRecord Encode(byte[] data, EMap encodingMap, string rootName = null)
         {
-            using (var bt = new BlockTableStreamWriter(encodingMap))
-            {
-                bt.Write(data);
+            using var bt = new BlockTableStreamWriter(encodingMap);
+            bt.Write(data);
 
-                var record = bt.Finalise();
-                record.FileName = rootName;
-                return record;
-            }
+            var record = bt.Finalise();
+            record.FileName = rootName;
+            return record;
         }
 
         /// <summary>
@@ -38,15 +36,13 @@ namespace TACT.Net.BlockTable
         /// <returns></returns>
         public static CASRecord Encode(string filename, string rootName = null)
         {
-            using (var fs = File.OpenRead(filename))
-            using (var bt = new BlockTableStreamWriter(GetEMapFromExtension(filename)))
-            {
-                fs.CopyTo(bt);
+            using var fs = File.OpenRead(filename);
+            using var bt = new BlockTableStreamWriter(GetEMapFromExtension(filename));
+            fs.CopyTo(bt);
 
-                var record = bt.Finalise();
-                record.FileName = rootName;
-                return record;
-            }
+            var record = bt.Finalise();
+            record.FileName = rootName;
+            return record;
         }
 
         /// <summary>
@@ -58,15 +54,13 @@ namespace TACT.Net.BlockTable
         /// <returns></returns>
         public static CASRecord Encode(Stream stream, EMap encodingMap, string rootName = null)
         {
-            using (var bt = new BlockTableStreamWriter(encodingMap))
-            {
-                stream.Position = 0;
-                stream.CopyTo(bt);
+            using var bt = new BlockTableStreamWriter(encodingMap);
+            stream.Position = 0;
+            stream.CopyTo(bt);
 
-                var record = bt.Finalise();
-                record.FileName = rootName;
-                return record;
-            }
+            var record = bt.Finalise();
+            record.FileName = rootName;
+            return record;
         }
 
         #endregion
@@ -113,21 +107,19 @@ namespace TACT.Net.BlockTable
         /// <returns></returns>
         public static CASRecord EncodeAndExport(byte[] data, EMap encodingMap, string directory, string rootName = null)
         {
-            using (var bt = new BlockTableStreamWriter(encodingMap))
+            using var bt = new BlockTableStreamWriter(encodingMap);
+            bt.Write(data);
+            var record = bt.Finalise();
+
+            string saveLocation = Path.Combine(directory, record.EKey.ToString());
+            using (var fs = Helpers.Create(saveLocation))
             {
-                bt.Write(data);
-                var record = bt.Finalise();
-
-                string saveLocation = Path.Combine(directory, record.EKey.ToString());
-                using (var fs = Helpers.Create(saveLocation))
-                {
-                    bt.WriteTo(fs);
-                    record.BLTEPath = saveLocation;
-                    record.FileName = rootName;
-                }
-
-                return record;
+                bt.WriteTo(fs);
+                record.BLTEPath = saveLocation;
+                record.FileName = rootName;
             }
+
+            return record;
         }
 
         /// <summary>
@@ -139,26 +131,24 @@ namespace TACT.Net.BlockTable
         /// <returns></returns>
         public static CASRecord EncodeAndExport(string filename, string directory, string rootName = null)
         {
-            using (var bt = new BlockTableStreamWriter(GetEMapFromExtension(filename)))
+            using var bt = new BlockTableStreamWriter(GetEMapFromExtension(filename));
+            // read the file into the BlockTableStream
+            using (var fs = File.OpenRead(filename))
+                fs.CopyTo(bt);
+
+            // encode
+            var record = bt.Finalise();
+
+            // save the encoded file
+            string saveLocation = Path.Combine(directory, record.EKey.ToString());
+            using (var fs = Helpers.Create(saveLocation))
             {
-                // read the file into the BlockTableStream
-                using (var fs = File.OpenRead(filename))
-                    fs.CopyTo(bt);
-
-                // encode
-                var record = bt.Finalise();
-
-                // save the encoded file
-                string saveLocation = Path.Combine(directory, record.EKey.ToString());
-                using (var fs = Helpers.Create(saveLocation))
-                {
-                    bt.WriteTo(fs);
-                    record.BLTEPath = saveLocation;
-                    record.FileName = rootName;
-                }
-
-                return record;
+                bt.WriteTo(fs);
+                record.BLTEPath = saveLocation;
+                record.FileName = rootName;
             }
+
+            return record;
         }
 
         /// <summary>
@@ -171,22 +161,20 @@ namespace TACT.Net.BlockTable
         /// <returns></returns>
         public static CASRecord EncodeAndExport(Stream stream, EMap encodingMap, string directory, string rootName = null)
         {
-            using (var bt = new BlockTableStreamWriter(encodingMap))
+            using var bt = new BlockTableStreamWriter(encodingMap);
+            stream.Position = 0;
+            stream.CopyTo(bt);
+            var record = bt.Finalise();
+
+            string saveLocation = Path.Combine(directory, record.EKey.ToString());
+            using (var fs = Helpers.Create(saveLocation))
             {
-                stream.Position = 0;
-                stream.CopyTo(bt);
-                var record = bt.Finalise();
-
-                string saveLocation = Path.Combine(directory, record.EKey.ToString());
-                using (var fs = Helpers.Create(saveLocation))
-                {
-                    bt.WriteTo(fs);
-                    record.BLTEPath = saveLocation;
-                    record.FileName = rootName;
-                }
-
-                return record;
+                bt.WriteTo(fs);
+                record.BLTEPath = saveLocation;
+                record.FileName = rootName;
             }
+
+            return record;
         }
 
         #endregion
@@ -234,12 +222,10 @@ namespace TACT.Net.BlockTable
         /// <returns></returns>
         public static void DecodeAndExport(byte[] data, string filepath)
         {
-            using (var bt = new BlockTableStreamReader(data))
-            using (var fs = Helpers.Create(filepath))
-            {
-                bt.Position = 0;
-                bt.CopyTo(fs);
-            }
+            using var bt = new BlockTableStreamReader(data);
+            using var fs = Helpers.Create(filepath);
+            bt.Position = 0;
+            bt.CopyTo(fs);
         }
 
         /// <summary>
@@ -250,12 +236,10 @@ namespace TACT.Net.BlockTable
         /// <returns></returns>
         public static void DecodeAndExport(string inputPath, string outputPath)
         {
-            using (var bt = new BlockTableStreamReader(inputPath))
-            using (var fs = Helpers.Create(outputPath))
-            {
-                bt.Position = 0;
-                bt.CopyTo(fs);
-            }
+            using var bt = new BlockTableStreamReader(inputPath);
+            using var fs = Helpers.Create(outputPath);
+            bt.Position = 0;
+            bt.CopyTo(fs);
         }
 
         /// <summary>
@@ -266,12 +250,10 @@ namespace TACT.Net.BlockTable
         /// <returns></returns>
         public static void DecodeAndExport(Stream stream, string filepath)
         {
-            using (var bt = new BlockTableStreamReader(stream))
-            using (var fs = Helpers.Create(filepath))
-            {
-                bt.Position = 0;
-                bt.CopyTo(fs);
-            }
+            using var bt = new BlockTableStreamReader(stream);
+            using var fs = Helpers.Create(filepath);
+            bt.Position = 0;
+            bt.CopyTo(fs);
 
         }
 

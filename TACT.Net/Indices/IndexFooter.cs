@@ -64,30 +64,28 @@ namespace TACT.Net.Indices
 
         public void Write(BinaryWriter bw)
         {
-            using (var md5 = MD5.Create())
-            using (var ms = new MemoryStream())
-            using (var writer = new BinaryWriter(ms))
-            {
-                writer.Write(Version);
-                writer.Write(Unk_11);
-                writer.Write(Unk_12);
-                writer.Write(PageSizeKB);
-                writer.Write(OffsetBytes);
-                writer.Write(CompressedSizeBytes);
-                writer.Write(KeySize);
-                writer.Write(ChecksumSize);
-                writer.Write(EntryCount);
-                writer.Write(new byte[8]);
+            using var md5 = MD5.Create();
+            using var ms = new MemoryStream();
+            using var writer = new BinaryWriter(ms);
+            writer.Write(Version);
+            writer.Write(Unk_11);
+            writer.Write(Unk_12);
+            writer.Write(PageSizeKB);
+            writer.Write(OffsetBytes);
+            writer.Write(CompressedSizeBytes);
+            writer.Write(KeySize);
+            writer.Write(ChecksumSize);
+            writer.Write(EntryCount);
+            writer.Write(new byte[8]);
 
-                // calculate checksum with placeholder
-                FooterChecksum = ms.HashSlice(md5, 0, ms.Length, ChecksumSize);
+            // calculate checksum with placeholder
+            FooterChecksum = ms.HashSlice(md5, 0, ms.Length, ChecksumSize);
 
-                // override the placeholder and copy to the main stream
-                ms.Position = ms.Length - 8;
-                writer.Write(FooterChecksum.Value);
+            // override the placeholder and copy to the main stream
+            ms.Position = ms.Length - 8;
+            writer.Write(FooterChecksum.Value);
 
-                ms.WriteTo(bw.BaseStream);
-            }
+            ms.WriteTo(bw.BaseStream);
         }
 
         #endregion

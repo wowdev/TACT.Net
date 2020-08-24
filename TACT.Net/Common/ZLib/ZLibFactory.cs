@@ -14,15 +14,13 @@ namespace TACT.Net.Common.ZLib
 
         public static ZLibStream CreateStream(Stream stream, ZLibMode mode, ZLibCompLevel level, ZLibWriteType writeType = ZLibWriteType.ZLib, bool leaveOpen = false)
         {
-            switch (writeType)
+            return writeType switch
             {
                 // 0 windowBits - inflate uses the window size in the zlib header
-                case 0:
-                    return new ZLibMPQStream(stream, mode, level, leaveOpen);
+                0 => new ZLibMPQStream(stream, mode, level, leaveOpen),
                 // 15 windowBits
-                default:
-                    return new ZLibStream(stream, mode, level, leaveOpen);
-            }
+                _ => new ZLibStream(stream, mode, level, leaveOpen),
+            };
         }
 
         private static void NativeGlobalInit()
@@ -30,26 +28,16 @@ namespace TACT.Net.Common.ZLib
             if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
                 throw new PlatformNotSupportedException();
 
-            string zlibPath = null;
             string libName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "zlibwapi.dll" : "libz.so";
 
-            switch (RuntimeInformation.ProcessArchitecture)
+            string zlibPath = RuntimeInformation.ProcessArchitecture switch
             {
-                case Architecture.X64:
-                    zlibPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "x64", libName);
-                    break;
-                case Architecture.X86:
-                    zlibPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "x86", libName);
-                    break;
-                case Architecture.Arm:
-                    zlibPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "armhf", libName);
-                    break;
-                case Architecture.Arm64:
-                    zlibPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "arm64", libName);
-                    break;
-                default:
-                    throw new PlatformNotSupportedException();
-            }
+                Architecture.X64 => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "x64", libName),
+                Architecture.X86 => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "x86", libName),
+                Architecture.Arm => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "armhf", libName),
+                Architecture.Arm64 => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "arm64", libName),
+                _ => throw new PlatformNotSupportedException(),
+            };
 
             ZLibInit.GlobalInit(zlibPath, 64 * 1024);
         }

@@ -51,9 +51,9 @@ namespace TACT.Net.Install
 
             FilePath = path;
 
-            using (var fs = File.OpenRead(path))
-            using (var bt = new BlockTableStreamReader(fs))
-                Read(bt);
+            using var fs = File.OpenRead(path);
+            using var bt = new BlockTableStreamReader(fs);
+            Read(bt);
         }
 
         /// <summary>
@@ -74,9 +74,9 @@ namespace TACT.Net.Install
         {
             string url = Helpers.GetCDNUrl(ekey.ToString(), "data");
 
-            using (var stream = client.OpenStream(url).Result)
-            using (var bt = new BlockTableStreamReader(stream))
-                Read(bt);
+            using var stream = client.OpenStream(url).Result;
+            using var bt = new BlockTableStreamReader(stream);
+            Read(bt);
         }
 
         /// <summary>
@@ -99,23 +99,21 @@ namespace TACT.Net.Install
             if (!stream.CanRead || stream.Length <= 1)
                 throw new NotSupportedException($"Unable to read InstallFile stream");
 
-            using (var br = new BinaryReader(stream))
+            using var br = new BinaryReader(stream);
+            InstallHeader.Read(br);
+
+            // Tags
+            ReadTags(br, InstallHeader.TagCount, InstallHeader.EntryCount);
+
+            // Files
+            for (int i = 0; i < InstallHeader.EntryCount; i++)
             {
-                InstallHeader.Read(br);
-
-                // Tags
-                ReadTags(br, InstallHeader.TagCount, InstallHeader.EntryCount);
-
-                // Files
-                for (int i = 0; i < InstallHeader.EntryCount; i++)
-                {
-                    var fileEntry = new InstallFileEntry();
-                    fileEntry.Read(br, InstallHeader);
-                    _FileEntries.TryAdd(fileEntry.FilePath, fileEntry);
-                }
-
-                Checksum = stream.MD5Hash();
+                var fileEntry = new InstallFileEntry();
+                fileEntry.Read(br, InstallHeader);
+                _FileEntries.TryAdd(fileEntry.FilePath, fileEntry);
             }
+
+            Checksum = stream.MD5Hash();
         }
 
         /// <summary>
@@ -148,11 +146,9 @@ namespace TACT.Net.Install
 
                 // save
                 string saveLocation = Helpers.GetCDNPath(record.EKey.ToString(), "data", directory, true);
-                using (var fs = File.Create(saveLocation))
-                {
-                    bt.WriteTo(fs);
-                    record.BLTEPath = saveLocation;
-                }
+                using var fs = File.Create(saveLocation);
+                bt.WriteTo(fs);
+                record.BLTEPath = saveLocation;
             }
 
             // insert the record into the encoding and the download files

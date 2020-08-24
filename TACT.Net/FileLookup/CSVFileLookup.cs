@@ -15,7 +15,7 @@ namespace TACT.Net.FileLookup
     {
         public bool IsLoaded { get; private set; }
 
-        private SemaphoreSlim _sync;
+        private readonly SemaphoreSlim _sync;
         private uint _curMaxId;
 
         private readonly string _filename;
@@ -60,7 +60,7 @@ namespace TACT.Net.FileLookup
 
                     if (seperatorIdx > -1)
                         if (uint.TryParse(line.Substring(0, seperatorIdx), out uint id))
-                            _fileLookup[line.Substring(seperatorIdx)] = id;
+                            _fileLookup[line[seperatorIdx..]] = id;
                 }
             }
 
@@ -79,9 +79,9 @@ namespace TACT.Net.FileLookup
             await _sync.WaitAsync().ConfigureAwait(false);
             try
             {
-                using (var sw = new StreamWriter(_filename))
-                    foreach (var lookup in _fileLookup)
-                        await sw.WriteLineAsync(lookup.Value + _seperator + lookup.Key).ConfigureAwait(false);
+                using var sw = new StreamWriter(_filename);
+                foreach (var lookup in _fileLookup)
+                    await sw.WriteLineAsync(lookup.Value + _seperator + lookup.Key).ConfigureAwait(false);
             }
             finally
             {

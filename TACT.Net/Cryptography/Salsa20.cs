@@ -6,7 +6,7 @@ namespace TACT.Net.Cryptography
 {
     public sealed class Salsa20 : SymmetricAlgorithm
     {
-        private static Random rnd = new Random();
+        private static readonly Random rnd = new Random();
         private int m_rounds;
 
         /// <summary>

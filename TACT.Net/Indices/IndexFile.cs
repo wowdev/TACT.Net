@@ -74,7 +74,7 @@ namespace TACT.Net.Indices
         public IndexFile(CDNClient client, string path, IndexType type) : this(IndexType.Unknown)
         {
             if (!path.EndsWith(".index", StringComparison.OrdinalIgnoreCase))
-                path = path + ".index";
+                path += ".index";
 
             string endpoint = type.HasFlag(IndexType.Data) ? "data" : "patch";
             string url = Helpers.GetCDNUrl(path, endpoint);
@@ -104,39 +104,35 @@ namespace TACT.Net.Indices
             if (!stream.CanRead || stream.Length <= 0)
                 throw new NotSupportedException($"Unable to read IndexFile stream");
 
-            using (var md5 = MD5.Create())
-            using (var reader = new BinaryReader(stream))
+            using var md5 = MD5.Create();
+            using var reader = new BinaryReader(stream);
+            IndexFooter.Read(reader);
+
+            // calculate file dimensions
+            var (PageSize, _, PageCount) = GetFileDimensions();
+
+            // read the entries
+            _indexEntries.Capacity = (int)IndexFooter.EntryCount;
+            stream.Position = 0;
+
+            for (int i = 0; i < PageCount; i++)
             {
-                IndexFooter.Read(reader);
-
-                // calculate file dimensions
-                var (PageSize, _, PageCount) = GetFileDimensions();
-
-                // read the entries
-                _indexEntries.Capacity = (int)IndexFooter.EntryCount;
-                stream.Position = 0;
-
-                for (int i = 0; i < PageCount; i++)
+                // buffer the page then read the entries to minimise file reads
+                using var ms = new MemoryStream(reader.ReadBytes(PageSize));
+                using var br = new BinaryReader(ms);
+                var entry = new IndexEntry();
+                while (entry.Read(br, IndexFooter))
                 {
-                    // buffer the page then read the entries to minimise file reads
-                    using (var ms = new MemoryStream(reader.ReadBytes(PageSize)))
-                    using (var br = new BinaryReader(ms))
-                    {
-                        var entry = new IndexEntry();
-                        while (entry.Read(br, IndexFooter))
-                        {
-                            _indexEntries[entry.Key] = entry;
-                            entry = new IndexEntry();
-                        }
-                    }
+                    _indexEntries[entry.Key] = entry;
+                    entry = new IndexEntry();
                 }
-
-                // calculate the current filename
-                Checksum = stream.HashSlice(md5, stream.Length - IndexFooter.Size + IndexFooter.ChecksumSize, IndexFooter.Size - IndexFooter.ChecksumSize);
-
-                // store the current blob offset
-                _currentOffset = (ulong)_indexEntries.Values.Sum(x => (long)x.CompressedSize);
             }
+
+            // calculate the current filename
+            Checksum = stream.HashSlice(md5, stream.Length - IndexFooter.Size + IndexFooter.ChecksumSize, IndexFooter.Size - IndexFooter.ChecksumSize);
+
+            // store the current blob offset
+            _currentOffset = (ulong)_indexEntries.Values.Sum(x => (long)x.CompressedSize);
         }
 
         /// <summary>
@@ -164,76 +160,74 @@ namespace TACT.Net.Indices
             // get file dimensions
             var (PageSize, EntriesPerPage, PageCount) = GetFileDimensions();
 
-            using (var md5 = MD5.Create())
-            using (var ms = new MemoryStream(PageCount * (PageSize + 1)))
-            using (var bw = new BinaryWriter(ms))
+            using var md5 = MD5.Create();
+            using var ms = new MemoryStream(PageCount * (PageSize + 1));
+            using var bw = new BinaryWriter(ms);
+            // set capcity
+            EKeyLookupHashes.Capacity = PageCount;
+            PageChecksums.Capacity = PageCount;
+
+            // IndexEntries
+            int index = 0;
+            for (int i = 0; i < PageCount; i++)
             {
-                // set capcity
-                EKeyLookupHashes.Capacity = PageCount;
-                PageChecksums.Capacity = PageCount;
+                // write the entries
+                for (int j = 0; j < EntriesPerPage && index < IndexFooter.EntryCount; j++)
+                    _indexEntries.Values[index++].Write(bw, IndexFooter);
 
-                // IndexEntries
-                int index = 0;
-                for (int i = 0; i < PageCount; i++)
-                {
-                    // write the entries
-                    for (int j = 0; j < EntriesPerPage && index < IndexFooter.EntryCount; j++)
-                        _indexEntries.Values[index++].Write(bw, IndexFooter);
+                // apply padding and store EKey and page checksum
+                int remainder = (int)bw.BaseStream.Position % PageSize;
+                if (remainder > 0)
+                    ms.Write(new byte[PageSize - remainder]);
 
-                    // apply padding and store EKey and page checksum
-                    int remainder = (int)bw.BaseStream.Position % PageSize;
-                    if (remainder > 0)
-                        ms.Write(new byte[PageSize - remainder]);
+                EKeyLookupHashes.Add(_indexEntries.Values[index - 1].Key);
+                PageChecksums.Add(ms.HashSlice(md5, bw.BaseStream.Position - PageSize, PageSize, IndexFooter.ChecksumSize));
+            }
 
-                    EKeyLookupHashes.Add(_indexEntries.Values[index - 1].Key);
-                    PageChecksums.Add(ms.HashSlice(md5, bw.BaseStream.Position - PageSize, PageSize, IndexFooter.ChecksumSize));
-                }
+            // EKey Lookup
+            long lookupStartPos = bw.BaseStream.Position;
+            foreach (var lookupHash in EKeyLookupHashes)
+                bw.Write(lookupHash.Value);
 
-                // EKey Lookup
-                long lookupStartPos = bw.BaseStream.Position;
-                foreach (var lookupHash in EKeyLookupHashes)
-                    bw.Write(lookupHash.Value);
+            // Page hashes - final page is ignored
+            long pageStartPos = bw.BaseStream.Position;
+            PageChecksums.RemoveAt(PageChecksums.Count - 1);
+            foreach (var pagechecksum in PageChecksums)
+                bw.Write(pagechecksum.Value);
 
-                // Page hashes - final page is ignored
-                long pageStartPos = bw.BaseStream.Position;
-                PageChecksums.RemoveAt(PageChecksums.Count - 1);
-                foreach (var pagechecksum in PageChecksums)
-                    bw.Write(pagechecksum.Value);
+            // LastPage hash - last PageSize of Entries
+            long footerStartPos = bw.BaseStream.Position;
+            IndexFooter.LastPageHash = ms.HashSlice(md5, lookupStartPos - PageSize, PageSize, IndexFooter.ChecksumSize);
+            bw.Write(IndexFooter.LastPageHash.Value);
 
-                // LastPage hash - last PageSize of Entries
-                long footerStartPos = bw.BaseStream.Position;
-                IndexFooter.LastPageHash = ms.HashSlice(md5, lookupStartPos - PageSize, PageSize, IndexFooter.ChecksumSize);
-                bw.Write(IndexFooter.LastPageHash.Value);
+            // TOC hash - from EKey Lookup to LastPage Hash
+            IndexFooter.ContentsHash = ms.HashSlice(md5, lookupStartPos, ms.Length - lookupStartPos, IndexFooter.ChecksumSize);
+            bw.Write(IndexFooter.ContentsHash.Value);
 
-                // TOC hash - from EKey Lookup to LastPage Hash
-                IndexFooter.ContentsHash = ms.HashSlice(md5, lookupStartPos, ms.Length - lookupStartPos, IndexFooter.ChecksumSize);
-                bw.Write(IndexFooter.ContentsHash.Value);
+            // write footer
+            IndexFooter.Write(bw);
 
-                // write footer
-                IndexFooter.Write(bw);
+            // compute filename - from ContentsHash to EOF
+            MD5Hash newChecksum = ms.HashSlice(md5, footerStartPos + IndexFooter.ChecksumSize, IndexFooter.Size - IndexFooter.ChecksumSize);
+            // update the CDN Config
+            UpdateConfig(configContainer, newChecksum, bw.BaseStream.Length);
 
-                // compute filename - from ContentsHash to EOF
-                MD5Hash newChecksum = ms.HashSlice(md5, footerStartPos + IndexFooter.ChecksumSize, IndexFooter.Size - IndexFooter.ChecksumSize);
-                // update the CDN Config
-                UpdateConfig(configContainer, newChecksum, bw.BaseStream.Length);
+            //// remove old index file
+            //if (!Checksum.IsEmpty)
+            //    Helpers.Delete(Checksum.ToString() + ".index", directory);
 
-                //// remove old index file
-                //if (!Checksum.IsEmpty)
-                //    Helpers.Delete(Checksum.ToString() + ".index", directory);
+            // update Checksum
+            Checksum = newChecksum;
 
-                // update Checksum
-                Checksum = newChecksum;
+            // Group Indicies are generated client-side
+            if (IsGroupIndex)
+                return;
 
-                // Group Indicies are generated client-side
-                if (IsGroupIndex)
-                    return;
-
-                string saveLocation = Helpers.GetCDNPath(Checksum.ToString() + ".index", "data", directory, true);
-                if (!File.Exists(saveLocation))
-                {
-                    // save to disk
-                    File.WriteAllBytes(saveLocation, ms.ToArray());
-                }
+            string saveLocation = Helpers.GetCDNPath(Checksum.ToString() + ".index", "data", directory, true);
+            if (!File.Exists(saveLocation))
+            {
+                // save to disk
+                File.WriteAllBytes(saveLocation, ms.ToArray());
             }
         }
 

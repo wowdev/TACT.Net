@@ -69,8 +69,8 @@ namespace TACT.Net.Configs
             if (!File.Exists(path))
                 throw new FileNotFoundException($"Unable to load {type} config", path);
 
-            using (var sr = new StreamReader(path))
-                Read(sr);
+            using var sr = new StreamReader(path);
+            Read(sr);
         }
 
         /// <summary>
@@ -87,8 +87,8 @@ namespace TACT.Net.Configs
             if (!stream.CanRead)
                 throw new NotSupportedException($"Unable to read {type} stream");
 
-            using (var sr = new StreamReader(stream))
-                Read(sr);
+            using var sr = new StreamReader(stream);
+            Read(sr);
         }
 
         #endregion
@@ -228,17 +228,17 @@ namespace TACT.Net.Configs
             string saveDir = Directory.CreateDirectory(Path.Combine(directory, product)).FullName;
             string saveLocation = Path.Combine(saveDir, Type.ToString().ToLowerInvariant());
 
-            using (var sw = new StreamWriter(saveLocation))
+            using var sw = new StreamWriter(saveLocation)
             {
-                sw.NewLine = "\n";
+                NewLine = "\n"
+            };
 
-                // write the field information
-                sw.WriteLine(string.Join("|", _fields));
+            // write the field information
+            sw.WriteLine(string.Join("|", _fields));
 
-                // write the values for each locale
-                foreach (var collection in _data.Values)
-                    sw.WriteLine(string.Join("|", collection.Values));
-            }
+            // write the values for each locale
+            foreach (var collection in _data.Values)
+                sw.WriteLine(string.Join("|", collection.Values));
         }
 
         #endregion

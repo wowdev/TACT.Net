@@ -46,9 +46,9 @@ namespace TACT.Net.Download
 
             FilePath = path;
 
-            using (var fs = File.OpenRead(path))
-            using (var bt = new BlockTableStreamReader(fs))
-                Read(bt);
+            using var fs = File.OpenRead(path);
+            using var bt = new BlockTableStreamReader(fs);
+            Read(bt);
         }
 
         /// <summary>
@@ -69,9 +69,9 @@ namespace TACT.Net.Download
         {
             string url = Helpers.GetCDNUrl(ekey.ToString(), "data");
 
-            using (var stream = client.OpenStream(url).Result)
-            using (var bt = new BlockTableStreamReader(stream))
-                Read(bt);
+            using var stream = client.OpenStream(url).Result;
+            using var bt = new BlockTableStreamReader(stream);
+            Read(bt);
         }
 
         /// <summary>
@@ -94,28 +94,26 @@ namespace TACT.Net.Download
             if (!stream.CanRead || stream.Length <= 1)
                 throw new NotSupportedException($"Unable to read DownloadFile stream");
 
-            using (var br = new BinaryReader(stream))
+            using var br = new BinaryReader(stream);
+            // parse the header
+            DownloadHeader.Read(br);
+
+            _FileEntries.EnsureCapacity((int)DownloadHeader.EntryCount);
+            for (int i = 0; i < DownloadHeader.EntryCount; i++)
             {
-                // parse the header
-                DownloadHeader.Read(br);
-
-                _FileEntries.EnsureCapacity((int)DownloadHeader.EntryCount);
-                for (int i = 0; i < DownloadHeader.EntryCount; i++)
-                {
-                    var fileEntry = new DownloadFileEntry();
-                    fileEntry.Read(br, DownloadHeader);
-                    _FileEntries[fileEntry.EKey] = fileEntry;
-                }
-
-                // Tags
-                ReadTags(br, DownloadHeader.TagCount, DownloadHeader.EntryCount);
-
-                // HACK do we know what this is?
-                DownloadHeader.IncludeChecksum = false;
-
-                // store checksum
-                Checksum = stream.MD5Hash();
+                var fileEntry = new DownloadFileEntry();
+                fileEntry.Read(br, DownloadHeader);
+                _FileEntries[fileEntry.EKey] = fileEntry;
             }
+
+            // Tags
+            ReadTags(br, DownloadHeader.TagCount, DownloadHeader.EntryCount);
+
+            // HACK do we know what this is?
+            DownloadHeader.IncludeChecksum = false;
+
+            // store checksum
+            Checksum = stream.MD5Hash();
         }
 
         /// <summary>
@@ -149,11 +147,9 @@ namespace TACT.Net.Download
 
                 // save
                 string saveLocation = Helpers.GetCDNPath(record.EKey.ToString(), "data", directory, true);
-                using (var fs = File.Create(saveLocation))
-                {
-                    bt.WriteTo(fs);
-                    record.BLTEPath = saveLocation;
-                }
+                using var fs = File.Create(saveLocation);
+                bt.WriteTo(fs);
+                record.BLTEPath = saveLocation;
             }
 
             if (tactRepo != null)

@@ -40,23 +40,21 @@ namespace TACT.Net.Network
 
         public async Task<string> GetString(string payload)
         {
-            using (var stream = new TcpClient(_endpoint, _port).GetStream())
+            using var stream = new TcpClient(_endpoint, _port).GetStream();
+            // apply the terminator
+            if (!payload.EndsWith("\r\n"))
+                payload += "\r\n";
+
+            await stream.WriteAsync(payload.GetBytes("ASCII")).ConfigureAwait(false);
+
+            try
             {
-                // apply the terminator
-                if (!payload.EndsWith("\r\n"))
-                    payload += "\r\n";
-
-                await stream.WriteAsync(payload.GetBytes("ASCII")).ConfigureAwait(false);
-
-                try
-                {
-                    var msg = await MimeMessage.LoadAsync(stream).ConfigureAwait(false);
-                    return msg.TextBody;
-                }
-                catch (FormatException)
-                {
-                    return "";
-                }
+                var msg = await MimeMessage.LoadAsync(stream).ConfigureAwait(false);
+                return msg.TextBody;
+            }
+            catch (FormatException)
+            {
+                return "";
             }
         }
 
@@ -82,19 +80,14 @@ namespace TACT.Net.Network
 
         private string CommandToPayload(RibbitCommand command, string product)
         {
-            switch (command)
+            return command switch
             {
-                case RibbitCommand.Bgdl:
-                    return $"v1/products/{product}/bgdl";
-                case RibbitCommand.CDNs:
-                    return $"v1/products/{product}/cdns";
-                case RibbitCommand.Summary:
-                    return $"v1/products/summary";
-                case RibbitCommand.Versions:
-                    return $"v1/products/{product}/versions";
-            }
-
-            return "";
+                RibbitCommand.Bgdl => $"v1/products/{product}/bgdl",
+                RibbitCommand.CDNs => $"v1/products/{product}/cdns",
+                RibbitCommand.Summary => $"v1/products/summary",
+                RibbitCommand.Versions => $"v1/products/{product}/versions",
+                _ => "",
+            };
         }
 
         #endregion

@@ -55,124 +55,122 @@ namespace TACT.Net.Common.Patching
             if (output == null || !output.CanSeek || !output.CanRead)
                 throw new ArgumentException("Output stream must be not null, readable and seekable");
 
-            using (var ctrl = ZLibFactory.CreateStream(new MemoryStream(modified.Length), ZLibMode.Compress, ZLibCompLevel.BestCompression))
-            using (var diff = ZLibFactory.CreateStream(new MemoryStream(modified.Length), ZLibMode.Compress, ZLibCompLevel.BestCompression))
-            using (var extr = ZLibFactory.CreateStream(new MemoryStream(modified.Length), ZLibMode.Compress, ZLibCompLevel.BestCompression))
+            using var ctrl = ZLibFactory.CreateStream(new MemoryStream(modified.Length), ZLibMode.Compress, ZLibCompLevel.BestCompression);
+            using var diff = ZLibFactory.CreateStream(new MemoryStream(modified.Length), ZLibMode.Compress, ZLibCompLevel.BestCompression);
+            using var extr = ZLibFactory.CreateStream(new MemoryStream(modified.Length), ZLibMode.Compress, ZLibCompLevel.BestCompression);
+            int scan = 0, pos = 0, len = 0, lastscan = 0, lastpos = 0, lastoffset = 0;
+            int oldDataLen = original.Length, newDataLen = modified.Length;
+
+            int[] I = SuffixSort(original);
+
+            while (scan < newDataLen)
             {
-                int scan = 0, pos = 0, len = 0, lastscan = 0, lastpos = 0, lastoffset = 0;
-                int oldDataLen = original.Length, newDataLen = modified.Length;
-
-                int[] I = SuffixSort(original);
-
-                while (scan < newDataLen)
+                int oldscore = 0;
+                for (int scsc = scan += len; scan < newDataLen; scan++)
                 {
-                    int oldscore = 0;
-                    for (int scsc = scan += len; scan < newDataLen; scan++)
-                    {
-                        len = Search(I, original, modified, scan, 0, oldDataLen, out pos);
+                    len = Search(I, original, modified, scan, 0, oldDataLen, out pos);
 
-                        for (; scsc < scan + len; scsc++)
-                            if ((scsc + lastoffset < oldDataLen) && (original[scsc + lastoffset] == modified[scsc]))
-                                oldscore++;
+                    for (; scsc < scan + len; scsc++)
+                        if ((scsc + lastoffset < oldDataLen) && (original[scsc + lastoffset] == modified[scsc]))
+                            oldscore++;
 
-                        if ((len == oldscore && len != 0) || (len > oldscore + 8))
-                            break;
+                    if ((len == oldscore && len != 0) || (len > oldscore + 8))
+                        break;
 
-                        if ((scan + lastoffset < oldDataLen) && (original[scan + lastoffset] == modified[scan]))
-                            oldscore--;
-                    }
-
-                    if (len != oldscore || scan == newDataLen)
-                    {
-                        int s = 0, sf = 0, lenf = 0, lenb = 0;
-                        for (var i = 0; (lastscan + i < scan) && (lastpos + i < oldDataLen);)
-                        {
-                            if (original[lastpos + i] == modified[lastscan + i])
-                                s++;
-
-                            i++;
-                            if (s * 2 - i > sf * 2 - lenf)
-                            {
-                                sf = s;
-                                lenf = i;
-                            }
-                        }
-
-                        if (scan < newDataLen)
-                        {
-                            s = 0;
-                            int sb = 0;
-                            for (var i = 1; (scan >= lastscan + i) && (pos >= i); i++)
-                            {
-                                if (original[pos - i] == modified[scan - i])
-                                    s++;
-
-                                if (s * 2 - i > sb * 2 - lenb)
-                                {
-                                    sb = s;
-                                    lenb = i;
-                                }
-                            }
-                        }
-
-                        if (lastscan + lenf > scan - lenb)
-                        {
-                            s = 0;
-
-                            int overlap = lastscan + lenf - (scan - lenb), ss = 0, lens = 0;
-                            for (var i = 0; i < overlap; i++)
-                            {
-                                if (modified[lastscan + lenf - overlap + i] == original[lastpos + lenf - overlap + i])
-                                    s++;
-
-                                if (modified[scan - lenb + i] == original[pos - lenb + i])
-                                    s--;
-
-                                if (s > ss)
-                                {
-                                    ss = s;
-                                    lens = i + 1;
-                                }
-                            }
-
-                            lenf += lens - overlap;
-                            lenb -= lens;
-                        }
-
-                        // write diff chunk
-                        byte[] buffer = new byte[lenf];
-                        for (int i = 0; i < lenf; i++)
-                            buffer[i] = (byte)(modified[lastscan + i] - original[lastpos + i]);
-                        diff.Write(buffer);
-
-                        // write extra chunk
-                        var extraLength = scan - lenb - (lastscan + lenf);
-                        if (extraLength > 0)
-                            extr.Write(modified.Slice(lastscan + lenf, extraLength));
-
-                        // write ctrl chunk
-                        ctrl.WriteInt64BS(lenf);
-                        ctrl.WriteInt64BS(extraLength);
-                        ctrl.WriteInt64BS(pos - lenb - (lastpos + lenf));
-
-                        lastscan = scan - lenb;
-                        lastpos = pos - lenb;
-                        lastoffset = pos - scan;
-                    }
+                    if ((scan + lastoffset < oldDataLen) && (original[scan + lastoffset] == modified[scan]))
+                        oldscore--;
                 }
 
-                // flush the streams
-                ctrl.Flush(); diff.Flush(); extr.Flush();
+                if (len != oldscore || scan == newDataLen)
+                {
+                    int s = 0, sf = 0, lenf = 0, lenb = 0;
+                    for (var i = 0; (lastscan + i < scan) && (lastpos + i < oldDataLen);)
+                    {
+                        if (original[lastpos + i] == modified[lastscan + i])
+                            s++;
 
-                // generate the output stream
-                output.WriteInt64BS(Signature);
-                output.WriteInt64BS(ctrl.TotalOut); // controlSize
-                output.WriteInt64BS(diff.TotalOut); // diffSize
-                output.WriteInt64BS(modified.Length); // outputSize
-                (ctrl.BaseStream as MemoryStream).WriteTo(output);
-                (diff.BaseStream as MemoryStream).WriteTo(output);
-                (extr.BaseStream as MemoryStream).WriteTo(output);
+                        i++;
+                        if (s * 2 - i > sf * 2 - lenf)
+                        {
+                            sf = s;
+                            lenf = i;
+                        }
+                    }
+
+                    if (scan < newDataLen)
+                    {
+                        s = 0;
+                        int sb = 0;
+                        for (var i = 1; (scan >= lastscan + i) && (pos >= i); i++)
+                        {
+                            if (original[pos - i] == modified[scan - i])
+                                s++;
+
+                            if (s * 2 - i > sb * 2 - lenb)
+                            {
+                                sb = s;
+                                lenb = i;
+                            }
+                        }
+                    }
+
+                    if (lastscan + lenf > scan - lenb)
+                    {
+                        s = 0;
+
+                        int overlap = lastscan + lenf - (scan - lenb), ss = 0, lens = 0;
+                        for (var i = 0; i < overlap; i++)
+                        {
+                            if (modified[lastscan + lenf - overlap + i] == original[lastpos + lenf - overlap + i])
+                                s++;
+
+                            if (modified[scan - lenb + i] == original[pos - lenb + i])
+                                s--;
+
+                            if (s > ss)
+                            {
+                                ss = s;
+                                lens = i + 1;
+                            }
+                        }
+
+                        lenf += lens - overlap;
+                        lenb -= lens;
+                    }
+
+                    // write diff chunk
+                    byte[] buffer = new byte[lenf];
+                    for (int i = 0; i < lenf; i++)
+                        buffer[i] = (byte)(modified[lastscan + i] - original[lastpos + i]);
+                    diff.Write(buffer);
+
+                    // write extra chunk
+                    var extraLength = scan - lenb - (lastscan + lenf);
+                    if (extraLength > 0)
+                        extr.Write(modified.Slice(lastscan + lenf, extraLength));
+
+                    // write ctrl chunk
+                    ctrl.WriteInt64BS(lenf);
+                    ctrl.WriteInt64BS(extraLength);
+                    ctrl.WriteInt64BS(pos - lenb - (lastpos + lenf));
+
+                    lastscan = scan - lenb;
+                    lastpos = pos - lenb;
+                    lastoffset = pos - scan;
+                }
             }
+
+            // flush the streams
+            ctrl.Flush(); diff.Flush(); extr.Flush();
+
+            // generate the output stream
+            output.WriteInt64BS(Signature);
+            output.WriteInt64BS(ctrl.TotalOut); // controlSize
+            output.WriteInt64BS(diff.TotalOut); // diffSize
+            output.WriteInt64BS(modified.Length); // outputSize
+            (ctrl.BaseStream as MemoryStream).WriteTo(output);
+            (diff.BaseStream as MemoryStream).WriteTo(output);
+            (extr.BaseStream as MemoryStream).WriteTo(output);
         }
 
         #endregion

@@ -24,7 +24,7 @@ namespace TACT.Net.Indices
         /// </summary>
         public readonly SortedList<MD5Hash, CASRecord> QueuedEntries;
 
-        private ConcurrentSet<IndexFile> _indices;
+        private readonly ConcurrentSet<IndexFile> _indices;
         private string _sourceDirectory;
         private bool _useParallelism = false;
         private CDNClient _client;
@@ -468,7 +468,9 @@ namespace TACT.Net.Indices
         /// </summary>
         /// <param name="directory"></param>
         /// <param name="configContainer"></param>
+#pragma warning disable IDE0051 // Remove unused private members
         private void GenerateIndexGroup(string directory, Configs.ConfigContainer configContainer)
+#pragma warning restore IDE0051 // Remove unused private members
         {
             if (configContainer == null)
                 return;

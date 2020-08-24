@@ -30,8 +30,8 @@ namespace TACT.Net.Encoding
         public readonly bool Partial;
 
         private readonly EMap[] _EncodingMap;
-        private CKeyPageTable _CKeyEntries;
-        private EKeyPageTable _EKeyEntries;
+        private readonly CKeyPageTable _CKeyEntries;
+        private readonly EKeyPageTable _EKeyEntries;
 
         #region Constructors
 
@@ -70,9 +70,9 @@ namespace TACT.Net.Encoding
             FilePath = path;
             Partial = partial;
 
-            using (var fs = File.OpenRead(path))
-            using (var bt = new BlockTableStreamReader(fs))
-                Read(bt);
+            using var fs = File.OpenRead(path);
+            using var bt = new BlockTableStreamReader(fs);
+            Read(bt);
         }
 
         /// <summary>
@@ -97,9 +97,9 @@ namespace TACT.Net.Encoding
 
             string url = Helpers.GetCDNUrl(ekey.ToString(), "data");
 
-            using (var stream = client.OpenStream(url).Result)
-            using (var bt = new BlockTableStreamReader(stream))
-                Read(bt);
+            using var stream = client.OpenStream(url).Result;
+            using var bt = new BlockTableStreamReader(stream);
+            Read(bt);
         }
 
         /// <summary>
@@ -125,35 +125,33 @@ namespace TACT.Net.Encoding
             if (!stream.CanRead || stream.Length <= 1)
                 throw new NotSupportedException($"Unable to read EncodingFile stream");
 
-            using (var br = new BinaryReader(stream))
+            using var br = new BinaryReader(stream);
+            EncodingHeader.Read(br);
+
+            // ESpec string table
+            byte[] buffer = br.ReadBytes((int)EncodingHeader.ESpecTableSize);
+            ESpecStringTable = Text.Encoding.ASCII.GetString(buffer).Split('\0').ToList();
+
+            // skip CKey page table indices
+            stream.Seek((int)EncodingHeader.CKeyPageCount * (EncodingHeader.CKeyHashSize + 16), SeekOrigin.Current);
+
+            // read CKey entries
+            _CKeyEntries.Capacity = (int)EncodingHeader.CKeyPageCount * 40;
+            ReadPage(br, EncodingHeader.CKeyPageSize << 10, EncodingHeader.CKeyPageCount, _CKeyEntries);
+
+            if (!Partial)
             {
-                EncodingHeader.Read(br);
+                // skip EKey page table indices
+                stream.Seek((int)EncodingHeader.EKeyPageCount * (EncodingHeader.EKeyHashSize + 16), SeekOrigin.Current);
 
-                // ESpec string table
-                byte[] buffer = br.ReadBytes((int)EncodingHeader.ESpecTableSize);
-                ESpecStringTable = Text.Encoding.ASCII.GetString(buffer).Split('\0').ToList();
+                // read EKey entries
+                _EKeyEntries.Capacity = (int)EncodingHeader.CKeyPageCount * 25;
+                ReadPage(br, EncodingHeader.EKeyPageSize << 10, EncodingHeader.EKeyPageCount, _EKeyEntries);
 
-                // skip CKey page table indices
-                stream.Seek((int)EncodingHeader.CKeyPageCount * (EncodingHeader.CKeyHashSize + 16), SeekOrigin.Current);
-
-                // read CKey entries
-                _CKeyEntries.Capacity = (int)EncodingHeader.CKeyPageCount * 40;
-                ReadPage(br, EncodingHeader.CKeyPageSize << 10, EncodingHeader.CKeyPageCount, _CKeyEntries);
-
-                if (!Partial)
-                {
-                    // skip EKey page table indices
-                    stream.Seek((int)EncodingHeader.EKeyPageCount * (EncodingHeader.EKeyHashSize + 16), SeekOrigin.Current);
-
-                    // read EKey entries
-                    _EKeyEntries.Capacity = (int)EncodingHeader.CKeyPageCount * 25;
-                    ReadPage(br, EncodingHeader.EKeyPageSize << 10, EncodingHeader.EKeyPageCount, _EKeyEntries);
-
-                    // remainder is an ESpec block for the file itself
-                }
-
-                Checksum = stream.MD5Hash();
+                // remainder is an ESpec block for the file itself
             }
+
+            Checksum = stream.MD5Hash();
         }
 
         /// <summary>
@@ -167,8 +165,6 @@ namespace TACT.Net.Encoding
             if (Partial)
                 throw new NotSupportedException("Writing is not supported for partial EncodingFiles");
 
-            EBlock[] eblocks = new EBlock[_EncodingMap.Length];
-
             CASRecord record;
             using (var bt = new BlockTableStreamWriter(_EncodingMap[1], 1))
             using (var bw = new BinaryWriter(bt))
@@ -178,10 +174,10 @@ namespace TACT.Net.Encoding
                 EncodingHeader.ESpecTableSize = (uint)bt.Length;
 
                 // CKeysPageIndices 2, CKeysPageTable 3
-                WritePage(bw, eblocks, 2, EncodingHeader.CKeyPageSize << 10, _CKeyEntries);
+                WritePage(bw, 2, EncodingHeader.CKeyPageSize << 10, _CKeyEntries);
 
                 // EKeysPageIndices 4, EKeysPageTable 5
-                WritePage(bw, eblocks, 4, EncodingHeader.EKeyPageSize << 10, _EKeyEntries);
+                WritePage(bw, 4, EncodingHeader.EKeyPageSize << 10, _EKeyEntries);
 
                 // Header 0
                 bt.AddBlock(_EncodingMap[0], 0);
@@ -196,11 +192,9 @@ namespace TACT.Net.Encoding
 
                 // save
                 string saveLocation = Helpers.GetCDNPath(record.EKey.ToString(), "data", directory, true);
-                using (var fs = File.Create(saveLocation))
-                {
-                    bt.WriteTo(fs);
-                    record.BLTEPath = saveLocation;
-                }
+                using var fs = File.Create(saveLocation);
+                bt.WriteTo(fs);
+                record.BLTEPath = saveLocation;
             }
 
             // update the build config with the new values
@@ -388,15 +382,13 @@ namespace TACT.Net.Encoding
             for (uint i = 0; i < pageCount; i++)
             {
                 // buffer the page then read the entries to minimise file reads
-                using (var ms = new MemoryStream(reader.ReadBytes(pageSize)))
-                using (var br = new BinaryReader(ms))
+                using var ms = new MemoryStream(reader.ReadBytes(pageSize));
+                using var br = new BinaryReader(ms);
+                T entry = new T();
+                while (entry.Read(br, EncodingHeader))
                 {
-                    T entry = new T();
-                    while (entry.Read(br, EncodingHeader))
-                    {
-                        container.Add(entry.Key, entry);
-                        entry = new T();
-                    }
+                    container.Add(entry.Key, entry);
+                    entry = new T();
                 }
             }
         }
@@ -409,7 +401,7 @@ namespace TACT.Net.Encoding
         /// <param name="blockIndex"></param>
         /// <param name="pageSize"></param>
         /// <param name="container"></param>
-        private void WritePage<T>(BinaryWriter bw, EBlock[] eblocks, int blockIndex, int pageSize, IDictionary<MD5Hash, T> container) where T : EncodingEntryBase
+        private void WritePage<T>(BinaryWriter bw, int blockIndex, int pageSize, IDictionary<MD5Hash, T> container) where T : EncodingEntryBase
         {
             var bt = bw.BaseStream as BlockTableStreamWriter;
 
@@ -437,41 +429,39 @@ namespace TACT.Net.Encoding
         /// <returns></returns>
         private PageIndexTable WritePageImpl<T>(BinaryWriter bw, int pageSize, IDictionary<MD5Hash, T> container) where T : EncodingEntryBase
         {
-            using (var md5 = MD5.Create())
+            using var md5 = MD5.Create();
+            // split entries into pages of pageSize
+            var pages = EnumerablePartitioner.ConcreteBatch(container.Values, pageSize, (x) => x.Size);
+            uint pageCount = (uint)pages.Count();
+
+            PageIndexTable pageIndices = new PageIndexTable((int)pageCount);
+            bool EOFflag = typeof(T) == typeof(EncodingEncodedEntry);
+
+            // set Header PageCount
+            EncodingHeader.SetPageCount<T>(pageCount);
+
+            uint index = pageCount;
+            foreach (var page in pages)
             {
-                // split entries into pages of pageSize
-                var pages = EnumerablePartitioner.ConcreteBatch(container.Values, pageSize, (x) => x.Size);
-                uint pageCount = (uint)pages.Count();
+                // write page entries and pad to pageSize
+                page.ForEach(x => x.Write(bw, EncodingHeader));
 
-                PageIndexTable pageIndices = new PageIndexTable((int)pageCount);
-                bool EOFflag = typeof(T) == typeof(EncodingEncodedEntry);
-
-                // set Header PageCount
-                EncodingHeader.SetPageCount<T>(pageCount);
-
-                uint index = pageCount;
-                foreach (var page in pages)
+                // apply EOF flag (EKey page)
+                if (EOFflag && --index == 0)
                 {
-                    // write page entries and pad to pageSize
-                    page.ForEach(x => x.Write(bw, EncodingHeader));
-
-                    // apply EOF flag (EKey page)
-                    if (EOFflag && --index == 0)
-                    {
-                        bw.Write(new byte[EncodingHeader.EKeyHashSize]);
-                        bw.Write(0xFFFFFFFF);
-                    }
-
-                    // pad to page size
-                    bw.Write(new byte[pageSize - (bw.BaseStream.Position % pageSize)]);
-
-                    // create page index record
-                    pageIndices[page[0].Key] = bw.BaseStream.HashSlice(md5, bw.BaseStream.Position - pageSize, pageSize);
-                    page.Clear();
+                    bw.Write(new byte[EncodingHeader.EKeyHashSize]);
+                    bw.Write(0xFFFFFFFF);
                 }
 
-                return pageIndices;
+                // pad to page size
+                bw.Write(new byte[pageSize - (bw.BaseStream.Position % pageSize)]);
+
+                // create page index record
+                pageIndices[page[0].Key] = bw.BaseStream.HashSlice(md5, bw.BaseStream.Position - pageSize, pageSize);
+                page.Clear();
             }
+
+            return pageIndices;
         }
 
         /// <summary>

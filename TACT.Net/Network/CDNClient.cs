@@ -89,16 +89,14 @@ namespace TACT.Net.Network
 
                 try
                 {
-                    using (var resp = (HttpWebResponse)await req.GetResponseAsync().ConfigureAwait(false))
-                    using (var stream = resp.GetResponseStream())
-                    using (var respStream = ApplyDecryption ? Armadillo.Decrypt(cdnpath, stream) : stream)
-                    {
-                        var resultStream = new MemoryStream((int)resp.ContentLength);
-                        await respStream.CopyToAsync(resultStream).ConfigureAwait(false);
+                    using var resp = (HttpWebResponse)await req.GetResponseAsync().ConfigureAwait(false);
+                    using var stream = resp.GetResponseStream();
+                    using var respStream = ApplyDecryption ? Armadillo.Decrypt(cdnpath, stream) : stream;
+                    var resultStream = new MemoryStream((int)resp.ContentLength);
+                    await respStream.CopyToAsync(resultStream).ConfigureAwait(false);
 
-                        resultStream.Position = 0;
-                        return resultStream;
-                    }
+                    resultStream.Position = 0;
+                    return resultStream;
                 }
                 catch (WebException) { }
             }
@@ -126,14 +124,12 @@ namespace TACT.Net.Network
 
                 try
                 {
-                    using (var resp = (HttpWebResponse)await req.GetResponseAsync().ConfigureAwait(false))
-                    using (var stream = resp.GetResponseStream())
-                    using (var respStream = ApplyDecryption ? Armadillo.Decrypt(cdnpath, stream) : stream)
-                    using (var fs = File.Create(filepath))
-                    {
-                        await respStream.CopyToAsync(fs).ConfigureAwait(false);
-                        return true;
-                    }
+                    using var resp = (HttpWebResponse)await req.GetResponseAsync().ConfigureAwait(false);
+                    using var stream = resp.GetResponseStream();
+                    using var respStream = ApplyDecryption ? Armadillo.Decrypt(cdnpath, stream) : stream;
+                    using var fs = File.Create(filepath);
+                    await respStream.CopyToAsync(fs).ConfigureAwait(false);
+                    return true;
                 }
                 catch (WebException) { }
             }
@@ -156,9 +152,9 @@ namespace TACT.Net.Network
                     HttpWebRequest req = WebRequest.CreateHttp("http://" + host + "/" + cdnpath);
                     req.Method = "HEAD";
 
-                    using (var resp = (HttpWebResponse)await req.GetResponseAsync().ConfigureAwait(false))
-                        if (resp.StatusCode == HttpStatusCode.OK)
-                            return resp.ContentLength;
+                    using var resp = (HttpWebResponse)await req.GetResponseAsync().ConfigureAwait(false);
+                    if (resp.StatusCode == HttpStatusCode.OK)
+                        return resp.ContentLength;
                 }
                 catch (WebException) { }
             }

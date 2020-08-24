@@ -16,8 +16,8 @@ namespace TACT.Net.Common
         public static MD5Hash MD5Hash(this Stream stream, long offset = 0)
         {
             stream.Position = offset;
-            using (var md5 = MD5.Create())
-                return new MD5Hash(md5.ComputeHash(stream));
+            using var md5 = MD5.Create();
+            return new MD5Hash(md5.ComputeHash(stream));
         }
 
         public static string ToHex(this byte[] array)

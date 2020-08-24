@@ -165,9 +165,9 @@ Process:
                 block.EncodingMap.Level *= 3;
 
             // ignore EType and ZLib header
-            using (var ms = new MemoryStream(data, 3, data.Length - 3))
-            using (var ds = new DeflateStream(ms, CompressionMode.Decompress))
-                ds.CopyTo(outStream);
+            using var ms = new MemoryStream(data, 3, data.Length - 3);
+            using var ds = new DeflateStream(ms, CompressionMode.Decompress);
+            ds.CopyTo(outStream);
         }
 
         private byte[] Decrypt(EBlock block, byte[] data, int index)

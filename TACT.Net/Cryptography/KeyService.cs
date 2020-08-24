@@ -31,7 +31,7 @@ namespace TACT.Net.Cryptography
 
         #region Keys
 
-        private static Dictionary<ulong, byte[]> Keys = new Dictionary<ulong, byte[]>()
+        private static readonly Dictionary<ulong, byte[]> Keys = new Dictionary<ulong, byte[]>()
         {
             { 0xFA505078126ACB3E, "BDC51862ABED79B2DE48C8E7E66C6200".ToByteArray() },
             { 0xFF813F7D062AC0BC, "AA0B5C77F088CCC2D39049BD267F066D".ToByteArray() },

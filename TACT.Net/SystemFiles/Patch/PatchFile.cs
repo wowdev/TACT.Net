@@ -39,8 +39,8 @@ namespace TACT.Net.Patch
 
             FilePath = path;
 
-            using (var fs = File.OpenRead(path))
-                Read(fs);
+            using var fs = File.OpenRead(path);
+            Read(fs);
         }
 
         /// <summary>
@@ -61,8 +61,8 @@ namespace TACT.Net.Patch
         {
             string url = Helpers.GetCDNUrl(ekey.ToString(), "patch");
 
-            using (var stream = client.OpenStream(url).Result)
-                Read(stream);
+            using var stream = client.OpenStream(url).Result;
+            Read(stream);
         }
 
         /// <summary>
@@ -85,67 +85,63 @@ namespace TACT.Net.Patch
             if (!stream.CanRead || stream.Length <= 1)
                 throw new NotSupportedException($"Unable to read PatchFile stream");
 
-            using (var reader = new BinaryReader(stream))
+            using var reader = new BinaryReader(stream);
+            PatchHeader.Read(reader);
+
+            // read the patch entries
+            int pageSize = 1 << PatchHeader.PageSize;
+            long length = reader.BaseStream.Length;
+
+            foreach (var offset in GetOffsets(reader))
             {
-                PatchHeader.Read(reader);
+                reader.BaseStream.Position = offset;
 
-                // read the patch entries
-                int pageSize = 1 << PatchHeader.PageSize;
-                long length = reader.BaseStream.Length;
-
-                foreach (var offset in GetOffsets(reader))
+                // buffer the page then read the entries to minimise file reads
+                using var ms = new MemoryStream(reader.ReadBytes(pageSize));
+                using var br = new BinaryReader(ms);
+                var block = new PatchEntry();
+                while (block.Read(br, PatchHeader))
                 {
-                    reader.BaseStream.Position = offset;
-
-                    // buffer the page then read the entries to minimise file reads
-                    using (var ms = new MemoryStream(reader.ReadBytes(pageSize)))
-                    using (var br = new BinaryReader(ms))
-                    {
-                        var block = new PatchEntry();
-                        while (block.Read(br, PatchHeader))
-                        {
-                            _PatchEntries[block.CKey] = block;
-                            block = new PatchEntry();
-                        }
-                    }
+                    _PatchEntries[block.CKey] = block;
+                    block = new PatchEntry();
                 }
-
-                #region Unknown Data
-
-                // Unknown = br.ReadBytes((int)(br.BaseStream.Length - br.BaseStream.Position));
-
-                /*
-                // the following is unknown entries that comprise of:
-                // a keysize byte followed by either a CKey or Ekey
-                // the key type relevant size (decompressed/compressed)
-                // and optionally an ESpec string
-                // blocks are always a pair of 112 bytes then 160, Encoding Entry then Content Entry
-                //
-                // struct encodin_entry {
-                //    char _unk0[4]; // always 0
-                //    char KeySize;
-                //    char Hash[KeySize];
-                //    char _unk15[7];
-                //    uint32_t some_offset;
-                //    
-                //    // 0x44 CompressedSize;
-                // } 
-                // 
-                // struct content_entry {
-                //    char _unk0[4]; // always 0
-                //    char KeySize;
-                //    char Hash[KeySize];
-                //    char _unk15[7];
-                //    uint32_t some_offset;
-                //    
-                //    // 0x34 DeompressedSize;
-                //    // 0x6C partial ESpec   always ends in 0xA0
-                // }
-                */
-                #endregion
-
-                Checksum = stream.MD5Hash();
             }
+
+            #region Unknown Data
+
+            // Unknown = br.ReadBytes((int)(br.BaseStream.Length - br.BaseStream.Position));
+
+            /*
+            // the following is unknown entries that comprise of:
+            // a keysize byte followed by either a CKey or Ekey
+            // the key type relevant size (decompressed/compressed)
+            // and optionally an ESpec string
+            // blocks are always a pair of 112 bytes then 160, Encoding Entry then Content Entry
+            //
+            // struct encodin_entry {
+            //    char _unk0[4]; // always 0
+            //    char KeySize;
+            //    char Hash[KeySize];
+            //    char _unk15[7];
+            //    uint32_t some_offset;
+            //    
+            //    // 0x44 CompressedSize;
+            // } 
+            // 
+            // struct content_entry {
+            //    char _unk0[4]; // always 0
+            //    char KeySize;
+            //    char Hash[KeySize];
+            //    char _unk15[7];
+            //    uint32_t some_offset;
+            //    
+            //    // 0x34 DeompressedSize;
+            //    // 0x6C partial ESpec   always ends in 0xA0
+            // }
+            */
+            #endregion
+
+            Checksum = stream.MD5Hash();
         }
 
         public CASRecord Write(string directory, TACTRepo tactRepo = null)
@@ -199,13 +195,11 @@ namespace TACT.Net.Patch
                 if (i > 0)
                     input = output;
 
-                using (var patch = indexContainer.OpenPatch(patchEntry.Records[i].PatchEKey))
-                {
-                    if (patch == null)
-                        return false;
+                using var patch = indexContainer.OpenPatch(patchEntry.Records[i].PatchEKey);
+                if (patch == null)
+                    return false;
 
-                    ZBSPatch.Apply(input, patch, output);
-                }
+                ZBSPatch.Apply(input, patch, output);
             }
 
             return true;

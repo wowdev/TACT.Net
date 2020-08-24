@@ -61,8 +61,8 @@ namespace TACT.Net.Configs
             if (!File.Exists(path))
                 throw new FileNotFoundException($"Unable to load {type} config", path);
 
-            using (var sr = new StreamReader(path))
-                Read(sr);
+            using var sr = new StreamReader(path);
+            Read(sr);
         }
 
         /// <summary>
@@ -79,8 +79,8 @@ namespace TACT.Net.Configs
             if (!stream.CanRead)
                 throw new NotSupportedException($"Unable to read {type} stream");
 
-            using (var sr = new StreamReader(stream))
-                Read(sr);
+            using var sr = new StreamReader(stream);
+            Read(sr);
         }
 
         #endregion
@@ -196,8 +196,6 @@ namespace TACT.Net.Configs
         private void Read(TextReader reader)
         {
             string line;
-            string[] tokens = null;
-
             while ((line = reader.ReadLine()) != null)
             {
                 // skip blank
@@ -214,7 +212,7 @@ namespace TACT.Net.Configs
                     continue;
                 }
 
-                tokens = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                string[] tokens = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
                 // special case for PatchConfig's patch entries; store the entry as the SystemFile type
                 if (Type == ConfigType.PatchConfig && line.StartsWith("patch-entry"))
@@ -233,50 +231,50 @@ namespace TACT.Net.Configs
             // sort the CDN Config entries
             SortEntries();
 
-            using (var ms = new MemoryStream())
-            using (var sw = new StreamWriter(ms))
+            using var ms = new MemoryStream();
+            using var sw = new StreamWriter(ms)
             {
-                sw.NewLine = "\n";
+                NewLine = "\n"
+            };
 
-                // append the comment line
-                switch (Type)
-                {
-                    case ConfigType.BuildConfig:
-                        sw.WriteLine("# Build Configuration\n");
-                        break;
-                    case ConfigType.CDNConfig:
-                        sw.WriteLine("# CDN Configuration\n");
-                        break;
-                    case ConfigType.PatchConfig:
-                        sw.WriteLine("# Patch Configuration\n");
-                        break;
-                }
-
-                // sequence number
-                if (SequenceNumber > 0)
-                    sw.WriteLine("## seqn " + SequenceNumber);
-
-                // write the token and values skipping blanks
-                foreach (var data in _data)
-                {
-                    if (data.Value.Count > 0 && !data.Value.All(x => string.IsNullOrWhiteSpace(x)))
-                    {
-                        // special case for PatchConfig's patch entries
-                        if (Type == ConfigType.PatchConfig && !data.Key.StartsWith("patch"))
-                            sw.WriteLine($"patch-entry = {data.Key} {string.Join(" ", data.Value)}");
-                        else
-                            sw.WriteLine($"{data.Key} = {string.Join(" ", data.Value)}");
-                    }
-                }
-
-                sw.WriteLine();
-
-                sw.Flush();
-                Checksum = ms.MD5Hash();
-
-                string saveLocation = Helpers.GetCDNPath(Checksum.ToString(), "config", directory, true);
-                File.WriteAllBytes(saveLocation, ms.ToArray());
+            // append the comment line
+            switch (Type)
+            {
+                case ConfigType.BuildConfig:
+                    sw.WriteLine("# Build Configuration\n");
+                    break;
+                case ConfigType.CDNConfig:
+                    sw.WriteLine("# CDN Configuration\n");
+                    break;
+                case ConfigType.PatchConfig:
+                    sw.WriteLine("# Patch Configuration\n");
+                    break;
             }
+
+            // sequence number
+            if (SequenceNumber > 0)
+                sw.WriteLine("## seqn " + SequenceNumber);
+
+            // write the token and values skipping blanks
+            foreach (var data in _data)
+            {
+                if (data.Value.Count > 0 && !data.Value.All(x => string.IsNullOrWhiteSpace(x)))
+                {
+                    // special case for PatchConfig's patch entries
+                    if (Type == ConfigType.PatchConfig && !data.Key.StartsWith("patch"))
+                        sw.WriteLine($"patch-entry = {data.Key} {string.Join(" ", data.Value)}");
+                    else
+                        sw.WriteLine($"{data.Key} = {string.Join(" ", data.Value)}");
+                }
+            }
+
+            sw.WriteLine();
+
+            sw.Flush();
+            Checksum = ms.MD5Hash();
+
+            string saveLocation = Helpers.GetCDNPath(Checksum.ToString(), "config", directory, true);
+            File.WriteAllBytes(saveLocation, ms.ToArray());
         }
 
         #endregion

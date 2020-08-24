@@ -18,7 +18,9 @@
         /// </summary>
         public bool MPQ;
 
+#pragma warning disable IDE0060 // Remove unused parameter
         public EMap(EType type, byte level, bool mpq = false)
+#pragma warning restore IDE0060 // Remove unused parameter
         {
             Type = type;
             Level = level;

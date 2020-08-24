@@ -184,23 +184,16 @@ namespace TACT.Net.Configs
         {
             var type = typeof(T);
 
-            switch (true)
+            return true switch
             {
-                case true when type == typeof(Root.RootFile):
-                    return TryGetKey(BuildConfig, "root");
-                case true when type == typeof(Encoding.EncodingFile):
-                    return TryGetKey(BuildConfig, "encoding", 1);
-                case true when type == typeof(Install.InstallFile):
-                    return TryGetKey(BuildConfig, "install");
-                case true when type == typeof(Download.DownloadFile):
-                    return TryGetKey(BuildConfig, "download");
-                case true when type == typeof(Download.DownloadSizeFile):
-                    return TryGetKey(BuildConfig, "size");
-                case true when type == typeof(Patch.PatchFile):
-                    return TryGetKey(BuildConfig, "patch");
-            }
-
-            return default;
+                true when type == typeof(Root.RootFile) => TryGetKey(BuildConfig, "root"),
+                true when type == typeof(Encoding.EncodingFile) => TryGetKey(BuildConfig, "encoding", 1),
+                true when type == typeof(Install.InstallFile) => TryGetKey(BuildConfig, "install"),
+                true when type == typeof(Download.DownloadFile) => TryGetKey(BuildConfig, "download"),
+                true when type == typeof(Download.DownloadSizeFile) => TryGetKey(BuildConfig, "size"),
+                true when type == typeof(Patch.PatchFile) => TryGetKey(BuildConfig, "patch"),
+                _ => default,
+            };
         }
 
         private MD5Hash TryGetKey(KeyValueConfig config, string identifier, int index = 0)

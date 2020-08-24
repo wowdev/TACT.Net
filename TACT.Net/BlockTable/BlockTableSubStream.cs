@@ -50,17 +50,13 @@ namespace TACT.Net.BlockTable
         public override long Seek(long offset, SeekOrigin origin)
         {
             //_innerStream.Seek(offset + _startPos, origin) - _startPos;
-            switch (origin)
+            return origin switch
             {
-                case SeekOrigin.Begin:
-                    return Position = offset;
-                case SeekOrigin.Current:
-                    return Position += offset;
-                case SeekOrigin.End:
-                    return Position = Length + offset;
-                default:
-                    return Position;
-            }
+                SeekOrigin.Begin => Position = offset,
+                SeekOrigin.Current => Position += offset,
+                SeekOrigin.End => Position = Length + offset,
+                _ => Position,
+            };
         }
         public override void SetLength(long value) => _innerStream.SetLength(Math.Max(_startPos, _startPos + value));
         public override void Flush() => _innerStream.Flush();
@@ -106,11 +102,9 @@ namespace TACT.Net.BlockTable
             if (EncodingMap.Type == EType.ZLib)
             {
                 var writeType = EncodingMap.MPQ ? 0 : ZLibWriteType.ZLib;
-                using (var zlib = ZLibFactory.CreateStream(this, ZLibMode.Compress, (ZLibCompLevel)EncodingMap.Level, writeType, true))
-                {
-                    zlib.WriteBasestream();
-                    CompressedSize = (uint)zlib.TotalOut + 1;
-                }
+                using var zlib = ZLibFactory.CreateStream(this, ZLibMode.Compress, (ZLibCompLevel)EncodingMap.Level, writeType, true);
+                zlib.WriteBasestream();
+                CompressedSize = (uint)zlib.TotalOut + 1;
             }
 
             _finalised = true;

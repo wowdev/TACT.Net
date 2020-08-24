@@ -80,9 +80,9 @@ namespace TACT.Net.Root
 
             FilePath = path;
 
-            using (var fs = File.OpenRead(path))
-            using (var bt = new BlockTableStreamReader(fs))
-                Read(bt);
+            using var fs = File.OpenRead(path);
+            using var bt = new BlockTableStreamReader(fs);
+            Read(bt);
         }
 
         /// <summary>
@@ -105,9 +105,9 @@ namespace TACT.Net.Root
 
             string url = Helpers.GetCDNUrl(ekey.ToString(), "data");
 
-            using (var stream = client.OpenStream(url).Result)
-            using (var bt = new BlockTableStreamReader(stream))
-                Read(bt);
+            using var stream = client.OpenStream(url).Result;
+            using var bt = new BlockTableStreamReader(stream);
+            Read(bt);
         }
 
         /// <summary>
@@ -177,37 +177,35 @@ namespace TACT.Net.Root
             FixDeltas();
 
             CASRecord record;
-            using (var bt = new BlockTableStreamWriter(_EncodingMap[0]))
-            using (var bw = new BinaryWriter(bt))
+            using var bt = new BlockTableStreamWriter(_EncodingMap[0]);
+            using var bw = new BinaryWriter(bt);
+            RootHeader.Write(bw, _blocks);
+
+            foreach (var block in _blocks)
+                block.Write(bw);
+
+            // finalise and change ESpec to non chunked
+            record = bt.Finalise();
+            record.ESpec = "z";
+
+            // save
+            string saveLocation = Helpers.GetCDNPath(record.EKey.ToString(), "data", directory, true);
+            using (var fs = File.Create(saveLocation))
             {
-                RootHeader.Write(bw, _blocks);
-
-                foreach (var block in _blocks)
-                    block.Write(bw);
-
-                // finalise and change ESpec to non chunked
-                record = bt.Finalise();
-                record.ESpec = "z";
-
-                // save
-                string saveLocation = Helpers.GetCDNPath(record.EKey.ToString(), "data", directory, true);
-                using (var fs = File.Create(saveLocation))
-                {
-                    bt.WriteTo(fs);
-                    record.BLTEPath = saveLocation;
-                }
-
-                // add to the encoding file and update the build config
-                if (tactRepo != null)
-                {
-                    tactRepo.EncodingFile?.AddOrUpdate(record, tactRepo);
-                    tactRepo.ConfigContainer?.BuildConfig?.SetValue("root", record.CKey, 0);
-                }
-
-                FilePath = record.BLTEPath;
-                Checksum = record.CKey;
-                return record;
+                bt.WriteTo(fs);
+                record.BLTEPath = saveLocation;
             }
+
+            // add to the encoding file and update the build config
+            if (tactRepo != null)
+            {
+                tactRepo.EncodingFile?.AddOrUpdate(record, tactRepo);
+                tactRepo.ConfigContainer?.BuildConfig?.SetValue("root", record.CKey, 0);
+            }
+
+            FilePath = record.BLTEPath;
+            Checksum = record.CKey;
+            return record;
         }
 
         #endregion
@@ -571,13 +569,11 @@ namespace TACT.Net.Root
         /// <returns></returns>
         private IRootBlock CreateRootBlock()
         {
-            switch (RootHeader.Version)
+            return RootHeader.Version switch
             {
-                case 2:
-                    return Activator.CreateInstance<RootBlockV2>();
-                default:
-                    return Activator.CreateInstance<RootBlock>();
-            }
+                2 => Activator.CreateInstance<RootBlockV2>(),
+                _ => Activator.CreateInstance<RootBlock>(),
+            };
         }
 
         /// <summary>

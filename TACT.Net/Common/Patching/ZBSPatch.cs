@@ -105,32 +105,30 @@ namespace TACT.Net.Common.Patching
         private static long CreatePatchStreams(Stream patch, out Stream ctrl, out Stream diff, out Stream extra)
         {
             // read the header
-            using (var br = new BinaryReader(patch))
-            {
-                // check patch stream capabilities
-                if (!patch.CanRead || !patch.CanSeek)
-                    throw new ArgumentException("Patch stream must be readable and seekable");
+            using var br = new BinaryReader(patch);
+            // check patch stream capabilities
+            if (!patch.CanRead || !patch.CanSeek)
+                throw new ArgumentException("Patch stream must be readable and seekable");
 
-                // check the magic
-                var signature = patch.ReadInt64BS();
-                if (signature != Signature)
-                    throw new FormatException($"Invalid signature. Expected {Signature} got {signature}.");
+            // check the magic
+            var signature = patch.ReadInt64BS();
+            if (signature != Signature)
+                throw new FormatException($"Invalid signature. Expected {Signature} got {signature}.");
 
-                // read lengths from header
-                long controlSize = patch.ReadInt64BS();
-                long diffSize = patch.ReadInt64BS();
-                long outputSize = patch.ReadInt64BS();
+            // read lengths from header
+            long controlSize = patch.ReadInt64BS();
+            long diffSize = patch.ReadInt64BS();
+            long outputSize = patch.ReadInt64BS();
 
-                if (controlSize < 0 || diffSize < 0 || outputSize <= 0)
-                    throw new InvalidOperationException("Corrupt patch");
+            if (controlSize < 0 || diffSize < 0 || outputSize <= 0)
+                throw new InvalidOperationException("Corrupt patch");
 
-                // create a stream for each block
-                ctrl = DecompressBlock(br.ReadBytes((int)controlSize));
-                diff = DecompressBlock(br.ReadBytes((int)diffSize));
-                extra = DecompressBlock(br.ReadBytes((int)(br.BaseStream.Length - br.BaseStream.Position))); // to EOF
+            // create a stream for each block
+            ctrl = DecompressBlock(br.ReadBytes((int)controlSize));
+            diff = DecompressBlock(br.ReadBytes((int)diffSize));
+            extra = DecompressBlock(br.ReadBytes((int)(br.BaseStream.Length - br.BaseStream.Position))); // to EOF
 
-                return outputSize;
-            }
+            return outputSize;
         }
 
         #endregion
