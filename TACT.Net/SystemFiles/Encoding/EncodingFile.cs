@@ -291,15 +291,19 @@ namespace TACT.Net.Encoding
             if (_CKeyEntries.TryGetValue(record.CKey, out var entry))
             {
                 _CKeyEntries.Remove(record.CKey);
-                entry.EKeys.ForEach(x => _EKeyEntries.Remove(x));
 
-                // propagate removal
-                if (tactRepo != null)
+                entry.EKeys.ForEach(key =>
                 {
-                    entry.EKeys.ForEach(x => tactRepo.IndexContainer?.Remove(x));
-                    entry.EKeys.ForEach(x => tactRepo.DownloadFile?.Remove(x));
-                    entry.EKeys.ForEach(x => tactRepo.DownloadSizeFile?.Remove(x));
-                }
+                    _EKeyEntries.Remove(key);
+
+                    // propagate removal
+                    if (tactRepo != null)
+                    {
+                        tactRepo.IndexContainer?.Remove(key);
+                        tactRepo.DownloadFile?.Remove(key);
+                        tactRepo.DownloadSizeFile?.Remove(key);
+                    }
+                });
 
                 return true;
             }
