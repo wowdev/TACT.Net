@@ -1,4 +1,6 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using TACT.Net.Common;
 using TACT.Net.Cryptography;
 
@@ -16,12 +18,11 @@ namespace TACT.Net.Encoding
         public MD5Hash CKey;
         /// <summary>
         /// Encoding key
-        /// <para>Note: The implementation states this can be >1 however this has never been the case for WoW</para>
         /// </summary>
-        public MD5Hash EKey;
+        public List<MD5Hash> EKeys;
 
         internal override MD5Hash Key => CKey;
-        internal override int Size => 6 + CKey.Value.Length + EKey.Value.Length;
+        internal override int Size => 6 + CKey.Value.Length + EKeys.Sum((x) => x.Value.Length);
 
         #region IO
 
@@ -33,20 +34,21 @@ namespace TACT.Net.Encoding
 
             DecompressedSize = br.ReadUInt40BE();
             CKey = new MD5Hash(br.ReadBytes(header.CKeyHashSize));
-            EKey = new MD5Hash(br.ReadBytes(header.EKeyHashSize));
 
-            if (keyCount > 1)
-                br.BaseStream.Position += (keyCount - 1) * header.EKeyHashSize;
+            EKeys = new List<MD5Hash>(keyCount);
+            for (var i = 0; i < keyCount; ++i)
+                EKeys.Add(new MD5Hash(br.ReadBytes(header.EKeyHashSize)));
 
             return true;
         }
 
         public override void Write(BinaryWriter bw, EncodingHeader header)
         {
-            bw.Write((byte)1); // EKey count
+            bw.Write((byte)EKeys.Count);
             bw.WriteUInt40BE(DecompressedSize);
             bw.Write(CKey.Value);
-            bw.Write(EKey.Value);
+
+            EKeys.ForEach(ekey => bw.Write(ekey.Value));
         }
 
         #endregion
@@ -55,7 +57,7 @@ namespace TACT.Net.Encoding
 
         internal override void Validate()
         {
-            if (EKey.IsEmpty)
+            if (EKeys.Count == 0)
                 throw new InvalidDataException("Entry contains no EKey");
             if (CKey.IsEmpty)
                 throw new InvalidDataException("Entry contains no CKey");

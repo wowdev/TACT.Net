@@ -115,19 +115,19 @@ namespace TACT.Net
 
                 // Open RootFile
                 if (ConfigContainer.RootCKey.Value != null && EncodingFile.TryGetCKeyEntry(ConfigContainer.RootCKey, out var rootEKey))
-                    RootFile = new Root.RootFile(BaseDirectory, rootEKey.EKey);
+                    RootFile = new Root.RootFile(BaseDirectory, rootEKey.EKeys[0]);
 
                 // Open InstallFile
                 if (ConfigContainer.InstallCKey.Value != null && EncodingFile.TryGetCKeyEntry(ConfigContainer.InstallCKey, out var installEKey))
-                    InstallFile = new Install.InstallFile(BaseDirectory, installEKey.EKey);
+                    InstallFile = new Install.InstallFile(BaseDirectory, installEKey.EKeys[0]);
 
                 // Open DownloadFile
                 if (ConfigContainer.DownloadCKey.Value != null && EncodingFile.TryGetCKeyEntry(ConfigContainer.DownloadCKey, out var downloadEKey))
-                    DownloadFile = new Download.DownloadFile(BaseDirectory, downloadEKey.EKey);
+                    DownloadFile = new Download.DownloadFile(BaseDirectory, downloadEKey.EKeys[0]);
 
                 // Open DownloadSizeFile
                 if (ConfigContainer.DownloadSizeCKey.Value != null && EncodingFile.TryGetCKeyEntry(ConfigContainer.DownloadSizeCKey, out var downloadSizeEKey))
-                    DownloadSizeFile = new Download.DownloadSizeFile(BaseDirectory, downloadSizeEKey.EKey);
+                    DownloadSizeFile = new Download.DownloadSizeFile(BaseDirectory, downloadSizeEKey.EKeys[0]);
             }
 
             // Open PatchFile
@@ -163,25 +163,25 @@ namespace TACT.Net
 
                 // Stream RootFile
                 if (EncodingFile.TryGetCKeyEntry(ConfigContainer.RootCKey, out var entry))
-                    RootFile = new Root.RootFile(cdnClient, entry.EKey);
+                    RootFile = new Root.RootFile(cdnClient, entry.EKeys[0]);
 
                 // Stream InstallFile
                 if (ConfigContainer.InstallEKey.Value != null)
                     InstallFile = new Install.InstallFile(cdnClient, ConfigContainer.InstallEKey);
                 else if (EncodingFile.TryGetCKeyEntry(ConfigContainer.InstallCKey, out entry))
-                    InstallFile = new Install.InstallFile(cdnClient, entry.EKey);
+                    InstallFile = new Install.InstallFile(cdnClient, entry.EKeys[0]);
 
                 // Stream DownloadFile
                 if (ConfigContainer.DownloadEKey.Value != null)
                     DownloadFile = new Download.DownloadFile(cdnClient, ConfigContainer.DownloadEKey);
                 else if (EncodingFile.TryGetCKeyEntry(ConfigContainer.DownloadCKey, out entry))
-                    DownloadFile = new Download.DownloadFile(cdnClient, entry.EKey);
+                    DownloadFile = new Download.DownloadFile(cdnClient, entry.EKeys[0]);
 
                 // Stream DownloadSizeFile
                 if (ConfigContainer.DownloadSizeEKey.Value != null)
                     DownloadSizeFile = new Download.DownloadSizeFile(cdnClient, ConfigContainer.DownloadSizeEKey);
                 else if (EncodingFile.TryGetCKeyEntry(ConfigContainer.DownloadSizeCKey, out entry))
-                    DownloadSizeFile = new Download.DownloadSizeFile(cdnClient, entry.EKey);
+                    DownloadSizeFile = new Download.DownloadSizeFile(cdnClient, entry.EKeys[0]);
             }
 
             // Stream PatchFile
@@ -220,19 +220,20 @@ namespace TACT.Net
 
                 // Download RootFile
                 if (EncodingFile.TryGetCKeyEntry(ConfigContainer.RootCKey, out var ekeyEntry))
-                    queuedDownload.Enqueue(ekeyEntry.EKey.ToString());
+                    ekeyEntry.EKeys.ForEach(x => queuedDownload.Enqueue(x.Value.ToString()));
+                    
 
                 // Download InstallFile
                 if (EncodingFile.TryGetCKeyEntry(ConfigContainer.InstallCKey, out ekeyEntry))
-                    queuedDownload.Enqueue(ekeyEntry.EKey.ToString());
+                    ekeyEntry.EKeys.ForEach(x => queuedDownload.Enqueue(x.Value.ToString()));
 
                 // Download DownloadFile
                 if (EncodingFile.TryGetCKeyEntry(ConfigContainer.DownloadCKey, out ekeyEntry))
-                    queuedDownload.Enqueue(ekeyEntry.EKey.ToString());
+                    ekeyEntry.EKeys.ForEach(x => queuedDownload.Enqueue(x.Value.ToString()));
 
                 // Download DownloadSizeFile
                 if (EncodingFile.TryGetCKeyEntry(ConfigContainer.DownloadSizeCKey, out ekeyEntry))
-                    queuedDownload.Enqueue(ekeyEntry.EKey.ToString());
+                    ekeyEntry.EKeys.ForEach(x => queuedDownload.Enqueue(x.Value.ToString()));
 
                 queuedDownload.Download("data");
             }
