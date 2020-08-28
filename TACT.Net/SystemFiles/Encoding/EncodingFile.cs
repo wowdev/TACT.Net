@@ -226,9 +226,11 @@ namespace TACT.Net.Encoding
             var cKeyEntry = new EncodingContentEntry
             {
                 CKey = record.CKey,
-                EKey = record.EKey,
+                EKeys = new List<MD5Hash>(),
                 DecompressedSize = record.EBlock.DecompressedSize,
             };
+
+            cKeyEntry.EKeys.Add(record.EKey);
             _CKeyEntries.Add(record.CKey, cKeyEntry);
 
             // get or add to the ESpecStringTable
@@ -289,15 +291,19 @@ namespace TACT.Net.Encoding
             if (_CKeyEntries.TryGetValue(record.CKey, out var entry))
             {
                 _CKeyEntries.Remove(record.CKey);
-                _EKeyEntries.Remove(entry.EKey);
 
-                // propagate removal
-                if (tactRepo != null)
+                entry.EKeys.ForEach(key =>
                 {
-                    tactRepo.IndexContainer?.Remove(entry.EKey);
-                    tactRepo.DownloadFile?.Remove(entry.EKey);
-                    tactRepo.DownloadSizeFile?.Remove(entry.EKey);
-                }
+                    _EKeyEntries.Remove(key);
+
+                    // propagate removal
+                    if (tactRepo != null)
+                    {
+                        tactRepo.IndexContainer?.Remove(key);
+                        tactRepo.DownloadFile?.Remove(key);
+                        tactRepo.DownloadSizeFile?.Remove(key);
+                    }
+                });
 
                 return true;
             }
@@ -340,8 +346,13 @@ namespace TACT.Net.Encoding
         public EncodingContentEntry GetCKeyEntryByEKey(MD5Hash ekey)
         {
             foreach (var ckeyEntry in _CKeyEntries.Values)
-                if (ckeyEntry.EKey == ekey)
-                    return ckeyEntry;
+            {
+                foreach (var ekeyEntry in ckeyEntry.EKeys)
+                {
+                    if (ekeyEntry == ekey)
+                        return ckeyEntry;
+                }
+            }
 
             return null;
         }

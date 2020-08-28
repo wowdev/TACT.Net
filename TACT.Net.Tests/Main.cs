@@ -116,7 +116,7 @@ namespace TACT.Net.Tests
             Assert.IsTrue(tactRepo.EncodingFile.TryGetCKeyEntry(tactRepo.ConfigContainer.RootCKey, out var rootCEntry));
 
             // open the root
-            tactRepo.RootFile = new Root.RootFile(tactRepo.BaseDirectory, rootCEntry.EKey);
+            tactRepo.RootFile = new Root.RootFile(tactRepo.BaseDirectory, rootCEntry.EKeys[0]);
 
             // read a normal file then an encrypted file
             string[] filenames = new[] { "world/arttest/boxtest/xyz.m2", "creature/encrypted05/encrypted05.m2" };
@@ -290,7 +290,7 @@ namespace TACT.Net.Tests
 
             // open root
             tactRepo.EncodingFile.TryGetCKeyEntry(tactRepo.ConfigContainer.RootCKey, out var rootCKeyEntry);
-            tactRepo.RootFile = new Root.RootFile(tactRepo.BaseDirectory, rootCKeyEntry.EKey)
+            tactRepo.RootFile = new Root.RootFile(tactRepo.BaseDirectory, rootCKeyEntry.EKeys[0])
             {
                 FileLookup = new MockFileLookup()
                 {
