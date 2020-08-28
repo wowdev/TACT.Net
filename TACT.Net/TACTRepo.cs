@@ -194,29 +194,29 @@ namespace TACT.Net
         /// <para>Note: This will download the entire CDN so will take a while</para>
         /// </summary>
         /// <param name="url"></param>
-        /// <param name="directory"></param>
+        /// <param name="tprDirectory"></param>
         /// <param name="product"></param>
         /// <param name="locale"></param>
-        public void DownloadRemote(string directory, string product, Locale locale, bool systemFileOnly = false)
+        public void DownloadRemote(string tprDirectory, string product, Locale locale, bool systemFileOnly = false)
         {
             ManifestContainer = new Configs.ManifestContainer(product, locale);
-            ManifestContainer.DownloadRemote(directory);
+            ManifestContainer.DownloadRemote(BaseDirectory);
 
             ConfigContainer = new Configs.ConfigContainer();
-            ConfigContainer.DownloadRemote(directory, ManifestContainer);
+            ConfigContainer.DownloadRemote(tprDirectory, ManifestContainer);
 
             var cdnClient = new CDNClient(ManifestContainer);
-            var queuedDownload = new QueuedDownloader(directory, cdnClient);
+            var queuedDownload = new QueuedDownloader(tprDirectory, cdnClient);
 
             if (ConfigContainer.EncodingEKey.Value != null)
             {
                 // Download encoding file
-                var encodingEKey = DownloadSystemFile(ConfigContainer.EncodingEKey, cdnClient, directory);
+                var encodingEKey = DownloadSystemFile(ConfigContainer.EncodingEKey, cdnClient, tprDirectory);
                 if (encodingEKey.Value != null)
-                    EncodingFile = new Encoding.EncodingFile(BaseDirectory, encodingEKey, true);
+                    EncodingFile = new Encoding.EncodingFile(tprDirectory, encodingEKey, true);
 
                 // Download PatchFile
-                DownloadSystemFile(ConfigContainer.PatchEKey, cdnClient, directory, "patch");
+                DownloadSystemFile(ConfigContainer.PatchEKey, cdnClient, tprDirectory, "patch");
 
                 // Download RootFile
                 if (EncodingFile.TryGetCKeyEntry(ConfigContainer.RootCKey, out var ekeyEntry))
@@ -241,10 +241,10 @@ namespace TACT.Net
             if (!systemFileOnly)
             {
                 IndexContainer = new Indices.IndexContainer();
-                IndexContainer.DownloadRemote(directory, ConfigContainer, ManifestContainer);
+                IndexContainer.DownloadRemote(tprDirectory, ConfigContainer, ManifestContainer);
             }
 
-            Open(directory);
+            Open(tprDirectory);
         }
 
         /// <summary>
