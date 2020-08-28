@@ -220,8 +220,7 @@ namespace TACT.Net
 
                 // Download RootFile
                 if (EncodingFile.TryGetCKeyEntry(ConfigContainer.RootCKey, out var ekeyEntry))
-                    ekeyEntry.EKeys.ForEach(x => queuedDownload.Enqueue(x.Value.ToString()));
-                    
+                    ekeyEntry.EKeys.ForEach(x => queuedDownload.Enqueue(x.Value.ToString()));                    
 
                 // Download InstallFile
                 if (EncodingFile.TryGetCKeyEntry(ConfigContainer.InstallCKey, out ekeyEntry))
