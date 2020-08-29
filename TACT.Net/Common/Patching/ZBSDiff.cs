@@ -42,6 +42,16 @@ namespace TACT.Net.Common.Patching
             CreateImpl(original, modified, output);
         }
 
+        public static void Create(Stream original, Stream modified, Stream output)
+        {
+            var obuffer = new byte[original.Length];
+            var mbuffer = new byte[modified.Length];
+            original.Read(obuffer);
+            modified.Read(mbuffer);
+
+            CreateImpl(obuffer, mbuffer, output);
+        }
+
         #endregion
 
         #region Implementation
@@ -61,12 +71,12 @@ namespace TACT.Net.Common.Patching
             int scan = 0, pos = 0, len = 0, lastscan = 0, lastpos = 0, lastoffset = 0;
             int oldDataLen = original.Length, newDataLen = modified.Length;
 
-            int[] I = SuffixSort(original);
+            var I = SuffixSort(original);
 
             while (scan < newDataLen)
             {
                 int oldscore = 0;
-                for (int scsc = scan += len; scan < newDataLen; scan++)
+                for (var scsc = scan += len; scan < newDataLen; scan++)
                 {
                     len = Search(I, original, modified, scan, 0, oldDataLen, out pos);
 
@@ -140,7 +150,7 @@ namespace TACT.Net.Common.Patching
 
                     // write diff chunk
                     byte[] buffer = new byte[lenf];
-                    for (int i = 0; i < lenf; i++)
+                    for (var i = 0; i < lenf; i++)
                         buffer[i] = (byte)(modified[lastscan + i] - original[lastpos + i]);
                     diff.Write(buffer);
 
@@ -184,31 +194,32 @@ namespace TACT.Net.Common.Patching
         /// <returns></returns>
         private static int[] SuffixSort(Span<byte> data)
         {
-            int[] buckets = new int[256];
+            var buckets = new int[256];
 
-            foreach (byte b in data)
-                buckets[b]++;
-            for (int i = 1; i < 256; i++)
+            for (var i = 0; i < data.Length; i++)
+                buckets[data[i]]++;
+            for (var i = 1; i < 256; i++)
                 buckets[i] += buckets[i - 1];
-            for (int i = 255; i > 0; i--)
+            for (var i = 255; i > 0; i--)
                 buckets[i] = buckets[i - 1];
+
             buckets[0] = 0;
 
-            int[] I = new int[data.Length + 1];
-            for (int i = 0; i < data.Length; i++)
+            var I = new int[data.Length + 1];
+            for (var i = 0; i < data.Length; i++)
                 I[++buckets[data[i]]] = i;
 
-            int[] v = new int[data.Length + 1];
-            for (int i = 0; i < data.Length; i++)
+            var v = new int[data.Length + 1];
+            for (var i = 0; i < data.Length; i++)
                 v[i] = buckets[data[i]];
 
-            for (int i = 1; i < 256; i++)
+            for (var i = 1; i < 256; i++)
                 if (buckets[i] == buckets[i - 1] + 1)
                     I[buckets[i]] = -1;
 
             I[0] = -1;
 
-            for (int h = 1; I[0] != -(data.Length + 1); h += h)
+            for (var h = 1; I[0] != -(data.Length + 1); h += h)
             {
                 int len = 0, i = 0;
                 while (i < data.Length + 1)
@@ -233,7 +244,7 @@ namespace TACT.Net.Common.Patching
                     I[i - len] = -len;
             }
 
-            for (int i = 0; i < data.Length + 1; i++)
+            for (var i = 0; i < data.Length + 1; i++)
                 I[v[i]] = i;
 
             return I;
@@ -252,7 +263,7 @@ namespace TACT.Net.Common.Patching
             if (len < 16)
             {
                 int j, x, i;
-                for (int k = start; k < start + len; k += j)
+                for (var k = start; k < start + len; k += j)
                 {
                     j = 1;
                     x = v[I[k] + h];
@@ -282,7 +293,7 @@ namespace TACT.Net.Common.Patching
             {
                 int x = v[I[start + len / 2] + h];
                 int jj = 0, kk = 0;
-                for (int i2 = start; i2 < start + len; i2++)
+                for (var i2 = start; i2 < start + len; i2++)
                 {
                     if (v[I[i2] + h] < x)
                         jj++;
@@ -343,34 +354,37 @@ namespace TACT.Net.Common.Patching
         {
             if (end - start < 2)
             {
-                int startLength = MatchLength(original, I[start], modified, newOffset);
-                int endLength = MatchLength(original, I[end], modified, newOffset);
+                var startLength = MatchLength(original, I[start], modified, newOffset);
+                var endLength = MatchLength(original, I[end], modified, newOffset);
 
                 if (startLength > endLength)
                 {
                     pos = I[start];
                     return startLength;
                 }
-
-                pos = I[end];
-                return endLength;
+                else
+                {
+                    pos = I[end];
+                    return endLength;
+                }
             }
             else
             {
-                int midPoint = start + (end - start) / 2;
-                return CompareBytes(original, I[midPoint], modified, newOffset) < 0 ?
-                    Search(I, original, modified, newOffset, midPoint, end, out pos) :
-                    Search(I, original, modified, newOffset, start, midPoint, out pos);
+                var midPoint = start + (end - start) / 2;
+
+                if (CompareBytes(original, I[midPoint], modified, newOffset) < 0)
+                    return Search(I, original, modified, newOffset, midPoint, end, out pos);
+                else
+                    return Search(I, original, modified, newOffset, start, midPoint, out pos);
             }
         }
 
         private static int CompareBytes(Span<byte> left, int leftOffset, Span<byte> right, int rightOffset)
         {
             int diff;
-            for (int index = 0; index < left.Length - leftOffset && index < right.Length - rightOffset; index++)
+            for (var index = 0; index < left.Length - leftOffset && index < right.Length - rightOffset; index++)
             {
-                diff = left[index + leftOffset] - right[index + rightOffset];
-                if (diff != 0)
+                if ((diff = left[index + leftOffset] - right[index + rightOffset]) != 0)
                     return diff;
             }
 

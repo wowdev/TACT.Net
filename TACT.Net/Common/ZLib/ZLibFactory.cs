@@ -28,9 +28,9 @@ namespace TACT.Net.Common.ZLib
             if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
                 throw new PlatformNotSupportedException();
 
-            string libName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "zlibwapi.dll" : "libz.so";
+            var libName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "zlibwapi.dll" : "libz.so";
 
-            string zlibPath = RuntimeInformation.ProcessArchitecture switch
+            var zlibPath = RuntimeInformation.ProcessArchitecture switch
             {
                 Architecture.X64 => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "x64", libName),
                 Architecture.X86 => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "x86", libName),
