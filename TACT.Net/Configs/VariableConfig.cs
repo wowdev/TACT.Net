@@ -120,6 +120,27 @@ namespace TACT.Net.Configs
         }
 
         /// <summary>
+        /// Removes a field from all locales
+        /// </summary>
+        /// <param name="field"></param>
+        public void RemoveValue(string field)
+        {
+            foreach (var collection in _data.Values)
+                collection.Remove(field);
+        }
+
+        /// <summary>
+        /// Removes a field from a specific locale
+        /// </summary>
+        /// <param name="field"></param>
+        /// <param name="locale"></param>
+        public void RemoveValue(string field, Locale locale)
+        {
+            if (_data.TryGetValue(locale, out var collection))
+                collection.Remove(field);
+        }
+
+        /// <summary>
         /// Gets the field value for all locales
         /// </summary>
         /// <param name="field"></param>

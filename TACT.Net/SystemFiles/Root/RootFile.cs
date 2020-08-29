@@ -263,6 +263,26 @@ namespace TACT.Net.Root
                 block.Records[fileId] = rootRecord;
             }
         }
+        /// <summary>
+        /// Adds or Updates a RootRecord for a specific block and amends all associated system files. If no block is found the Common block is used.
+        /// </summary>
+        /// <param name="record"></param>
+        /// <param name="locale"></param>
+        /// <param name="tactRepo">If provided, will add the entry to all relevant system files</param>
+        public void AddOrUpdate(CASRecord record, LocaleFlags localeFlags, ContentFlags contentFlags = ContentFlags.None, TACTRepo tactRepo = null)
+        {
+            var locale = LocaleFlags;
+            var content = ContentFlags;
+
+            LocaleFlags = localeFlags;
+            ContentFlags = contentFlags;
+
+            AddOrUpdate(record, tactRepo);
+
+            LocaleFlags = locale;
+            ContentFlags = content;
+
+        }
 
         /// <summary>
         /// Removes files based on their <paramref name="fileId"/>
