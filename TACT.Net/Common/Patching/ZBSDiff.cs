@@ -65,9 +65,9 @@ namespace TACT.Net.Common.Patching
             if (output == null || !output.CanSeek || !output.CanRead)
                 throw new ArgumentException("Output stream must be not null, readable and seekable");
 
-            using var ctrl = ZLibFactory.CreateStream(new MemoryStream(modified.Length), ZLibMode.Compress, ZLibCompLevel.BestCompression);
-            using var diff = ZLibFactory.CreateStream(new MemoryStream(modified.Length), ZLibMode.Compress, ZLibCompLevel.BestCompression);
-            using var extr = ZLibFactory.CreateStream(new MemoryStream(modified.Length), ZLibMode.Compress, ZLibCompLevel.BestCompression);
+            using var ctrl = ZLibFactory.CreateStream(new MemoryStream(modified.Length), ZLibCompLevel.BestCompression);
+            using var diff = ZLibFactory.CreateStream(new MemoryStream(modified.Length), ZLibCompLevel.BestCompression);
+            using var extr = ZLibFactory.CreateStream(new MemoryStream(modified.Length), ZLibCompLevel.BestCompression);
             int scan = 0, pos = 0, len = 0, lastscan = 0, lastpos = 0, lastoffset = 0;
             int oldDataLen = original.Length, newDataLen = modified.Length;
 

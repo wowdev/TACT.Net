@@ -101,8 +101,8 @@ namespace TACT.Net.BlockTable
 
             if (EncodingMap.Type == EType.ZLib)
             {
-                var writeType = EncodingMap.MPQ ? 0 : ZLibWriteType.ZLib;
-                using var zlib = ZLibFactory.CreateStream(this, ZLibMode.Compress, (ZLibCompLevel)EncodingMap.Level, writeType, true);
+                var windowBits = EncodingMap.MPQ ? 0 : ZLibWindowBits.Default;
+                using var zlib = ZLibFactory.CreateStream(this, (ZLibCompLevel)EncodingMap.Level, windowBits, true);
                 zlib.WriteBasestream();
                 CompressedSize = (uint)zlib.TotalOut + 1;
             }

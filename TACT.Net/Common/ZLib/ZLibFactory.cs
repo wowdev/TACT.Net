@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -12,34 +13,29 @@ namespace TACT.Net.Common.ZLib
         ~ZLibFactory() => ZLibInit.GlobalCleanup();
 
 
-        public static ZLibStream CreateStream(Stream stream, ZLibMode mode, ZLibCompLevel level, ZLibWriteType writeType = ZLibWriteType.ZLib, bool leaveOpen = false)
+        public static ZLibStream CreateStream(Stream stream, ZLibCompLevel level, ZLibWindowBits windowBits = ZLibWindowBits.Default, bool leaveOpen = false)
         {
-            return writeType switch
+            var options = new ZLibCompressOptions()
             {
-                // 0 windowBits - inflate uses the window size in the zlib header
-                0 => new ZLibMPQStream(stream, mode, level, leaveOpen),
-                // 15 windowBits
-                _ => new ZLibStream(stream, mode, level, leaveOpen),
+                Level = level,
+                WindowBits = windowBits,
+                LeaveOpen = leaveOpen
             };
+
+            return new ZLibStream(stream, options);
         }
 
         private static void NativeGlobalInit()
         {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-                throw new PlatformNotSupportedException();
+            var directory = Path.Combine(Environment.CurrentDirectory, "runtimes");
+            var arch = RuntimeInformation.ProcessArchitecture.ToString().ToLower();
 
-            var libName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "zlibwapi.dll" : "libz.so";
-
-            var zlibPath = RuntimeInformation.ProcessArchitecture switch
-            {
-                Architecture.X64 => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "x64", libName),
-                Architecture.X86 => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "x86", libName),
-                Architecture.Arm => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "armhf", libName),
-                Architecture.Arm64 => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "arm64", libName),
-                _ => throw new PlatformNotSupportedException(),
-            };
-
-            ZLibInit.GlobalInit(zlibPath, 64 * 1024);
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                ZLibInit.GlobalInit(Path.Combine(directory, "win-" + arch, "native", "zlibwapi.dll"));
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                ZLibInit.GlobalInit(Path.Combine(directory, "osx-" + arch, "native", "libz.dylib")); // TODO should this use system installed?
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                ZLibInit.GlobalInit(); // Linux binaries are not portable            
         }
     }
 }
