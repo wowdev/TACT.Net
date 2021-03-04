@@ -30,5 +30,7 @@ namespace TACT.Net.Download
         }
 
         #endregion
+
+        public override string ToString() => EKey.ToString();
     }
 }

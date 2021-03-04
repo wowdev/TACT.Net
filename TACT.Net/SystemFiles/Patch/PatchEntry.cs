@@ -45,5 +45,7 @@ namespace TACT.Net.Patch
             return true;
         }
         #endregion
+
+        public override string ToString() => CKey.ToString();
     }
 }

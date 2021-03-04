@@ -36,5 +36,7 @@ namespace TACT.Net.Install
         }
 
         #endregion
+
+        public override string ToString() => FilePath;
     }
 }

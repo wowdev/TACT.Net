@@ -66,5 +66,7 @@ namespace TACT.Net.Encoding
         }
 
         #endregion
+
+        public override string ToString() => CKey.ToString();
     }
 }

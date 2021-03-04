@@ -9,5 +9,7 @@ namespace TACT.Net.Root
         public ulong NameHash { get; set; }
         public uint FileId { get; set; }
         public uint FileIdDelta { get; set; }
+
+        public override string ToString() => $"{FileId}: {CKey}";
     }
 }

@@ -29,5 +29,6 @@ namespace TACT.Net.Tags
 
         #endregion
 
+        public override string ToString() => Name;
     }
 }
