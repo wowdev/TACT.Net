@@ -3,6 +3,13 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <LangVersion>8.0</LangVersion>
+    <Company>WoWDev</Company>
+    <Authors>wowdev</Authors>
+    <RepositoryUrl>https://github.com/wowdev/TACT.Net</RepositoryUrl>
+    <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
+    <NeutralLanguage>en-GB</NeutralLanguage>
+    <RepositoryType>git</RepositoryType>
+    <Description>A C# library for reading and writing World of Warcraft's TACT repositories.</Description>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -15,7 +22,7 @@
 
   <ItemGroup>
     <PackageReference Include="Joveler.Compression.ZLib" Version="4.0.0" />
-    <PackageReference Include="MimeKitLite" Version="2.9.1" />
+    <PackageReference Include="MimeKitLite" Version="2.10.1" />
   </ItemGroup>
 
 </Project>
