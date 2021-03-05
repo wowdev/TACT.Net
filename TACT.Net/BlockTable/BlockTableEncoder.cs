@@ -226,6 +226,8 @@ namespace TACT.Net.BlockTable
             using var fs = Helpers.Create(filepath);
             bt.Position = 0;
             bt.CopyTo(fs);
+            fs.Flush(true);
+            fs.Dispose();
         }
 
         /// <summary>
@@ -240,6 +242,8 @@ namespace TACT.Net.BlockTable
             using var fs = Helpers.Create(outputPath);
             bt.Position = 0;
             bt.CopyTo(fs);
+            fs.Flush(true);
+            fs.Dispose();
         }
 
         /// <summary>
@@ -254,7 +258,8 @@ namespace TACT.Net.BlockTable
             using var fs = Helpers.Create(filepath);
             bt.Position = 0;
             bt.CopyTo(fs);
-
+            fs.Flush(true);
+            fs.Dispose();
         }
 
         #endregion

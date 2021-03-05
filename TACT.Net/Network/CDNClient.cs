@@ -30,7 +30,7 @@ namespace TACT.Net.Network
             Armadillo = new Armadillo();
             ApplyDecryption = applyDecryption;
 
-            if(ServicePointManager.DefaultConnectionLimit != ushort.MaxValue)
+            if (ServicePointManager.DefaultConnectionLimit != ushort.MaxValue)
                 ServicePointManager.DefaultConnectionLimit = ushort.MaxValue;
         }
 
@@ -127,8 +127,12 @@ namespace TACT.Net.Network
                     using var resp = (HttpWebResponse)await req.GetResponseAsync().ConfigureAwait(false);
                     using var stream = resp.GetResponseStream();
                     using var respStream = ApplyDecryption ? Armadillo.Decrypt(cdnpath, stream) : stream;
-                    using var fs = File.Create(filepath);
-                    await respStream.CopyToAsync(fs).ConfigureAwait(false);
+                    using (var fs = File.Create(filepath))
+                    {
+                        await respStream.CopyToAsync(fs).ConfigureAwait(false);
+                        fs.Flush(true);
+                    }                        
+                    
                     return true;
                 }
                 catch (WebException) { }
