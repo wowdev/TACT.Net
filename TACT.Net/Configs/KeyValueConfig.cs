@@ -134,7 +134,7 @@ namespace TACT.Net.Configs
         {
             if (_data.TryGetValue(key, out var values))
                 if (values.Count > index)
-                    values[index] = value.ToString();
+                    values[index] = value?.ToString() ?? "";
         }
 
         /// <summary>
