@@ -1,17 +1,20 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace TACT.Net.Configs
 {
-    using Lookup = Dictionary<ConfigType, Dictionary<string, uint>>;
-    using LookupEntry = Dictionary<string, uint>;
+    // (key, minbuild, valuecount)
+    using Lookup = Dictionary<ConfigType, (string, uint, int)[]>;
 
     /// <summary>
     /// A config data generator
     /// </summary>
     internal static class ConfigDataFactory
     {
+        private static readonly string[] Empty = { "", "" };
+
         #region Data Generators
 
         /// <summary>
@@ -24,30 +27,23 @@ namespace TACT.Net.Configs
         {
             var collection = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
 
-            switch (type)
+            if (KeyValueLookup.Value.TryGetValue(type, out var fields))
             {
-                case ConfigType.BuildConfig:
-                    AddValue(collection, "build-name", "");
-                    AddValue(collection, "build-uid", "");
-                    AddValue(collection, "build-product", "WoW");
-                    AddValue(collection, "build-playbuild-installer", "ngdptool_casc2");
-                    AddValue(collection, "root", "");
-                    AddValue(collection, "install", "", "");
-                    AddValue(collection, "download", "", "");
-                    AddValue(collection, "encoding", "", "");
-                    break;
-                case ConfigType.CDNConfig:
-                    AddValue(collection, "archives");
-                    AddValue(collection, "archives-index-size");
-                    AddValue(collection, "patch-archives");
-                    AddValue(collection, "patch-archives-index-size");
-                    break;
-                default:
-                    throw new ArgumentException("Invalid KeyValueConfig type");
+                foreach ((string key, uint minbuild, int size) in fields)
+                {
+                    if (build > minbuild)
+                    {
+                        AddValue(collection, type, key, Empty[..size]);
+                    }
+                }
             }
 
-            // build specific fields
-            AddLookupValues(collection, type, build);
+            // apply static values
+            if (type == ConfigType.BuildConfig)
+            {
+                collection["build-product"][0] = "WoW";
+                collection["build-playbuild-installer"][0] = "ngdptool_casc2";
+            }
 
             return collection;
         }
@@ -64,20 +60,20 @@ namespace TACT.Net.Configs
             switch (type)
             {
                 case ConfigType.CDNs:
-                    AddValue(collection, "Name!STRING:0");
-                    AddValue(collection, "Path!STRING:0", "tpr/wow");
-                    AddValue(collection, "Hosts!STRING:0");
-                    AddValue(collection, "Servers!STRING:0");
-                    AddValue(collection, "ConfigPath!STRING:0", "tpr/configs/data");
+                    AddValue(collection, type, "Name!STRING:0");
+                    AddValue(collection, type, "Path!STRING:0", "tpr/wow");
+                    AddValue(collection, type, "Hosts!STRING:0");
+                    AddValue(collection, type, "Servers!STRING:0");
+                    AddValue(collection, type, "ConfigPath!STRING:0", "tpr/configs/data");
                     break;
                 case ConfigType.Versions:
-                    AddValue(collection, "Region!STRING:0");
-                    AddValue(collection, "BuildConfig!HEX:16");
-                    AddValue(collection, "CDNConfig!HEX:16");
-                    AddValue(collection, "KeyRing!HEX:16");
-                    AddValue(collection, "BuildId!DEC:4", "00000");
-                    AddValue(collection, "VersionsName!String:0", "0.0.0.00000");
-                    AddValue(collection, "ProductConfig!HEX:16");
+                    AddValue(collection, type, "Region!STRING:0");
+                    AddValue(collection, type, "BuildConfig!HEX:16");
+                    AddValue(collection, type, "CDNConfig!HEX:16");
+                    AddValue(collection, type, "KeyRing!HEX:16");
+                    AddValue(collection, type, "BuildId!DEC:4", "00000");
+                    AddValue(collection, type, "VersionsName!String:0", "0.0.0.00000");
+                    AddValue(collection, type, "ProductConfig!HEX:16");
                     break;
                 default:
                     throw new ArgumentException("Invalid VariableConfig type");
@@ -96,60 +92,52 @@ namespace TACT.Net.Configs
         /// <param name="dictionay"></param>
         /// <param name="key"></param>
         /// <param name="values"></param>
-        private static void AddValue(System.Collections.IDictionary dictionay, string key, params string[] values)
+        private static void AddValue(IDictionary dictionay, ConfigType type, string key, params string[] values)
         {
-            var valueType = dictionay.GetType().GetGenericArguments()[1];
-            bool isList = valueType.IsGenericType && valueType.GetGenericTypeDefinition() == typeof(List<>);
-
-            if (isList)
-                dictionay[key] = new List<string>(values);
-            else
+            if (type == ConfigType.CDNs || type == ConfigType.Versions)
                 dictionay[key] = values.Length == 0 ? "" : values[0];
-        }
+            else
+                dictionay[key] = new List<string>(values);
 
-        /// <summary>
-        /// Adds build specific fields to the collection
-        /// </summary>
-        /// <param name="collection"></param>
-        /// <param name="type"></param>
-        /// <param name="build"></param>
-        private static void AddLookupValues(Dictionary<string, List<string>> collection, ConfigType type, uint build)
-        {
-            if (Lookup.Value.TryGetValue(type, out var fields))
-            {
-                string[] defaultValue = type == ConfigType.BuildConfig ? new[] { "", "" } : new string[0];
-
-                foreach (var field in fields)
-                    if (build > field.Value)
-                        AddValue(collection, field.Key, defaultValue);
-            }
         }
 
         #endregion
 
         #region Lookup
 
-        private static readonly Lazy<Lookup> Lookup = new Lazy<Lookup>(() =>
+        private static readonly Lazy<Lookup> KeyValueLookup = new Lazy<Lookup>(() =>
         {
             return new Lookup
             {
                 {
-                    ConfigType.BuildConfig, new LookupEntry()
+                    ConfigType.BuildConfig, new []
                     {
-                        { "encoding-size", 18888 },
-                        { "install-size", 22231 },
-                        { "download-size", 22231 },
-                        { "size", 22231 },
-                        { "size-size", 27547 },
+                        ("root", 0u, 1),
+                        ("install", 0u, 2),
+                        ("install-size", 22231u, 2),
+                        ("download", 0u, 2),
+                        ("download-size", 22231u, 2),
+                        ("size", 22231u, 2),
+                        ("size-size", 27547u, 2),
+                        ("encoding", 0u, 2),
+                        ("encoding-size", 18888u, 2),
+                        ("build-name", 0u, 1),
+                        ("build-uid", 0u, 1),
+                        ("build-product", 0u, 1),
+                        ("build-playbuild-installer", 0u, 1)
                     }
                 },
                 {
-                    ConfigType.CDNConfig, new LookupEntry()
+                    ConfigType.CDNConfig, new []
                     {
-                        { "file-index", 27165 },
-                        { "file-index-size", 27165 },
-                        { "patch-file-index", 27165 },
-                        { "patch-file-index-size", 27165 },
+                        ("archives", 0u, 1),
+                        ("archives-index-size", 0u, 1),
+                        ("patch-archives", 0u, 1),
+                        ("patch-archives-index-size", 0u, 1),
+                        ("file-index", 27165u, 0),
+                        ("file-index-size", 27165u, 0),
+                        ("patch-file-index", 27165u, 0),
+                        ("patch-file-index-size", 27165u, 0)
                     }
                 }
             };
