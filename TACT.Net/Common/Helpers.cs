@@ -49,8 +49,7 @@ namespace TACT.Net.Common
         /// Determines a file exists before attempting to delete
         /// </summary>
         /// <param name="filename"></param>
-        /// <param name="deleteParentFolder"></param>
-        public static void Delete(string filename, bool deleteParentFolder = false)
+        public static void Delete(string filename)
         {
             if (File.Exists(filename))
                 File.Delete(filename);
@@ -77,8 +76,8 @@ namespace TACT.Net.Common
         /// <param name="folder"></param>
         public static void Delete(string filename, string directory, string folder = "data")
         {
-            string filePath = GetCDNPath(filename, folder, directory);
-            Delete(filePath, true);
+            var filePath = GetCDNPath(filename, folder, directory);
+            Delete(filePath);
         }
 
         /// <summary>

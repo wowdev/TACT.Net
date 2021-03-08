@@ -89,7 +89,7 @@ namespace TACT.Net.Cryptography
 
         public override string ToString()
         {
-            return stringvalue ?? (stringvalue = Value.ToHex());
+            return stringvalue ??= Value.ToHex();
         }
 
         public override int GetHashCode()
