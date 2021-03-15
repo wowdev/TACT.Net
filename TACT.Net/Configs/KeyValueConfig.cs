@@ -207,7 +207,7 @@ namespace TACT.Net.Configs
                 {
                     // grab the sequence number
                     if (line.StartsWith("## seqn", StringComparison.OrdinalIgnoreCase))
-                        uint.TryParse(line.Split(' ').Last(), out SequenceNumber);
+                        uint.TryParse(line.Split(' ')[^1], out SequenceNumber);
 
                     continue;
                 }
