@@ -4,7 +4,9 @@ using System.IO;
 using TACT.Net.BlockTable;
 using TACT.Net.Common;
 using TACT.Net.Cryptography;
+using TACT.Net.Encoding;
 using TACT.Net.Network;
+using TACT.Net.SystemFiles.Install;
 using TACT.Net.Tags;
 
 namespace TACT.Net.Install
@@ -15,12 +17,14 @@ namespace TACT.Net.Install
     /// </summary>
     public class InstallFile : TagFileBase, ISystemFile
     {
+        private const StringComparison StrCmp = StringComparison.OrdinalIgnoreCase;
+
         public string FilePath { get; private set; }
         public InstallHeader InstallHeader { get; private set; }
-        public IEnumerable<InstallFileEntry> Files => _FileEntries.Values;
+        public IEnumerable<InstallFileEntry> Files => _FileEntries;
         public MD5Hash Checksum { get; private set; }
 
-        private readonly Dictionary<string, InstallFileEntry> _FileEntries;
+        private readonly List<InstallFileEntry> _FileEntries;
         private readonly EMap[] _EncodingMap;
 
         #region Constructors
@@ -31,7 +35,7 @@ namespace TACT.Net.Install
         public InstallFile()
         {
             InstallHeader = new InstallHeader();
-            _FileEntries = new Dictionary<string, InstallFileEntry>(StringComparer.OrdinalIgnoreCase);
+            _FileEntries = new List<InstallFileEntry>();
 
             _EncodingMap = new[]
             {
@@ -106,11 +110,12 @@ namespace TACT.Net.Install
             ReadTags(br, InstallHeader.TagCount, InstallHeader.EntryCount);
 
             // Files
+            _FileEntries.Capacity = (int)InstallHeader.EntryCount;
             for (int i = 0; i < InstallHeader.EntryCount; i++)
             {
                 var fileEntry = new InstallFileEntry();
                 fileEntry.Read(br, InstallHeader);
-                _FileEntries.TryAdd(fileEntry.FilePath, fileEntry);
+                _FileEntries.Add(fileEntry);
             }
 
             Checksum = stream.MD5Hash();
@@ -137,7 +142,7 @@ namespace TACT.Net.Install
 
                 // File Entry block
                 bt.AddBlock(_EncodingMap[1]);
-                foreach (var fileEntry in _FileEntries.Values)
+                foreach (var fileEntry in _FileEntries)
                     fileEntry.Write(bw);
 
                 // finalise
@@ -196,22 +201,33 @@ namespace TACT.Net.Install
             tactRepo?.EncodingFile?.AddOrUpdate(record, tactRepo);
         }
 
+        /// <summary>
+        /// Adds a InstallFileEntry to the InstallFile, this will overwrite existing entries
+        /// <para>
+        /// WARNING: This will replace all duplicated InstallFileEntries and override their tags
+        /// </para>
+        /// </summary>
+        /// <param name="fileEntry"></param>
+        /// <param name="tags"></param>
         public void AddOrUpdate(InstallFileEntry fileEntry, params string[] tags)
         {
-            int index;
-            if (!_FileEntries.ContainsKey(fileEntry.FilePath))
+            bool found = false;
+            for(var i = 0; i < _FileEntries.Count; i++)
             {
-                index = _FileEntries.Count;
-                _FileEntries.Add(fileEntry.FilePath, fileEntry);
-            }
-            else
-            {
-                index = _FileEntries.IndexOfKey(x => x.IndexOf(fileEntry.FilePath, StringComparison.OrdinalIgnoreCase) >= 0);
-                _FileEntries[fileEntry.FilePath] = fileEntry;
+                if(_FileEntries[i].Equals(fileEntry))
+                {
+                    _FileEntries[i] = fileEntry;
+                    SetTags(i, true, tags);
+                    found = true;
+                }
             }
 
-            // update the tag masks
-            SetTags(index, true, tags);
+            if(!found)
+            {
+                var index = _FileEntries.Count;
+                _FileEntries.Add(fileEntry);
+                SetTags(index, true, tags);
+            }            
         }
 
         public void AddOrUpdate(TagEntry tagEntry)
@@ -221,59 +237,176 @@ namespace TACT.Net.Install
 
 
         /// <summary>
-        /// Removes a InstallFileEntry from the InstallFile
+        /// Removes an InstallFileEntry from the InstallFile
         /// </summary>
         /// <param name="fileEntry"></param>
         public bool Remove(InstallFileEntry fileEntry)
         {
-            return Remove(fileEntry.FilePath);
+            var index = _FileEntries.IndexOf(fileEntry);
+            if (index > -1)
+            {
+                _FileEntries.RemoveAt(index);
+                RemoveFile(index);
+            }
+
+            return false;
         }
 
         /// <summary>
-        /// Removes a InstallFileEntry from the InstallFile
+        /// Removes all InstallFileEntries with a specific filename
         /// </summary>
         /// <param name="filePath"></param>
         public bool Remove(string filePath)
         {
-            int index = _FileEntries.IndexOfKey(x => x.IndexOf(filePath, StringComparison.OrdinalIgnoreCase) >= 0);
-            if (index > -1)
+            bool found = false;
+
+            for (var i = 0; i < _FileEntries.Count; i++)
             {
-                _FileEntries.Remove(filePath);
-                return RemoveFile(index);
+                if (_FileEntries[i].FilePath.Equals(filePath, StrCmp))
+                {
+                    _FileEntries.RemoveAt(i);
+                    RemoveFile(i);
+                    found = true;
+                    i--;
+                }
             }
 
-            return true;
+            return found;
         }
 
 
         /// <summary>
-        /// Returns a InstallFileEntry by name
+        /// Returns all InstallFileEntries with the supplied filepath
         /// </summary>
         /// <param name="filename"></param>
         /// <param name="fileEntry"></param>
         /// <returns></returns>
-        public bool TryGet(string filename, out InstallFileEntry fileEntry)
+        public IEnumerable<InstallFileEntry> Get(string filePath)
         {
-            return _FileEntries.TryGetValue(filename, out fileEntry);
+            for (var i = 0; i < _FileEntries.Count; i++)
+            {
+                if (_FileEntries[i].FilePath.Equals(filePath, StrCmp))
+                {
+                    yield return _FileEntries[i];
+                }
+            }
+        }
+        /// <summary>
+        /// Returns all InstallFileEntries with the supplied CKey
+        /// </summary>
+        /// <param name="filename"></param>
+        /// <param name="fileEntry"></param>
+        /// <returns></returns>
+        public IEnumerable<InstallFileEntry> Get(MD5Hash ckey)
+        {
+            for (var i = 0; i < _FileEntries.Count; i++)
+            {
+                if (_FileEntries[i].CKey == ckey)
+                {
+                    yield return _FileEntries[i];
+                }
+            }
+        }
+
+        /// <summary>
+        /// Returns a specific InstallFileEntry based on it's filepath 
+        /// filtered by platform and architecture
+        /// </summary>
+        /// <param name="filePath"></param>
+        /// <param name="platform"></param>
+        /// <returns></returns>
+        public InstallFileEntry Get(string filePath, Platforms platform, Architectures arch)
+        {
+            if (!_TagEntries.TryGetValue(platform.ToString(), out var osTag))
+                return null;
+            if (!_TagEntries.TryGetValue(arch.ToString(), out var archTag))
+                return null;
+
+            for (var i = 0; i < _FileEntries.Count; i++)
+            {
+                if (_FileEntries[i].FilePath.Equals(filePath, StrCmp) &&
+                    osTag.FileMask[i] &&
+                    archTag.FileMask[i])
+                {
+                    return _FileEntries[i];
+                }
+            }
+
+            return null;
+        }
+        /// <summary>
+        /// Returns a specific InstallFileEntry based on it's CKey 
+        /// filtered by platform and architecture
+        /// </summary>
+        /// <param name="filePath"></param>
+        /// <param name="platform"></param>
+        /// <returns></returns>
+        public InstallFileEntry Get(MD5Hash ckey, Platforms platform, Architectures arch)
+        {
+            if (!_TagEntries.TryGetValue(platform.ToString(), out var osTag))
+                return null;
+            if (!_TagEntries.TryGetValue(arch.ToString(), out var archTag))
+                return null;
+
+            for (var i = 0; i < _FileEntries.Count; i++)
+            {
+                if (_FileEntries[i].CKey == ckey && osTag.FileMask[i] && archTag.FileMask[i])
+                {
+                    return _FileEntries[i];
+                }
+            }
+
+            return null;
         }
 
 
         /// <summary>
         /// Determines whether the specific filename exists
         /// </summary>
-        /// <param name="filename"></param>
+        /// <param name="filePath"></param>
         /// <returns></returns>
-        public bool ContainsFilename(string filename) => _FileEntries.ContainsKey(filename);
+        public bool ContainsFilename(string filePath)
+        {
+            return _FileEntries.FindIndex(x => x.FilePath.Equals(filePath, StrCmp)) >= 0;
+        }
+        /// <summary>
+        /// Determines whether the specific CKey exists
+        /// </summary>
+        /// <param name="ckey"></param>
+        /// <returns></returns>
+        public bool ContainsCKey(MD5Hash ckey)
+        {
+            return _FileEntries.FindIndex(x => x.CKey == ckey) >= 0;
+        }
+
+        /// <summary>
+        /// Opens a stream to the data of the supplied InstallFileEntry. Returns null if not found
+        /// </summary>
+        /// <param name="rootRecord"></param>
+        /// <returns></returns>
+        public Stream OpenFile(InstallFileEntry fileEntry, TACTRepo tactRepo)
+        {
+            if (fileEntry == null || tactRepo == null)
+                return null;
+
+            if (tactRepo.EncodingFile != null && tactRepo.IndexContainer != null)
+            {
+                if (tactRepo.EncodingFile.TryGetCKeyEntry(fileEntry.CKey, out EncodingContentEntry encodingCKey))
+                    return tactRepo.IndexContainer.OpenFile(encodingCKey.EKeys[0]);
+            }
+
+            return null;
+        }
+
 
         /// <summary>
         /// Returns the Tags associated to a file
         /// </summary>
         /// <param name="filename"></param>
         /// <returns></returns>
-        public IEnumerable<string> GetTags(string filename)
+        public IEnumerable<string> GetTags(InstallFileEntry fileEntry)
         {
-            int index = _FileEntries.IndexOfKey(x => x.IndexOf(filename, StringComparison.OrdinalIgnoreCase) >= 0);
-            return GetTags(index);
+            return GetTags(_FileEntries.IndexOf(fileEntry));
         }
 
         /// <summary>
@@ -282,10 +415,9 @@ namespace TACT.Net.Install
         /// <param name="filename"></param>
         /// <param name="value"></param>
         /// <param name="tags"></param>
-        public void SetTags(string filename, bool value, params string[] tags)
+        public void SetTags(InstallFileEntry fileEntry, bool value, params string[] tags)
         {
-            int index = _FileEntries.IndexOfKey(x => x.IndexOf(filename, StringComparison.OrdinalIgnoreCase) >= 0);
-            SetTags(index, value, tags);
+            SetTags(_FileEntries.IndexOf(fileEntry), value, tags);
         }
 
         /// <summary>
