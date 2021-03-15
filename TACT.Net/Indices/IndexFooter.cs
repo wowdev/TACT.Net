@@ -76,13 +76,13 @@ namespace TACT.Net.Indices
             writer.Write(KeySize);
             writer.Write(ChecksumSize);
             writer.Write(EntryCount);
-            writer.Write(new byte[8]);
+            writer.Write(new byte[ChecksumSize]);
 
             // calculate checksum with placeholder
             FooterChecksum = ms.HashSlice(md5, 0, ms.Length, ChecksumSize);
 
             // override the placeholder and copy to the main stream
-            ms.Position = ms.Length - 8;
+            ms.Position = ms.Length - ChecksumSize;
             writer.Write(FooterChecksum.Value);
 
             ms.WriteTo(bw.BaseStream);

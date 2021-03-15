@@ -52,7 +52,7 @@ namespace TACT.Net.BlockTable
 
         public BlockTableStreamReader(Stream src)
         {
-            stream = src ?? throw new ArgumentException(nameof(src));
+            stream = src ?? throw new ArgumentException(null, nameof(src));
             reader = new BinaryReader(src);
             Parse();
         }
@@ -90,7 +90,7 @@ namespace TACT.Net.BlockTable
                 chunkCount = reader.ReadUInt24BE();
 
                 if (flags != 0xF || chunkCount == 0)
-                    throw new InvalidDataException($"Bad table format 0x{flags.ToString("X2")}, numBlocks {chunkCount}");
+                    throw new InvalidDataException($"Bad table format 0x{flags:X2}, numBlocks {chunkCount}");
 
                 uint frameHeaderSize = 24 * chunkCount + 12;
                 if (headerSize != frameHeaderSize)
@@ -149,7 +149,7 @@ Process:
                     memStream.Write(data, 1, data.Length - 1);
                     break;
                 default:
-                    throw new NotImplementedException($"Unknown BLTE block type {(char)block.EncodingMap.Type} (0x{block.EncodingMap.Type.ToString("X2")})");
+                    throw new NotImplementedException($"Unknown BLTE block type {(char)block.EncodingMap.Type} (0x{block.EncodingMap.Type:X2})");
             }
 
             blockIndex++;
@@ -157,7 +157,7 @@ Process:
             return true;
         }
 
-        private void Decompress(EBlock block, byte[] data, MemoryStream outStream)
+        private static void Decompress(EBlock block, byte[] data, MemoryStream outStream)
         {
             // ZLib compression level
             block.EncodingMap.Level = (byte)(data[2] >> 6); // FLEVEL bits
@@ -170,7 +170,7 @@ Process:
             ds.CopyTo(outStream);
         }
 
-        private byte[] Decrypt(EBlock block, byte[] data, int index)
+        private static byte[] Decrypt(EBlock block, byte[] data, int index)
         {
             byte keyNameSize = data[1];
             if (keyNameSize != 8)

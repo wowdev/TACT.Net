@@ -15,7 +15,7 @@ namespace TACT.Net.Cryptography
         public int Compare(EncodingEntryBase x, EncodingEntryBase y) => Compare(x.Key.Value, y.Key.Value);
         public int Compare(byte[] x, byte[] y) => Compare(x, y, 16);
 
-        private int Compare(byte[] x, byte[] y, int length)
+        private static int Compare(byte[] x, byte[] y, int length)
         {
             int c;
             for (int i = 0; i < length; i++)

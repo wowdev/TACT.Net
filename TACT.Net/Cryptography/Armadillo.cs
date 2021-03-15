@@ -103,7 +103,7 @@ namespace TACT.Net.Cryptography
         /// </summary>
         /// <param name="name"></param>
         /// <returns></returns>
-        private bool IsValidName(string name)
+        private static bool IsValidName(string name)
         {
             if (name == null || name.Length != 32)
                 return false;

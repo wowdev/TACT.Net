@@ -9,6 +9,10 @@ namespace TACT.Net.BlockTable
 {
     public static class BlockTableEncoder
     {
+        private static readonly EMap NoneMap = new EMap(EType.None, 0);
+        private static readonly EMap MPQMap = new EMap(EType.ZLib, 6);
+        private static readonly EMap ZLibMap = new EMap(EType.ZLib, 9);
+
         #region Encode
 
         /// <summary>
@@ -271,6 +275,16 @@ namespace TACT.Net.BlockTable
         /// </summary>
         /// <param name="filename"></param>
         /// <param name="filesize">Small files are ignored from compression</param>
+        /// <remarks>
+        /// <para>
+        /// Blizzard uses multiple blocks to compress different parts of a file AND tailors this on a per-file basis to get peak output
+        /// e.g. DB2 string block will be best while the rest will be mpq (if data is repetitive) or none (if not)
+        /// </para>
+        /// <para>
+        /// This method is simplified to a single block of the most common compression type based on the file extension.
+        /// BlockTableStreamWriter should be used if the best speed/compression ratio is required
+        /// </para>
+        /// </remarks>
         /// <returns></returns>
         public static EMap GetEMapFromExtension(string filename, long? filesize = null)
         {
@@ -281,10 +295,6 @@ namespace TACT.Net.BlockTable
             if (filesize.HasValue && filesize >= 0 && filesize < 20)
                 return new EMap(EType.None, 0);
 
-            // Blizzard uses multiple blocks to compress different parts of a file AND tailors this on a per-file basis to get peek output
-            //   e.g. DB2 string block will be best while the rest will be mpq (if data is repetative) or none (if not)
-            // The below is simplified to a single block of the most common compression type per filetype to avoid file parsing
-            // The BlockTableStreamWriter should be used if the best speed/compression ratio is required
             switch (Path.GetExtension(filename).ToUpperInvariant())
             {
                 // don't compress - natively compressed formats
@@ -293,7 +303,7 @@ namespace TACT.Net.BlockTable
                 case ".OGG":
                 case ".PNG":
                 case ".TTF":
-                    return new EMap(EType.None, 0);
+                    return NoneMap;
                 // mpq compression
                 case ".ADT":
                 case ".BLP":
@@ -303,10 +313,10 @@ namespace TACT.Net.BlockTable
                 case ".SKIN":
                 case ".WDT":
                 case ".WMO":
-                    return new EMap(EType.ZLib, 6, true);
+                    return MPQMap;
                 // best compression
                 default:
-                    return new EMap(EType.ZLib, 9);
+                    return ZLibMap;
             }
         }
 

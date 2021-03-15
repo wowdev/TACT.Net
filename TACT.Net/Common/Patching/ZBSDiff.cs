@@ -59,9 +59,9 @@ namespace TACT.Net.Common.Patching
         private static void CreateImpl(Span<byte> original, Span<byte> modified, Stream output)
         {
             if (original == null || original.Length == 0)
-                throw new ArgumentException(nameof(original));
+                throw new ArgumentException(null, nameof(original));
             if (modified == null || modified.Length == 0)
-                throw new ArgumentException(nameof(modified));
+                throw new ArgumentException(null, nameof(modified));
             if (output == null || !output.CanSeek || !output.CanRead)
                 throw new ArgumentException("Output stream must be not null, readable and seekable");
 

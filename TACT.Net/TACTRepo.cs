@@ -296,7 +296,7 @@ namespace TACT.Net
                 RootFile.RootHeader.Version = 2;
         }
 
-        private MD5Hash DownloadSystemFile(MD5Hash key, CDNClient client, string directory, string dataFolder = "data")
+        private static MD5Hash DownloadSystemFile(MD5Hash key, CDNClient client, string directory, string dataFolder = "data")
         {
             if (key.Value == null)
                 return default;

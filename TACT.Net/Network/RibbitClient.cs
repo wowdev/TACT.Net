@@ -78,7 +78,7 @@ namespace TACT.Net.Network
 
         #region Helpers
 
-        private string CommandToPayload(RibbitCommand command, string product)
+        private static string CommandToPayload(RibbitCommand command, string product)
         {
             return command switch
             {

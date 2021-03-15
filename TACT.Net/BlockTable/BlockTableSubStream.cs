@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.IO;
 using System.Security.Cryptography;
 using Joveler.Compression.ZLib;
@@ -142,10 +143,12 @@ namespace TACT.Net.BlockTable
             Position = 0;
 
             // pre-LOH magic number
-            byte[] buffer = new byte[81920];
+            byte[] buffer = ArrayPool<byte>.Shared.Rent(81920);
             int read;
             while ((read = Read(buffer, 0, buffer.Length)) != 0)
                 md5.TransformBlock(buffer, 0, read, null, 0);
+
+            ArrayPool<byte>.Shared.Return(buffer);
         }
 
         #endregion
@@ -180,7 +183,5 @@ namespace TACT.Net.BlockTable
         }
 
         #endregion
-
-
     }
 }

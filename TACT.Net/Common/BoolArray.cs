@@ -67,7 +67,7 @@ namespace TACT.Net.Common
 
         public void Clear()
         {
-            _bytes = new byte[0];
+            _bytes = Array.Empty<byte>();
             Count = 0;
         }
 
@@ -150,7 +150,7 @@ namespace TACT.Net.Common
                 Array.Resize(ref _bytes, _bytes.Length - 1);
         }
 
-        private int GetMask(int index) => 1 << 7 - (index % 8);
+        private static int GetMask(int index) => 1 << 7 - (index % 8);
 
         #endregion
 

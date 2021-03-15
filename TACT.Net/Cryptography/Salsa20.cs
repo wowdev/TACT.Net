@@ -56,7 +56,7 @@ namespace TACT.Net.Cryptography
             return new Salsa20CryptoTransform(rgbKey, rgbIV, m_rounds);
         }
 
-        private new bool ValidKeySize(int size)
+        private new static bool ValidKeySize(int size)
         {
             return size == 128 || size == 256;
         }

@@ -196,9 +196,9 @@ namespace TACT.Net.Configs
             };
         }
 
-        private MD5Hash TryGetKey(KeyValueConfig config, string identifier, int index = 0)
+        private static MD5Hash TryGetKey(KeyValueConfig config, string identifier, int index = 0)
         {
-            MD5Hash.TryParse(config.GetValue(identifier, index), out MD5Hash hash);
+            _ = MD5Hash.TryParse(config.GetValue(identifier, index), out MD5Hash hash);
             return hash;
         }
 

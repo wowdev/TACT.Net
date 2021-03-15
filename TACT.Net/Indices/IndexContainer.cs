@@ -338,7 +338,7 @@ namespace TACT.Net.Indices
         /// </summary>
         /// <param name="configContainer"></param>
         /// <returns></returns>
-        private HashSet<string> GetRequiredIndices(Configs.ConfigContainer configContainer)
+        private static HashSet<string> GetRequiredIndices(Configs.ConfigContainer configContainer)
         {
             var indices = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -62,7 +63,7 @@ namespace TACT.Net.Common
         public static Span<T> ReadStructArray<T>(this BinaryReader reader, int count) where T : unmanaged
         {
             if (count <= 0)
-                return new T[0];
+                return Array.Empty<T>();
 
             byte[] buffer = reader.ReadBytes(count * Marshal.SizeOf<T>());
             return MemoryMarshal.Cast<byte, T>(buffer);
@@ -203,7 +204,7 @@ namespace TACT.Net.Common
         public static void PartialCopyTo(this Stream stream, Stream destination, long length)
         {
             // pre-LOH magic number
-            byte[] buffer = new byte[81920];
+            byte[] buffer = ArrayPool<byte>.Shared.Rent(81920);
 
             long remaining = length;
             int read;
@@ -219,6 +220,8 @@ namespace TACT.Net.Common
                 read = stream.Read(buffer, 0, (int)remaining);
                 destination.Write(buffer, 0, read);
             }
+
+            ArrayPool<byte>.Shared.Return(buffer);
         }
 
         /// <summary>
@@ -259,7 +262,7 @@ namespace TACT.Net.Common
             stream.BaseStream.Position = 0;
 
             // the largest multiple of 4096 smaller than the LOH threshold
-            byte[] buffer = new byte[81920];
+            byte[] buffer = ArrayPool<byte>.Shared.Rent(81920);
 
             // calculate the read position delta
             offset -= stream.TotalIn;
@@ -279,6 +282,8 @@ namespace TACT.Net.Common
             // jump to the final write position and flush the buffer
             stream.BaseStream.Position = offset + stream.TotalOut;
             stream.Flush();
+
+            ArrayPool<byte>.Shared.Return(buffer);
         }
 
         #endregion

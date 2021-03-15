@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.IO;
 using System.Linq;
 using TACT.Net.BlockTable;
@@ -202,13 +203,15 @@ namespace TACT.Net.Download
             // batched into 0xFFFF size uncompressed blocks
             // this is for client performance and isn't mandatory
             ms.Position = 0;
-            byte[] buffer = new byte[0xFFFF];
+            byte[] buffer = ArrayPool<byte>.Shared.Rent(0xFFFF);
             int read;
             while ((read = ms.Read(buffer)) != 0)
             {
                 bt.AddBlock(_EncodingMap[2]);
                 bt.Write(buffer, 0, read);
             }
+
+            ArrayPool<byte>.Shared.Return(buffer);
         }
 
         #endregion

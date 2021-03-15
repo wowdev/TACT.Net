@@ -155,6 +155,7 @@ namespace TACT.Net.Tags
             {
                 Add("x86_32", id, fileCount);
                 Add("x86_64", id, fileCount);
+                Add("arm64", id, fileCount);
             }
 
             // Locale
@@ -211,7 +212,7 @@ namespace TACT.Net.Tags
 
         #region Helpers
 
-        private IOrderedEnumerable<TagEntry> SortTags(IEnumerable<TagEntry> tagEntries)
+        private static IOrderedEnumerable<TagEntry> SortTags(IEnumerable<TagEntry> tagEntries)
         {
             // order by type then name, Alternate is Locale although differentiated
             return tagEntries.OrderBy(x => x.TypeId == 0x4000 ? 3 : x.TypeId).ThenBy(x => x.Name);

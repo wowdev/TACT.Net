@@ -291,7 +291,7 @@ namespace TACT.Net.Configs
         /// </summary>
         /// <param name="fields"></param>
         /// <returns></returns>
-        private string[] DestructFieldNames(string[] fields)
+        private static string[] DestructFieldNames(string[] fields)
         {
             return fields.Select(x => x.Split('!')[0]).ToArray();
         }
