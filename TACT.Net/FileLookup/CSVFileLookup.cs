@@ -58,9 +58,8 @@ namespace TACT.Net.FileLookup
                     line = sr.ReadLine();
                     seperatorIdx = line.IndexOf(_seperator);
 
-                    if (seperatorIdx > -1)
-                        if (uint.TryParse(line.Substring(0, seperatorIdx), out uint id))
-                            _fileLookup[line[seperatorIdx..]] = id;
+                    if (seperatorIdx > -1 && uint.TryParse(line[..seperatorIdx], out uint id))
+                        _fileLookup[line[(seperatorIdx + 1)..]] = id;
                 }
             }
 

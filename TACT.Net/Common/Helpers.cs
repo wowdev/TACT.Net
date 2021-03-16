@@ -15,7 +15,7 @@ namespace TACT.Net.Common
         /// <returns></returns>
         public static string GetCDNPath(string filename, string folder = "", string directory = "", bool create = false)
         {
-            string dir = Path.Combine(directory, folder, filename.Substring(0, 2), filename.Substring(2, 2));
+            string dir = Path.Combine(directory, folder, filename[..2], filename[2..4]);
             if (create)
                 Directory.CreateDirectory(dir);
 
@@ -31,7 +31,7 @@ namespace TACT.Net.Common
         /// <returns></returns>
         public static string GetCDNUrl(string filename, string folder)
         {
-            return string.Join("/", "tpr", "wow", folder, filename.Substring(0, 2), filename.Substring(2, 2), filename);
+            return string.Join("/", "tpr", "wow", folder, filename[..2], filename[2..4], filename);
         }
 
 
