@@ -107,7 +107,7 @@ namespace TACT.Net.Configs
 
         private MD5Hash TryGetKey(VariableConfig config, string identifier)
         {
-            MD5Hash.TryParse(config.GetValue(identifier, Locale), out MD5Hash hash);
+            _ = MD5Hash.TryParse(config.GetValue(identifier, Locale), out MD5Hash hash);
             return hash;
         }
 

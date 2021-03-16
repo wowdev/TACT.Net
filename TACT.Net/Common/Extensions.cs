@@ -232,7 +232,7 @@ namespace TACT.Net.Common
         /// <returns></returns>
         public static int IndexOf(this string[] array, string needle)
         {
-            return Array.FindIndex(array, t => t.Equals(needle, StringComparison.OrdinalIgnoreCase));
+            return Array.FindIndex(array, t => t.EqualsIC(needle));
         }
 
         /// <summary>
@@ -284,6 +284,17 @@ namespace TACT.Net.Common
             stream.Flush();
 
             ArrayPool<byte>.Shared.Return(buffer);
+        }
+
+        /// <summary>
+        /// Incasesensitive string equals
+        /// </summary>
+        /// <param name="str"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static bool EqualsIC(this string str, string value)
+        {
+            return str.Equals(value, StringComparison.OrdinalIgnoreCase);
         }
 
         #endregion

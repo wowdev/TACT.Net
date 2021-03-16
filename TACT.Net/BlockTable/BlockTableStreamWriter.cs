@@ -67,17 +67,24 @@ namespace TACT.Net.BlockTable
             // lock the final block
             _blocks[_blocks.Count - 1].Lock();
 
-            MD5Hash EKey, CKey = ComputeCKey();
-            EMap encoding = _blocks.Count == 1 ? _blocks[0].EncodingMap : new EMap(EType.ZLib, 9);
+            MD5Hash EKey;
+            MD5Hash CKey = ComputeCKey();
+            EMap encoding = _blocks[0].EncodingMap;
             uint decompressedSize = 0;
+            uint headerSize = 0;
             string eSpec;
+
+            if(_blocks.Count > 1)
+            {
+                headerSize = 0x18u * (uint)_blocks.Count + 0xCu;
+                encoding = new EMap(EType.ZLib, 9);
+            }
 
             using (var md5 = MD5.Create())
             using (var ms = new MemoryStream((int)memStream.Length + 0x100))
             using (var bw = new BinaryWriter(ms))
             {
                 // replace the stream contents with the BLTE structure
-                uint headerSize = (uint)(_blocks.Count == 1 ? 0 : 0x18 * _blocks.Count + 0xC);
 
                 // Header
                 bw.Write(BlockTableStreamReader.BLTE_MAGIC);
@@ -227,6 +234,7 @@ namespace TACT.Net.BlockTable
             using var md5 = MD5.Create();
             foreach (var block in _blocks.Values)
                 block.Hash(md5);
+
             md5.TransformFinalBlock(Array.Empty<byte>(), 0, 0);
             return new MD5Hash(md5.Hash);
         }

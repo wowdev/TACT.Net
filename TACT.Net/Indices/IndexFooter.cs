@@ -31,8 +31,8 @@ namespace TACT.Net.Indices
         /// Size of IndexEntry's CompressedSize field
         /// </summary>
         public byte CompressedSizeBytes = 4;
-        public byte KeySize { get; private set; } = 16;
-        public byte ChecksumSize { get; private set; } = 8;
+        public byte KeySize = 16;
+        public byte ChecksumSize = 8;
         public uint EntryCount;
         /// <summary>
         /// Hash of Version to the EOF with an empty FooterChecksum
@@ -65,7 +65,7 @@ namespace TACT.Net.Indices
         public void Write(BinaryWriter bw)
         {
             using var md5 = MD5.Create();
-            using var ms = new MemoryStream();
+            using var ms = new MemoryStream(Size);
             using var writer = new BinaryWriter(ms);
             writer.Write(Version);
             writer.Write(Unk_11);

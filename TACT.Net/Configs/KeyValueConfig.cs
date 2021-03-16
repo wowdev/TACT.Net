@@ -207,7 +207,7 @@ namespace TACT.Net.Configs
                 {
                     // grab the sequence number
                     if (line.StartsWith("## seqn", StringComparison.OrdinalIgnoreCase))
-                        uint.TryParse(line.Split(' ')[^1], out SequenceNumber);
+                        _ = uint.TryParse(line.Split(' ')[^1], out SequenceNumber);
 
                     continue;
                 }
@@ -231,7 +231,7 @@ namespace TACT.Net.Configs
             // sort the CDN Config entries
             SortEntries();
 
-            using var ms = new MemoryStream();
+            using var ms = new MemoryStream(0x1000);
             using var sw = new StreamWriter(ms)
             {
                 NewLine = "\n"

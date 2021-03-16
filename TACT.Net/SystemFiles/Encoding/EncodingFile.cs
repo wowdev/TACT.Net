@@ -27,7 +27,7 @@ namespace TACT.Net.Encoding
         public List<string> ESpecStringTable { get; private set; }
         public IEnumerable<EncodingContentEntry> CKeyEntries => _CKeyEntries.Values;
         public IEnumerable<EncodingEncodedEntry> EKeyEntries => _EKeyEntries.Values;
-        public readonly bool Partial;
+        public bool Partial { get; }
 
         private readonly EMap[] _EncodingMap;
         private readonly CKeyPageTable _CKeyEntries;

@@ -17,7 +17,7 @@ namespace TACT.Net.Indices
         public IEnumerable<IndexEntry> Entries => _indexEntries.Values;
         public IndexFooter IndexFooter { get; private set; }
         public MD5Hash Checksum { get; private set; }
-        public readonly IndexType Type;
+        public IndexType Type { get; }
 
         #region Helper Variables
 
@@ -120,6 +120,7 @@ namespace TACT.Net.Indices
                 // buffer the page then read the entries to minimise file reads
                 using var ms = new MemoryStream(reader.ReadBytes(PageSize));
                 using var br = new BinaryReader(ms);
+
                 var entry = new IndexEntry();
                 while (entry.Read(br, IndexFooter))
                 {
@@ -255,7 +256,7 @@ namespace TACT.Net.Indices
                     throw new FileNotFoundException($"Missing old archive blob {Path.GetFileName(prevBlob)}");
 
                 // same checksum, just overwrite
-                if (Path.GetFileName(prevBlob).Equals(Checksum.ToString(), StringComparison.OrdinalIgnoreCase))
+                if (Path.GetFileName(prevBlob).EqualsIC(Checksum.ToString()))
                 {
                     File.Copy(prevBlob, saveLocation, true);
                     return;
@@ -431,7 +432,7 @@ namespace TACT.Net.Indices
             if (IsGroupIndex)
             {
                 archivefield = IsPatchIndex ? "patch-archive-group" : "archive-group";
-                sizefield = null;
+                sizefield = "";
             }
             else if (IsLooseIndex)
             {

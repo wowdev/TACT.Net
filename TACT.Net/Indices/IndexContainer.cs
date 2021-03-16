@@ -22,7 +22,7 @@ namespace TACT.Net.Indices
         /// <summary>
         /// Files enqueued to be added to a new archive
         /// </summary>
-        public readonly SortedList<MD5Hash, CASRecord> QueuedEntries;
+        public SortedList<MD5Hash, CASRecord> QueuedEntries { get; }
 
         private readonly ConcurrentSet<IndexFile> _indices;
         private string _sourceDirectory;
@@ -57,6 +57,7 @@ namespace TACT.Net.Indices
         {
             IsRemote = false;
 
+            _indices.Clear();
             _sourceDirectory = directory;
             _useParallelism = useParallelism;
 
@@ -85,6 +86,7 @@ namespace TACT.Net.Indices
         {
             IsRemote = true;
 
+            _indices.Clear();
             _useParallelism = useParallelism;
             _client = new CDNClient(manifestContainer);
 
@@ -181,7 +183,7 @@ namespace TACT.Net.Indices
         /// <param name="configContainer"></param>
         public void Save(string directory, Configs.ConfigContainer configContainer = null)
         {
-            bool sameDirectory = directory.Equals(_sourceDirectory, StringComparison.OrdinalIgnoreCase);
+            bool sameDirectory = directory.EqualsIC(_sourceDirectory);
 
             // save altered Data archive indices
             if (!IsRemote)
@@ -210,7 +212,10 @@ namespace TACT.Net.Indices
             }
 
             // prevent duplicated entries
-            var duplicates = QueuedEntries.Keys.Where(k => GetIndexFileAndEntry(IndexType.Data, k, out _) != null).ToArray();
+            var duplicates = QueuedEntries.Keys
+                .Where(k => GetIndexFileAndEntry(IndexType.Data, k, out _) != null)
+                .ToArray();
+
             foreach (var key in duplicates)
                 QueuedEntries.Remove(key);
 
@@ -225,7 +230,6 @@ namespace TACT.Net.Indices
             }
 
             // reload indices
-            _indices.Clear();
             Open(directory, useParallelism: _useParallelism);
         }
 
