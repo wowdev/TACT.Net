@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using TACT.Net.Common;
 using TACT.Net.Cryptography;
 
@@ -36,6 +37,19 @@ namespace TACT.Net.Install
         }
 
         #endregion
+
+        public override bool Equals(object obj)
+        {
+            return obj is InstallFileEntry entry &&
+                entry.FilePath.ToUpper() == FilePath.ToUpper() &&
+                entry.DecompressedSize == DecompressedSize &&
+                entry.CKey == CKey;
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(FilePath.ToUpper(), DecompressedSize, CKey);
+        }
 
         public override string ToString() => FilePath;
     }
