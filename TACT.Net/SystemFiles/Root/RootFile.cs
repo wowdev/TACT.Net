@@ -591,6 +591,7 @@ namespace TACT.Net.Root
         {
             return RootHeader.Version switch
             {
+                3 => Activator.CreateInstance<RootBlockV2>(),
                 2 => Activator.CreateInstance<RootBlockV2>(),
                 _ => Activator.CreateInstance<RootBlock>(),
             };

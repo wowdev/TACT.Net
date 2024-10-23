@@ -9,9 +9,12 @@ namespace TACT.Net.Root
         public uint Magic { get; private set; } = 0x4D465354;
         public uint TotalRecordCount { get; private set; }
         public uint NamedRecordCount { get; private set; }
+        public uint V3HeaderSize { get; private set; }
+        public uint V3Version { get; private set; }
+        public uint V3Padding { get; private set; }
 
         /// <summary>
-        /// Custom versioning, version 2 includes header information whereas 1 doesn't
+        /// Custom versioning, version 3 is 10.1.7+ format with header size/version/padding. Version 2 includes header information. Version 1 doesn't have either.
         /// </summary>
         public uint Version { get; set; } = 1;
 
@@ -26,6 +29,20 @@ namespace TACT.Net.Root
                 Version = 2;
                 TotalRecordCount = br.ReadUInt32();
                 NamedRecordCount = br.ReadUInt32();
+
+                // Hackfix for 10.1.7+ root support
+                if (TotalRecordCount < 1000)
+                {
+                    Version = 3;
+
+                    br.BaseStream.Position -= 8;
+
+                    V3HeaderSize = br.ReadUInt32();
+                    V3Version = br.ReadUInt32();
+                    TotalRecordCount = br.ReadUInt32();
+                    NamedRecordCount = br.ReadUInt32();
+                    V3Padding = br.ReadUInt32();
+                }
             }
             else
             {
@@ -36,7 +53,7 @@ namespace TACT.Net.Root
 
         public void Write(BinaryWriter bw, List<IRootBlock> blocks)
         {
-            if (Version == 2)
+            if (Version == 2 || Version == 3)
             {
                 // re-count records
                 TotalRecordCount = NamedRecordCount = 0;
@@ -48,8 +65,18 @@ namespace TACT.Net.Root
                 }
 
                 bw.Write(Magic);
+
+                if(Version == 3)
+                {
+                    bw.Write(V3HeaderSize);
+                    bw.Write(V3Version);
+                }
+
                 bw.Write(TotalRecordCount);
                 bw.Write(NamedRecordCount);
+
+                if(Version == 3)
+                    bw.Write(V3Padding);
             }
         }
 
