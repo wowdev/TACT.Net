@@ -75,7 +75,6 @@ namespace TACT.Net.Indices
                 foreach (var index in applicableIndicies)
                 {
                     var indexPath = Helpers.GetCDNPath(index + ".index", "data", directory);
-                    Console.WriteLine(indexPath);
                     if (!File.Exists(indexPath))
                         throw new FileNotFoundException($"Index file referend in ConfigContainer not found on disk: {index} ({indexPath})");
 
