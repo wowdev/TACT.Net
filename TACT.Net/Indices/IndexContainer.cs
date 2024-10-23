@@ -64,13 +64,27 @@ namespace TACT.Net.Indices
             if (!Directory.Exists(directory))
                 throw new ArgumentException("Directory not found", paramName: nameof(directory));
 
-            var indices = Directory.EnumerateFiles(directory, "*.index", SearchOption.AllDirectories);
+            List<string> indices = new List<string>();
 
             // filter the indices to just this version's
             if (configContainer != null)
             {
-                var applicableIndicies = GetRequiredIndices(configContainer);
-                indices = indices.Where(x => applicableIndicies.Contains(Path.GetFileNameWithoutExtension(x)));
+                indices = new List<string>();
+
+                var applicableIndicies = GetRequiredIndices(configContainer, false);
+                foreach (var index in applicableIndicies)
+                {
+                    var indexPath = Helpers.GetCDNPath(index + ".index", "data", directory);
+                    Console.WriteLine(indexPath);
+                    if (!File.Exists(indexPath))
+                        throw new FileNotFoundException($"Index file referend in ConfigContainer not found on disk: {index} ({indexPath})");
+
+                    indices.Add(indexPath);
+                }
+            }
+            else
+            {
+                indices = Directory.EnumerateFiles(directory, "*.index", SearchOption.AllDirectories).ToList();
             }
 
             ParallelOptions options = new ParallelOptions() { MaxDegreeOfParallelism = useParallelism ? -1 : 1 };
@@ -240,11 +254,11 @@ namespace TACT.Net.Indices
         /// <param name="record"></param>
         public void Enqueue(CASRecord record)
         {
-            if(!string.IsNullOrWhiteSpace(record.BLTEPath))
+            if (!string.IsNullOrWhiteSpace(record.BLTEPath))
             {
                 lock (QueuedEntries)
                     QueuedEntries[record.EKey] = record;
-            }            
+            }
         }
         /// <summary>
         /// Dequeues a CASRecord from being written to the indicies and archives
@@ -341,8 +355,9 @@ namespace TACT.Net.Indices
         /// Returns a list of index filenames used by the specific CDNConfig
         /// </summary>
         /// <param name="configContainer"></param>
+        /// <param name="includePatchIndices"></param>
         /// <returns></returns>
-        private static HashSet<string> GetRequiredIndices(Configs.ConfigContainer configContainer)
+        private static HashSet<string> GetRequiredIndices(Configs.ConfigContainer configContainer, bool includePatchIndices = true)
         {
             var indices = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
@@ -352,9 +367,12 @@ namespace TACT.Net.Indices
                 indices.UnionWith(archives);
 
             // patch archives
-            var patcharchives = configContainer.CDNConfig.GetValues("patch-archives");
-            if (patcharchives != null)
-                indices.UnionWith(patcharchives);
+            if (includePatchIndices)
+            {
+                var patcharchives = configContainer.CDNConfig.GetValues("patch-archives");
+                if (patcharchives != null)
+                    indices.UnionWith(patcharchives);
+            }
 
             // loose file index
             var fileIndex = configContainer.CDNConfig.GetValue("file-index");
@@ -362,9 +380,12 @@ namespace TACT.Net.Indices
                 indices.Add(fileIndex);
 
             // loose patch file index
-            var patchIndex = configContainer.CDNConfig.GetValue("patch-file-index");
-            if (patchIndex != null)
-                indices.Add(patchIndex);
+            if (includePatchIndices)
+            {
+                var patchIndex = configContainer.CDNConfig.GetValue("patch-file-index");
+                if (patchIndex != null)
+                    indices.Add(patchIndex);
+            }
 
             return indices;
         }
